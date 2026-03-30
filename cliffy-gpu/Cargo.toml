@@ -12,7 +12,7 @@ categories = ["graphics", "mathematics", "wasm"]
 [dependencies]
 cliffy-core = { version = "0.3.1", path = "../cliffy-core" }
 amari-core = { workspace = true }
-wgpu = { version = "24.0", default-features = false, features = ["wgsl"] }
+wgpu = { version = "29.0", default-features = false, features = ["wgsl"] }
 bytemuck = { version = "1.21", features = ["derive"] }
 pollster = "0.4"
 thiserror = "2.0"

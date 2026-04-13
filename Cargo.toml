@@ -23,7 +23,7 @@ js-sys = "0.3"
 web-sys = "0.3"
 
 # Async (optional, for future use)
-tokio = { version = "1.48", features = ["sync"] }
+tokio = { version = "1.51", features = ["sync"] }
 
 [profile.release]
 opt-level = "z"          # Optimize for size (WASM)

@@ -39,7 +39,7 @@
     "@types/babel__traverse": "^7.20.0",
     "@types/babel__types": "^7.20.0",
     "@types/babel__generator": "^7.6.0",
-    "typescript": "^5.0.0",
+    "typescript": "^6.0.3",
     "vite": "^7.0.0"
   },
   "repository": {

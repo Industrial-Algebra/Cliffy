@@ -32,7 +32,7 @@ console_error_panic_hook = { version = "0.1", optional = true }
 cliffy-core = { version = "0.3.1", path = "../cliffy-core" }
 cliffy-protocols = { version = "0.3.1", path = "../cliffy-protocols" }
 cliffy-test = { version = "0.3.1", path = "../cliffy-test" }
-uuid = { version = "1.0", features = ["v4", "js"] }
+uuid = { version = "1.23", features = ["v4", "js"] }
 # getrandom 0.2 needed for uuid's transitive dep on wasm32
 getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
 # getrandom 0.3 needed for rand 0.10 on wasm32

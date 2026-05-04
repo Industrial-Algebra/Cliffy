@@ -14,7 +14,7 @@ categories = ["development-tools::testing", "mathematics"]
 amari-core = { workspace = true }
 
 # Probabilistic contracts
-amari-flynn = "0.19.0"
+amari-flynn = "0.20.0"
 
 # Property-based testing
 quickcheck = "1.0"

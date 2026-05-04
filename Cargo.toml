@@ -12,7 +12,7 @@ resolver = "2"
 [workspace.dependencies]
 # Amari geometric algebra
 # For local development: path = "../../math/amari/amari-core"
-amari-core = { version = "0.19.0", features = ["serialize"] }
+amari-core = { version = "0.20.0", features = ["serialize"] }
 
 # Core dependencies
 serde = { version = "1.0", features = ["derive"] }

@@ -16,7 +16,7 @@
     "clean": "cargo clean && rm -rf cliffy-wasm/pkg examples/*/dist examples/*/node_modules/.vite"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^10.0.3"
   },
   "keywords": [
     "frp",

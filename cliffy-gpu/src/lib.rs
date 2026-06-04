@@ -163,9 +163,9 @@ impl GpuContext {
     ///
     /// This initializes WebGPU and creates all compute pipelines.
     pub async fn new() -> Result<Self, GpuError> {
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
-            ..Default::default()
+            ..wgpu::InstanceDescriptor::new_without_display_handle()
         });
 
         let adapter = instance
@@ -175,7 +175,7 @@ impl GpuContext {
                 force_fallback_adapter: false,
             })
             .await
-            .ok_or(GpuError::AdapterNotFound)?;
+            .map_err(|_| GpuError::AdapterNotFound)?;
 
         let (device, queue) = adapter
             .request_device(
@@ -184,8 +184,9 @@ impl GpuContext {
                     required_features: wgpu::Features::empty(),
                     required_limits: wgpu::Limits::default(),
                     memory_hints: wgpu::MemoryHints::Performance,
+                    experimental_features: wgpu::ExperimentalFeatures::default(),
+                    trace: wgpu::Trace::default(),
                 },
-                None,
             )
             .await?;
 
@@ -236,8 +237,8 @@ impl GpuContext {
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Geometric Compute Pipeline Layout"),
-            bind_group_layouts: &[&bind_group_layout],
-            push_constant_ranges: &[],
+            bind_group_layouts: &[Some(&bind_group_layout)],
+            immediate_size: 0,
         });
 
         let geometric_product_pipeline =
@@ -506,7 +507,10 @@ impl GpuContext {
             let _ = sender.send(result);
         });
 
-        self.device.poll(wgpu::Maintain::Wait);
+        self.device.poll(wgpu::PollType::Wait {
+            submission_index: None,
+            timeout: None,
+        }).ok();
 
         receiver
             .recv()

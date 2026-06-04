@@ -514,19 +514,19 @@ pub fn test_rare(
 /// Generate a random GA3 multivector for property testing
 #[wasm_bindgen(js_name = randomGA3)]
 pub fn random_ga3() -> Vec<f64> {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    (0..8).map(|_| rng.gen_range(-10.0..10.0)).collect()
+    use rand::RngExt;
+    let mut rng = rand::rng();
+    (0..8).map(|_| rng.random_range(-10.0..10.0)).collect()
 }
 
 /// Generate a random unit vector for property testing
 #[wasm_bindgen(js_name = randomUnitVector)]
 pub fn random_unit_vector() -> Vec<f64> {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    let x: f64 = rng.gen_range(-1.0..1.0);
-    let y: f64 = rng.gen_range(-1.0..1.0);
-    let z: f64 = rng.gen_range(-1.0..1.0);
+    use rand::RngExt;
+    let mut rng = rand::rng();
+    let x: f64 = rng.random_range(-1.0..1.0);
+    let y: f64 = rng.random_range(-1.0..1.0);
+    let z: f64 = rng.random_range(-1.0..1.0);
     let mag = (x * x + y * y + z * z).sqrt();
     if mag > 1e-10 {
         vec![0.0, x / mag, y / mag, 0.0, z / mag, 0.0, 0.0, 0.0]
@@ -538,17 +538,17 @@ pub fn random_unit_vector() -> Vec<f64> {
 /// Generate a random rotor for property testing
 #[wasm_bindgen(js_name = randomRotor)]
 pub fn random_rotor() -> Vec<f64> {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
+    use rand::RngExt;
+    let mut rng = rand::rng();
 
     // Generate random angle
-    let angle: f64 = rng.gen_range(0.0..std::f64::consts::TAU);
+    let angle: f64 = rng.random_range(0.0..std::f64::consts::TAU);
     let half_angle = angle / 2.0;
 
     // Generate random axis
-    let x: f64 = rng.gen_range(-1.0..1.0);
-    let y: f64 = rng.gen_range(-1.0..1.0);
-    let z: f64 = rng.gen_range(-1.0..1.0);
+    let x: f64 = rng.random_range(-1.0..1.0);
+    let y: f64 = rng.random_range(-1.0..1.0);
+    let z: f64 = rng.random_range(-1.0..1.0);
     let mag = (x * x + y * y + z * z).sqrt();
 
     if mag < 1e-10 {

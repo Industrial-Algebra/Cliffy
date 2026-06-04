@@ -1,6 +1,6 @@
 [package]
 name = "cliffy-protocols"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 description = "Distributed consensus protocols using geometric algebra"
 license = "MIT"
@@ -10,7 +10,7 @@ keywords = ["distributed", "crdt", "consensus", "geometric-algebra", "sync"]
 categories = ["algorithms", "data-structures", "concurrency"]
 
 [dependencies]
-cliffy-core = { version = "0.3.0", path = "../cliffy-core" }
+cliffy-core = { version = "0.3.1", path = "../cliffy-core" }
 amari-core = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }

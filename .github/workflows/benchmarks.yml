@@ -41,7 +41,7 @@ jobs:
           cp benchmark-results.txt benchmark-output/
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-results
           path: benchmark-output/
@@ -104,7 +104,7 @@ jobs:
           echo '```' >> comparison.md
 
       - name: Upload comparison
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-comparison
           path: comparison.md
@@ -157,7 +157,7 @@ jobs:
           echo '```' >> gpu-comparison/report.md
 
       - name: Upload GPU comparison
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: gpu-cpu-comparison
           path: gpu-comparison/

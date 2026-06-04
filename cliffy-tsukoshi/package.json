@@ -1,6 +1,6 @@
 {
   "name": "@cliffy-ga/tsukoshi",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Minimal geometric state management with distributed protocols - pure TypeScript, zero dependencies",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -1,6 +1,6 @@
 [package]
 name = "cliffy-wasm"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 description = "WebAssembly bindings for Cliffy reactive framework"
 license = "MIT"
@@ -29,15 +29,17 @@ web-sys = { workspace = true, features = [
     "Window",
 ] }
 console_error_panic_hook = { version = "0.1", optional = true }
-cliffy-core = { version = "0.3.0", path = "../cliffy-core" }
-cliffy-protocols = { version = "0.3.0", path = "../cliffy-protocols" }
-cliffy-test = { version = "0.3.0", path = "../cliffy-test" }
+cliffy-core = { version = "0.3.1", path = "../cliffy-core" }
+cliffy-protocols = { version = "0.3.1", path = "../cliffy-protocols" }
+cliffy-test = { version = "0.3.1", path = "../cliffy-test" }
 uuid = { version = "1.0", features = ["v4", "js"] }
-getrandom = { version = "0.2", features = ["js"] }
-# getrandom 0.4 is pulled in by cliffy-test -> quickcheck -> rand 0.10
-# Enable wasm_js feature for WASM target compatibility
+# getrandom 0.2 needed for uuid's transitive dep on wasm32
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+# getrandom 0.3 needed for rand 0.10 on wasm32
+getrandom = { version = "0.3", features = ["wasm_js"] }
+# getrandom 0.4 pulled in by quickcheck -> rand; enable wasm_js for WASM target
 getrandom_04 = { package = "getrandom", version = "0.4", features = ["wasm_js"] }
-rand = "0.8"
+rand = "0.10"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

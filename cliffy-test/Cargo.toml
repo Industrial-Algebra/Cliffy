@@ -1,6 +1,6 @@
 [package]
 name = "cliffy-test"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 description = "Algebraic testing framework for Cliffy - tests as geometric invariants"
 license = "MIT"
@@ -24,7 +24,7 @@ quickcheck_macros = "1.0"
 rayon = "1.10"
 
 # Random sampling
-rand = "0.8"
+rand = "0.10"
 
 # Serialization for test results
 serde = { workspace = true }

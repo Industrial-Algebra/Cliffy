@@ -1,6 +1,6 @@
 {
   "name": "cliffy",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "WASM-first reactive framework with classical FRP semantics and geometric algebra foundation",
   "type": "module",
   "scripts": {

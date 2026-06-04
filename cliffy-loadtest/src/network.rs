@@ -2,7 +2,7 @@
 //!
 //! Provides configurable network characteristics for realistic testing.
 
-use rand::Rng;
+use rand::RngExt;
 use std::time::Duration;
 
 /// Network topology for simulation
@@ -73,9 +73,9 @@ impl NetworkTopology {
             }
 
             Self::Random { edge_probability } => {
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 (0..total_nodes)
-                    .filter(|&i| i != node_index && rng.gen::<f64>() < *edge_probability)
+                    .filter(|&i| i != node_index && rng.random::<f64>() < *edge_probability)
                     .collect()
             }
 
@@ -182,16 +182,16 @@ impl LatencyModel {
 
     /// Get a random latency value based on the model
     pub fn get_latency(&self) -> Duration {
-        let mut rng = rand::thread_rng();
-        let variance = (rng.gen::<f64>() - 0.5) * 2.0 * self.variance_ms;
-        let jitter_factor = 1.0 + (rng.gen::<f64>() - 0.5) * 2.0 * self.jitter;
+        let mut rng = rand::rng();
+        let variance = (rng.random::<f64>() - 0.5) * 2.0 * self.variance_ms;
+        let jitter_factor = 1.0 + (rng.random::<f64>() - 0.5) * 2.0 * self.jitter;
         let ms = ((self.base_ms + variance) * jitter_factor).max(0.0);
         Duration::from_secs_f64(ms / 1000.0)
     }
 
     /// Check if a packet should be dropped
     pub fn should_drop(&self) -> bool {
-        rand::thread_rng().gen::<f64>() < self.loss_rate
+        rand::rng().random::<f64>() < self.loss_rate
     }
 
     /// Get the expected average latency

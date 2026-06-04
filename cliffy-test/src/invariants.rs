@@ -385,15 +385,15 @@ mod tests {
 
     #[test]
     fn test_rare_invariant() {
-        use rand::Rng;
+        use rand::RngExt;
 
         // Invariant that fails ~10% of the time
         let inv = RareInvariant::new(
             "Rarely fails",
             0.2, // Allow up to 20% failure rate
             || {
-                let mut rng = rand::thread_rng();
-                if rng.gen::<f64>() < 0.1 {
+                let mut rng = rand::rng();
+                if rng.random::<f64>() < 0.1 {
                     TestResult::fail_with_distance(0.1, "Random failure")
                 } else {
                     TestResult::Pass
@@ -451,11 +451,11 @@ mod tests {
 
     #[test]
     fn test_rare_verify_with_smt() {
-        use rand::Rng;
+        use rand::RngExt;
 
         let inv = RareInvariant::new("Bounded failure", 0.2, || {
-            let mut rng = rand::thread_rng();
-            if rng.gen::<f64>() < 0.05 {
+            let mut rng = rand::rng();
+            if rng.random::<f64>() < 0.05 {
                 TestResult::fail_with_distance(0.1, "Random failure")
             } else {
                 TestResult::Pass

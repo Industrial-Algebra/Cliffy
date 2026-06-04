@@ -1,6 +1,6 @@
 {
   "name": "create-cliffy",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Create a new Cliffy project - apps or component libraries",
   "type": "module",
   "bin": {
@@ -38,16 +38,16 @@
     "url": "https://github.com/Industrial-Algebra/cliffy/issues"
   },
   "dependencies": {
-    "commander": "^12.0.0",
+    "commander": "^14.0.0",
     "prompts": "^2.4.2",
     "picocolors": "^1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^25.0.0",
     "@types/prompts": "^2.4.8",
     "typescript": "^5.3.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

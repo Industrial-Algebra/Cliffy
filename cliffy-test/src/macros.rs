@@ -88,14 +88,14 @@ macro_rules! invariant_impossible {
 /// ```rust
 /// use cliffy_test::invariant_rare;
 /// use cliffy_test::prelude::*;
-/// use rand::Rng;
+/// use rand::RngExt;
 ///
 /// let inv = invariant_rare! {
 ///     name: "Random value usually in range",
 ///     probability_bound: 0.1,  // Allow up to 10% failure rate
 ///     check: || {
-///         let mut rng = rand::thread_rng();
-///         let value: f64 = rng.gen_range(0.0..1.0);
+///         let mut rng = rand::rng();
+///         let value: f64 = rng.random_range(0.0..1.0);
 ///
 ///         if value < 0.95 {  // 95% of values should be < 0.95
 ///             TestResult::Pass

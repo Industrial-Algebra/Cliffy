@@ -96,7 +96,7 @@ jobs:
         run: node scripts/post-wasm-build.js
 
       - name: Upload WASM artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: wasm-build
           path: cliffy-wasm/pkg/
@@ -149,7 +149,7 @@ jobs:
           node-version: '20'
 
       - name: Download WASM artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: wasm-build
           path: cliffy-wasm/pkg/
@@ -167,7 +167,7 @@ jobs:
         run: npm run build:all --if-present || npm run build -ws --if-present
 
       - name: Upload example builds
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: examples-build
           path: |
@@ -207,7 +207,7 @@ jobs:
           node-version: '20'
 
       - name: Download WASM artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: wasm-build
           path: cliffy-wasm/pkg/
@@ -236,7 +236,7 @@ jobs:
         run: npx playwright test --project="$BROWSER"
 
       - name: Upload test results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report-${{ matrix.os }}-${{ matrix.browser }}
@@ -307,7 +307,7 @@ jobs:
         run: cp -r src/templates dist/
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: create-cliffy
           path: tools/create-cliffy/dist/
@@ -326,7 +326,7 @@ jobs:
           node-version: '20'
 
       - name: Download WASM artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: wasm-build
           path: cliffy-wasm/pkg/

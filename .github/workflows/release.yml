@@ -138,7 +138,7 @@ jobs:
         uses: actions/download-artifact@v8
       
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ github.event.inputs.version }}
           name: Cliffy v${{ github.event.inputs.version }}

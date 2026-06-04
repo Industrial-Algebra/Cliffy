@@ -19,7 +19,7 @@ cliffy-test = { version = "0.3.1", path = "../cliffy-test" }
 amari-core = { workspace = true }
 
 # Parallelism
-rayon = "1.10"
+rayon = "1.12"
 
 # Async runtime
 tokio = { version = "1.52", features = ["rt", "rt-multi-thread", "time", "sync", "macros"] }

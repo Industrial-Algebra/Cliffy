@@ -21,7 +21,7 @@ quickcheck = "1.0"
 quickcheck_macros = "1.0"
 
 # Parallelism
-rayon = "1.10"
+rayon = "1.12"
 
 # Random sampling
 rand = "0.10"

@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cliffy-ga/core": "^0.1.2"
+    "@cliffy-ga/core": "^0.3.1"
   },
   "devDependencies": {
     "typescript": "^5.3.0",

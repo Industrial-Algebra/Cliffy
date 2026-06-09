@@ -342,7 +342,7 @@ jobs:
           NETLIFY: 'true'
 
       - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v3
+        uses: nwtgck/actions-netlify@v4
         with:
           publish-dir: './examples/dist'
           production-deploy: true

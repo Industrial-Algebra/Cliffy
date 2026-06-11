@@ -11,7 +11,7 @@ let additions =
       { cliffy-purescript =
           { dependencies =
               [ "arrays", "effect", "prelude", "web-dom", "web-events", "web-html" ]
-          , repo = "https://github.com/justinelliottcobb/Cliffy.git"
+          , repo = "https://github.com/Industrial-Algebra/Cliffy.git"
           , version = "main"
           , subdir = "cliffy-purescript"
           }

@@ -1,8 +1,15 @@
 version: 2
+
+# Branch strategy:
+# - All dependency PRs target `develop` (integration branch)
+# - `main` receives only releases and hotfixes
+# - Gitflow: feature/* → develop → main
+
 updates:
   # Rust dependencies (workspace root)
   - package-ecosystem: "cargo"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -18,6 +25,7 @@ updates:
   # Root NPM dependencies
   - package-ecosystem: "npm"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -33,6 +41,7 @@ updates:
   # cliffy-tsukoshi (pure TypeScript geometric state)
   - package-ecosystem: "npm"
     directory: "/cliffy-tsukoshi"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "tuesday"
@@ -48,6 +57,7 @@ updates:
   # create-cliffy CLI tool
   - package-ecosystem: "npm"
     directory: "/tools/create-cliffy"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "tuesday"
@@ -63,6 +73,7 @@ updates:
   # Vite plugin
   - package-ecosystem: "npm"
     directory: "/vite-plugin-algebraic-tsx"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "wednesday"
@@ -78,6 +89,7 @@ updates:
   # Examples workspace
   - package-ecosystem: "npm"
     directory: "/examples"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "wednesday"
@@ -93,6 +105,7 @@ updates:
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "thursday"

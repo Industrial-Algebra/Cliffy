@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-algebraic-tsx",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Vite plugin to transform Algebraic TSX into Cliffy jsx() function calls",
   "type": "module",
   "main": "dist/index.js",

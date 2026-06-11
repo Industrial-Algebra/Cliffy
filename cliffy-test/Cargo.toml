@@ -1,6 +1,6 @@
 [package]
 name = "cliffy-test"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 description = "Algebraic testing framework for Cliffy - tests as geometric invariants"
 license = "MIT"

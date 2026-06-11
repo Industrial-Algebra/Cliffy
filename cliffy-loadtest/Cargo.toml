@@ -1,6 +1,6 @@
 [package]
 name = "cliffy-loadtest"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 description = "Scale testing framework for Cliffy - simulates 100-10,000+ concurrent users"
 license = "MIT"
@@ -11,9 +11,9 @@ categories = ["development-tools::testing", "simulation"]
 
 [dependencies]
 # Core Cliffy crates
-cliffy-core = { version = "0.3.1", path = "../cliffy-core" }
-cliffy-protocols = { version = "0.3.1", path = "../cliffy-protocols" }
-cliffy-test = { version = "0.3.1", path = "../cliffy-test" }
+cliffy-core = { version = "0.3.2", path = "../cliffy-core" }
+cliffy-protocols = { version = "0.3.2", path = "../cliffy-protocols" }
+cliffy-test = { version = "0.3.2", path = "../cliffy-test" }
 
 # Geometric algebra
 amari-core = { workspace = true }

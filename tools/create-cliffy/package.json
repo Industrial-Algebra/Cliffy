@@ -1,6 +1,6 @@
 {
   "name": "create-cliffy",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Create a new Cliffy project - apps or component libraries",
   "type": "module",
   "bin": {

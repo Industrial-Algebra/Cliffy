@@ -14,7 +14,7 @@ cliffy-core = { version = "0.3.1", path = "../cliffy-core" }
 amari-core = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
-uuid = { version = "1.23", features = ["v4", "serde"] }
+uuid = { version = "1.23.3", features = ["v4", "serde"] }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

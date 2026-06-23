@@ -43,7 +43,7 @@
     "picocolors": "^1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^25.0.0",
+    "@types/node": "^26.0.0",
     "@types/prompts": "^2.4.8",
     "typescript": "^6.0.3"
   },

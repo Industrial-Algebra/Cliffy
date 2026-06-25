@@ -40,7 +40,7 @@ jobs:
       cliffy-protocols: ${{ steps.changes.outputs.cliffy-protocols }}
       cliffy-gpu: ${{ steps.changes.outputs.cliffy-gpu }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
 
@@ -75,7 +75,7 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.cliffy-core == 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -117,7 +117,7 @@ jobs:
       needs.detect-changes.outputs.cliffy-test == 'true' &&
       (needs.publish-cliffy-core.result == 'success' || needs.publish-cliffy-core.result == 'skipped')
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -162,7 +162,7 @@ jobs:
       needs.detect-changes.outputs.cliffy-protocols == 'true' &&
       (needs.publish-cliffy-core.result == 'success' || needs.publish-cliffy-core.result == 'skipped')
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -207,7 +207,7 @@ jobs:
       needs.detect-changes.outputs.cliffy-gpu == 'true' &&
       (needs.publish-cliffy-core.result == 'success' || needs.publish-cliffy-core.result == 'skipped')
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable

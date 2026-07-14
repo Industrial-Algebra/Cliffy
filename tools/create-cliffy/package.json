@@ -45,7 +45,7 @@
   "devDependencies": {
     "@types/node": "^25.0.0",
     "@types/prompts": "^2.4.8",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=20.0.0"

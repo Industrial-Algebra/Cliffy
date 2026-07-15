@@ -14,7 +14,7 @@
     "@cliffy/shared": "*"
   },
   "devDependencies": {
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^5.0.0"
   }
 }

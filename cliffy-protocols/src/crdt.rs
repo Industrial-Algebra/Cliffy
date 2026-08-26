@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Geometric CRDT implementations using Clifford algebra
 
 use crate::serde_ga3;

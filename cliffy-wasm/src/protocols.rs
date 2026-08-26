@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! WASM bindings for cliffy-protocols distributed state types.
 //!
 //! This module exposes CRDTs, vector clocks, and lattice operations to JavaScript.

@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@cliffy-ga/core)](https://www.npmjs.com/package/@cliffy-ga/core)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/211f9fc6-dbfb-4837-a0b0-11aaf4c04573/deploy-status)](https://app.netlify.com/projects/cliffy-ga/deploys)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/Rust-1.80+-orange.svg)](https://www.rust-lang.org/)
 [![WASM](https://img.shields.io/badge/WebAssembly-ready-blueviolet.svg)](https://webassembly.org/)
 
@@ -331,4 +331,5 @@ See [ROADMAP.md](ROADMAP.md) for the full development plan.
 
 ## License
 
-MIT
+Apache-2.0. See [LICENSE](LICENSE). Industrial Algebra is the copyright holder;
+contributions are made under the [CLA](https://github.com/Industrial-Algebra/.github/blob/main/CLA.md).

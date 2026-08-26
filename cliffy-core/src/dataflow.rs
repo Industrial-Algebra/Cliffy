@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Dataflow graph intermediate representation for Algebraic TSX
 //!
 //! This module provides the dataflow graph model that connects geometric

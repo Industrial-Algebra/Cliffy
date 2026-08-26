@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Cliffy GPU
 //!
 //! WebGPU compute shaders and SIMD-optimized CPU operations for geometric algebra.

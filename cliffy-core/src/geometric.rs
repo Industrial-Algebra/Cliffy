@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Geometric algebra helpers
 //!
 //! This module provides the bridge between user-facing types (i32, f64, String, Vec<T>)

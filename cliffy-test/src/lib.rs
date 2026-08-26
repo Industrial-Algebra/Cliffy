@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Cliffy Test - Algebraic Testing Framework
 //!
 //! Tests are geometric invariants. Failures are geometric distances.

@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Synchronization protocol for P2P state coordination
 //!
 //! This module defines the protocol messages and types for peer-to-peer

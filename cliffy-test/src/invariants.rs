@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Invariant types for algebraic testing
 //!
 //! Invariants are properties that should hold across state transformations.

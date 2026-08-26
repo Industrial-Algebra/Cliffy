@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Manifold testing - verify states lie on expected geometric manifolds
 //!
 //! Valid states form geometric manifolds. Testing verifies that state

@@ -1030,4 +1030,4 @@ MIT
 
 ## Part of Cliffy
 
-cliffy-tsukoshi is the pure TypeScript extraction of geometric state management from [Cliffy](https://github.com/justinelliottcobb/Cliffy), a framework for building collaborative applications using geometric algebra.
+cliffy-tsukoshi is the pure TypeScript extraction of geometric state management from [Cliffy](https://github.com/Industrial-Algebra/Cliffy), a framework for building collaborative applications using geometric algebra.

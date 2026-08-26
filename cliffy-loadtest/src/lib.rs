@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! # cliffy-loadtest
 //!
 //! Scale testing framework for Cliffy that simulates 100-10,000+ concurrent users

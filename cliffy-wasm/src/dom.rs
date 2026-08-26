@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! DOM projection module for Algebraic TSX
 //!
 //! This module provides direct DOM projection from geometric state,

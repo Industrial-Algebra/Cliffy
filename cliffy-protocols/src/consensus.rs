@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Geometric consensus protocol implementations
 
 use crate::{geometric_mean, serde_ga3, GeometricCRDT, OperationType};

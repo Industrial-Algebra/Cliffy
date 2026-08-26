@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Predefined test scenarios for scale testing
 //!
 //! Provides ready-to-use scenarios for common testing patterns.

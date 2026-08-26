@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Behavior - Time-varying values backed by geometric algebra
 //!
 //! A `Behavior<T>` represents a value that can change over time.

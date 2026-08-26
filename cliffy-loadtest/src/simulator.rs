@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! User simulation for scale testing
 //!
 //! Simulates concurrent users generating operations and syncing state.

@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Declarative macros for algebraic testing
 //!
 //! These macros provide ergonomic syntax for defining invariants:

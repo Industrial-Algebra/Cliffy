@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Combinators for composing behaviors
 //!
 //! These combinators provide algebraic ways to compose reactive values,

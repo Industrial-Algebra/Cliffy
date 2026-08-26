@@ -1,3 +1,7 @@
 [toolchain]
-channel = "stable"
-components = ["rustfmt", "clippy"]
+# Date-pinned nightly: rustc 1.100.0-nightly (2026-08-25+) hits a trait-solver
+# recursion overflow evaluating wgpu's Send chains in check/clippy builds
+# (stable 1.98 and this nightly are clean). Re-float to plain "nightly" when
+# the regression clears; full builds/tests are unaffected either way.
+channel = "nightly-2026-08-14"
+components = ["rustfmt", "clippy", "rust-src"]

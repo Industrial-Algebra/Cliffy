@@ -23,12 +23,21 @@ discipline:
 
 ## Verification Matrix
 
+The default toolchain is **nightly** (`rust-toolchain.toml`); CI lints and
+tests on nightly **and** keeps a stable test lane (the library must stay
+crates.io-compatible). To check stable locally:
+
+```bash
+RUSTUP_TOOLCHAIN=stable cargo test --workspace   # rustup env beats the file
+```
+
 Every PR must pass:
 
 ```bash
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace
+cargo nextest run --workspace      # unit/integration (or: cargo test --workspace)
+cargo test --doc --workspace       # doctests (nextest doesn't run them)
 cargo doc --workspace --no-deps --all-features   # zero warnings
 ```
 

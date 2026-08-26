@@ -17,8 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain (from rust-toolchain.toml)
+        uses: dtolnay/rust-toolchain@master
         with:
           components: rustfmt, clippy
           targets: wasm32-unknown-unknown
@@ -41,13 +41,28 @@ jobs:
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
   rust-tests:
-    name: Rust Tests
+    name: Rust Tests (${{ matrix.toolchain }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # stable: crates.io compatibility guarantee.
+        # nightly: FLOATING — deliberately ahead of the pinned toolchain file
+        # so test-level regressions surface here before they reach devs.
+        toolchain: [stable, nightly]
+    env:
+      # Beats rust-toolchain.toml: rustup env > file > default.
+      RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
     steps:
       - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@${{ matrix.toolchain }}
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
 
       - name: Cache dependencies
         uses: actions/cache@v5
@@ -56,12 +71,15 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ matrix.toolchain }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-${{ matrix.toolchain }}-
 
-      - name: Run tests
-        run: cargo test --workspace
+      - name: Run tests (nextest)
+        run: cargo nextest run --workspace
+
+      - name: Run doctests
+        run: cargo test --doc --workspace
 
   wasm-build:
     name: WASM Build
@@ -70,8 +88,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain (from rust-toolchain.toml)
+        uses: dtolnay/rust-toolchain@master
         with:
           targets: wasm32-unknown-unknown
 
@@ -109,8 +127,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain (from rust-toolchain.toml)
+        uses: dtolnay/rust-toolchain@master
         with:
           targets: wasm32-unknown-unknown
 
@@ -254,8 +272,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain (from rust-toolchain.toml)
+        uses: dtolnay/rust-toolchain@master
 
       - name: Cache dependencies
         uses: actions/cache@v5

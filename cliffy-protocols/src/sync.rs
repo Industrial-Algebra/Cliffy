@@ -131,7 +131,8 @@ pub struct PeerCapabilities {
 
 impl PeerCapabilities {
     /// Create default capabilities.
-    pub fn default_capabilities() -> Self {
+    #[must_use]
+    pub const fn default_capabilities() -> Self {
         Self {
             compressed_deltas: true,
             batch_operations: true,
@@ -167,7 +168,7 @@ pub struct PeerState {
     pub connection_state: PeerConnectionState,
     /// Last message received timestamp
     pub last_seen: Option<Instant>,
-    /// Pending acknowledgments (message_id -> sent_time)
+    /// Pending acknowledgments (`message_id` -> `sent_time`)
     pub pending_acks: HashMap<u64, Instant>,
     /// Round-trip time estimate (in milliseconds)
     pub rtt_estimate: Option<Duration>,
@@ -175,6 +176,7 @@ pub struct PeerState {
 
 impl PeerState {
     /// Create a new peer state.
+    #[must_use]
     pub fn new(info: PeerInfo, clock: VectorClock) -> Self {
         Self {
             info,
@@ -192,6 +194,7 @@ impl PeerState {
     }
 
     /// Check if the peer is considered stale (no recent activity).
+    #[must_use]
     pub fn is_stale(&self, timeout: Duration) -> bool {
         match self.last_seen {
             Some(last) => last.elapsed() > timeout,
@@ -210,7 +213,7 @@ impl PeerState {
             let rtt = sent_time.elapsed();
             self.rtt_estimate = Some(match self.rtt_estimate {
                 Some(prev) => Duration::from_millis(
-                    (prev.as_millis() as f64 * 0.8 + rtt.as_millis() as f64 * 0.2) as u64,
+                    (rtt.as_millis() as f64).mul_add(0.2, prev.as_millis() as f64 * 0.8) as u64,
                 ),
                 None => rtt,
             });
@@ -262,6 +265,7 @@ impl Default for SyncConfig {
 
 impl SyncState {
     /// Create a new sync state for a node.
+    #[must_use]
     pub fn new(node_id: Uuid) -> Self {
         Self {
             node_id,
@@ -273,6 +277,7 @@ impl SyncState {
     }
 
     /// Create with custom configuration.
+    #[must_use]
     pub fn with_config(node_id: Uuid, config: SyncConfig) -> Self {
         Self {
             node_id,
@@ -306,6 +311,7 @@ impl SyncState {
     }
 
     /// Get a peer's state.
+    #[must_use]
     pub fn get_peer(&self, peer_id: &Uuid) -> Option<&PeerState> {
         self.peers.get(peer_id)
     }
@@ -466,6 +472,7 @@ impl SyncState {
     }
 
     /// Get list of stale peers that should be checked.
+    #[must_use]
     pub fn stale_peers(&self) -> Vec<Uuid> {
         self.peers
             .iter()
@@ -475,6 +482,7 @@ impl SyncState {
     }
 
     /// Get peers that need heartbeats.
+    #[must_use]
     pub fn peers_needing_heartbeat(&self) -> Vec<Uuid> {
         self.peers
             .iter()
@@ -484,8 +492,7 @@ impl SyncState {
                     PeerConnectionState::Synced | PeerConnectionState::Syncing
                 ) && state
                     .last_seen
-                    .map(|t| t.elapsed() > self.config.heartbeat_interval / 2)
-                    .unwrap_or(true)
+                    .is_none_or(|t| t.elapsed() > self.config.heartbeat_interval / 2)
             })
             .map(|(id, _)| *id)
             .collect()
@@ -496,8 +503,7 @@ impl SyncState {
 fn current_timestamp_ms() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_millis() as u64)
-        .unwrap_or(0)
+        .map_or(0, |d| d.as_millis() as u64)
 }
 
 #[cfg(test)]

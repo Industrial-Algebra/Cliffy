@@ -10,6 +10,7 @@ keywords = ["reactive", "frp", "geometric-algebra", "ui", "wasm"]
 categories = ["gui", "wasm", "mathematics"]
 
 [dependencies]
+parking_lot = "0.12"
 # Amari provides geometric algebra
 amari-core = { workspace = true }
 
@@ -18,3 +19,6 @@ serde = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt", "macros"] }
+
+[lints]
+workspace = true

@@ -65,6 +65,7 @@ pub struct DataflowGraph {
 
 impl DataflowGraph {
     /// Create a new empty dataflow graph.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             nodes: Vec::new(),
@@ -96,12 +97,18 @@ impl DataflowGraph {
             return false;
         }
 
-        self.edges.get_mut(&from).unwrap().push(to);
-        self.reverse_edges.get_mut(&to).unwrap().push(from);
-        true
+        match (self.edges.get_mut(&from), self.reverse_edges.get_mut(&to)) {
+            (Some(edge_list), Some(reverse_list)) => {
+                edge_list.push(to);
+                reverse_list.push(from);
+                true
+            }
+            _ => false,
+        }
     }
 
     /// Get a node by ID.
+    #[must_use]
     pub fn get_node(&self, id: NodeId) -> Option<&Node> {
         self.nodes.get(id)
     }
@@ -112,39 +119,45 @@ impl DataflowGraph {
     }
 
     /// Get a node by name.
+    #[must_use]
     pub fn get_node_by_name(&self, name: &str) -> Option<&Node> {
         self.node_names.get(name).and_then(|id| self.nodes.get(*id))
     }
 
     /// Get node ID by name.
+    #[must_use]
     pub fn get_id_by_name(&self, name: &str) -> Option<NodeId> {
         self.node_names.get(name).copied()
     }
 
     /// Get all outgoing edges from a node.
+    #[must_use]
     pub fn outgoing(&self, id: NodeId) -> &[NodeId] {
-        self.edges.get(&id).map(|v| v.as_slice()).unwrap_or(&[])
+        self.edges.get(&id).map_or(&[], std::vec::Vec::as_slice)
     }
 
     /// Get all incoming edges to a node.
+    #[must_use]
     pub fn incoming(&self, id: NodeId) -> &[NodeId] {
         self.reverse_edges
             .get(&id)
-            .map(|v| v.as_slice())
-            .unwrap_or(&[])
+            .map_or(&[], std::vec::Vec::as_slice)
     }
 
     /// Get the number of nodes.
-    pub fn node_count(&self) -> usize {
+    #[must_use]
+    pub const fn node_count(&self) -> usize {
         self.nodes.len()
     }
 
     /// Get the number of edges.
+    #[must_use]
     pub fn edge_count(&self) -> usize {
-        self.edges.values().map(|v| v.len()).sum()
+        self.edges.values().map(std::vec::Vec::len).sum()
     }
 
     /// Get all source nodes (no incoming edges).
+    #[must_use]
     pub fn sources(&self) -> Vec<NodeId> {
         (0..self.nodes.len())
             .filter(|&id| self.incoming(id).is_empty())
@@ -152,6 +165,7 @@ impl DataflowGraph {
     }
 
     /// Get all sink nodes (no outgoing edges).
+    #[must_use]
     pub fn sinks(&self) -> Vec<NodeId> {
         (0..self.nodes.len())
             .filter(|&id| self.outgoing(id).is_empty())
@@ -161,6 +175,7 @@ impl DataflowGraph {
     /// Perform topological sort of the graph.
     ///
     /// Returns None if the graph has cycles.
+    #[must_use]
     pub fn topological_sort(&self) -> Option<Vec<NodeId>> {
         let mut in_degree: HashMap<NodeId, usize> = HashMap::new();
         let mut result = Vec::new();
@@ -182,10 +197,11 @@ impl DataflowGraph {
             result.push(id);
 
             for &neighbor in self.outgoing(id) {
-                let degree = in_degree.get_mut(&neighbor).unwrap();
-                *degree -= 1;
-                if *degree == 0 {
-                    queue.push_back(neighbor);
+                if let Some(degree) = in_degree.get_mut(&neighbor) {
+                    *degree = degree.saturating_sub(1);
+                    if *degree == 0 {
+                        queue.push_back(neighbor);
+                    }
                 }
             }
         }
@@ -198,11 +214,13 @@ impl DataflowGraph {
     }
 
     /// Check if the graph has any cycles.
+    #[must_use]
     pub fn has_cycles(&self) -> bool {
         self.topological_sort().is_none()
     }
 
     /// Find all nodes reachable from a given node.
+    #[must_use]
     pub fn reachable_from(&self, start: NodeId) -> HashSet<NodeId> {
         let mut visited = HashSet::new();
         let mut queue = VecDeque::new();
@@ -246,7 +264,8 @@ pub struct Node {
 
 impl Node {
     /// Create a new node with the given kind.
-    pub fn new(kind: NodeKind) -> Self {
+    #[must_use]
+    pub const fn new(kind: NodeKind) -> Self {
         Self {
             name: None,
             kind,
@@ -322,12 +341,14 @@ impl Node {
     }
 
     /// Check if this is a source node.
-    pub fn is_source(&self) -> bool {
+    #[must_use]
+    pub const fn is_source(&self) -> bool {
         matches!(self.kind, NodeKind::Source)
     }
 
     /// Check if this is a sink node.
-    pub fn is_sink(&self) -> bool {
+    #[must_use]
+    pub const fn is_sink(&self) -> bool {
         matches!(self.kind, NodeKind::Sink(_))
     }
 }
@@ -352,7 +373,7 @@ pub enum NodeKind {
 }
 
 /// Specification for a projection node.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProjectionSpec {
     /// Type of projection (e.g., "scalar", "vector", "magnitude")
     pub projection_type: String,
@@ -384,14 +405,14 @@ pub enum RotationPlane {
 }
 
 /// Specification for a sink node.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SinkSpec {
     /// DOM property to update (e.g., "textContent", "style.color")
     pub target_property: String,
 }
 
 /// Type of combiner for multiple inputs.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CombinerType {
     /// Add all inputs
     Sum,
@@ -415,6 +436,7 @@ pub struct GraphBuilder {
 
 impl GraphBuilder {
     /// Create a new graph builder.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             graph: DataflowGraph::new(),
@@ -423,6 +445,7 @@ impl GraphBuilder {
     }
 
     /// Add a source node.
+    #[must_use]
     pub fn source(mut self, name: impl Into<String>) -> Self {
         let id = self.graph.add_node(Node::source(name));
         self.last_node = Some(id);
@@ -430,6 +453,7 @@ impl GraphBuilder {
     }
 
     /// Add a projection node, connecting from the last node.
+    #[must_use]
     pub fn project(mut self, name: impl Into<String>, projection_type: impl Into<String>) -> Self {
         let id = self.graph.add_node(Node::projection(name, projection_type));
         if let Some(last) = self.last_node {
@@ -440,6 +464,7 @@ impl GraphBuilder {
     }
 
     /// Add a transform node, connecting from the last node.
+    #[must_use]
     pub fn transform(mut self, name: impl Into<String>, transform_type: TransformType) -> Self {
         let id = self.graph.add_node(Node::transform(name, transform_type));
         if let Some(last) = self.last_node {
@@ -450,6 +475,7 @@ impl GraphBuilder {
     }
 
     /// Add a sink node, connecting from the last node.
+    #[must_use]
     pub fn sink(mut self, name: impl Into<String>, target_property: impl Into<String>) -> Self {
         let id = self.graph.add_node(Node::sink(name, target_property));
         if let Some(last) = self.last_node {
@@ -460,12 +486,14 @@ impl GraphBuilder {
     }
 
     /// Branch from a named node (for multiple paths).
+    #[must_use]
     pub fn from(mut self, name: &str) -> Self {
         self.last_node = self.graph.get_id_by_name(name);
         self
     }
 
     /// Build and return the graph.
+    #[must_use]
     pub fn build(self) -> DataflowGraph {
         self.graph
     }

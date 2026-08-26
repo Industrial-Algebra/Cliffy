@@ -17,6 +17,7 @@ impl Default for VectorClock {
 }
 
 impl VectorClock {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             clocks: HashMap::new(),
@@ -27,14 +28,15 @@ impl VectorClock {
         *self.clocks.entry(node_id).or_insert(0) += 1;
     }
 
-    pub fn update(&mut self, other: &VectorClock) {
+    pub fn update(&mut self, other: &Self) {
         for (&node_id, &timestamp) in &other.clocks {
             let current = self.clocks.entry(node_id).or_insert(0);
             *current = (*current).max(timestamp);
         }
     }
 
-    pub fn happens_before(&self, other: &VectorClock) -> bool {
+    #[must_use]
+    pub fn happens_before(&self, other: &Self) -> bool {
         let mut has_smaller = false;
 
         // Check all entries in other
@@ -61,11 +63,13 @@ impl VectorClock {
         has_smaller
     }
 
-    pub fn concurrent(&self, other: &VectorClock) -> bool {
+    #[must_use]
+    pub fn concurrent(&self, other: &Self) -> bool {
         !self.happens_before(other) && !other.happens_before(self)
     }
 
-    pub fn merge(&self, other: &VectorClock) -> VectorClock {
+    #[must_use]
+    pub fn merge(&self, other: &Self) -> Self {
         let mut result = self.clone();
         result.update(other);
         result

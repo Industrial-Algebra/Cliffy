@@ -44,7 +44,7 @@ impl Projection for ScalarProjection {
         mv.get(0)
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "scalar"
     }
 }
@@ -60,7 +60,7 @@ impl Projection for IntProjection {
         mv.get(0) as i32
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "int"
     }
 }
@@ -76,7 +76,7 @@ impl Projection for BoolProjection {
         mv.get(0) > 0.5
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "bool"
     }
 }
@@ -93,7 +93,7 @@ impl Projection for VectorProjection {
         (mv.get(1), mv.get(2), mv.get(4))
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "vector"
     }
 }
@@ -109,7 +109,7 @@ impl Projection for Position2DProjection {
         (mv.get(1), mv.get(2))
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "position2d"
     }
 }
@@ -125,7 +125,7 @@ impl Projection for Position3DProjection {
         (mv.get(1), mv.get(2), mv.get(4))
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "position3d"
     }
 }
@@ -142,7 +142,7 @@ impl Projection for BivectorProjection {
         (mv.get(3), mv.get(5), mv.get(6))
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "bivector"
     }
 }
@@ -158,7 +158,7 @@ impl Projection for TypedVectorProjection {
         Vector::from_components(mv.get(1), mv.get(2), mv.get(4))
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "typed_vector"
     }
 }
@@ -174,7 +174,7 @@ impl Projection for TypedBivectorProjection {
         Bivector::from_components(mv.get(3), mv.get(5), mv.get(6))
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "typed_bivector"
     }
 }
@@ -193,7 +193,7 @@ impl Projection for ColorProjection {
         (clamp(mv.get(0)), clamp(mv.get(1)), clamp(mv.get(2)))
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "color"
     }
 }
@@ -217,7 +217,7 @@ impl Projection for ColorAlphaProjection {
         )
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "color_alpha"
     }
 }
@@ -233,7 +233,7 @@ impl Projection for MagnitudeProjection {
         mv.magnitude()
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "magnitude"
     }
 }
@@ -254,7 +254,7 @@ impl Projection for RotorAngleProjection {
         2.0 * scalar.clamp(-1.0, 1.0).acos()
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "rotor_angle"
     }
 }

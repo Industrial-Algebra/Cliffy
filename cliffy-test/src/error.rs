@@ -50,13 +50,15 @@ impl GeometricError {
     }
 
     /// Create error with gradient information
-    pub fn with_gradient(mut self, gradient: [f64; 3]) -> Self {
+    #[must_use]
+    pub const fn with_gradient(mut self, gradient: [f64; 3]) -> Self {
         self.gradient = gradient;
         self
     }
 
     /// Create error with correction information
-    pub fn with_correction(mut self, correction: [f64; 8]) -> Self {
+    #[must_use]
+    pub const fn with_correction(mut self, correction: [f64; 8]) -> Self {
         self.correction = correction;
         self
     }
@@ -88,16 +90,19 @@ impl GeometricError {
     }
 
     /// Check if this error is within tolerance
+    #[must_use]
     pub fn is_within_tolerance(&self, epsilon: f64) -> bool {
         self.distance < epsilon
     }
 
     /// Get the gradient as a GA3 vector
+    #[must_use]
     pub fn gradient_as_ga3(&self) -> GA3 {
         vector(self.gradient[0], self.gradient[1], self.gradient[2])
     }
 
     /// Get the correction as a GA3 multivector
+    #[must_use]
     pub fn correction_as_ga3(&self) -> GA3 {
         GA3::from_coefficients(self.correction.to_vec())
     }

@@ -46,149 +46,170 @@ pub struct WasmMultivector {
 impl WasmMultivector {
     /// Create a zero multivector.
     #[wasm_bindgen(constructor)]
-    pub fn new() -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
             inner: GpuMultivector::zero(),
         }
     }
 
     /// Create a scalar multivector.
     #[wasm_bindgen]
-    pub fn scalar(s: f32) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn scalar(s: f32) -> Self {
+        Self {
             inner: GpuMultivector::scalar(s),
         }
     }
 
     /// Create a vector multivector (e1, e2, e3 components).
     #[wasm_bindgen]
-    pub fn vector(x: f32, y: f32, z: f32) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn vector(x: f32, y: f32, z: f32) -> Self {
+        Self {
             inner: GpuMultivector::vector(x, y, z),
         }
     }
 
     /// Create from raw coefficients array.
     #[wasm_bindgen(js_name = "fromCoeffs")]
-    pub fn from_coeffs(coeffs: &[f32]) -> WasmMultivector {
+    #[must_use]
+    pub fn from_coeffs(coeffs: &[f32]) -> Self {
         let mut inner = GpuMultivector::zero();
-        for (i, &c) in coeffs.iter().enumerate() {
-            if i < 8 {
-                inner.coeffs[i] = c;
-            }
+        // zip stops at the shorter side — same semantics as the old loop.
+        for (dst, &c) in inner.coeffs.iter_mut().zip(coeffs.iter()) {
+            *dst = c;
         }
-        WasmMultivector { inner }
+        Self { inner }
     }
 
     /// Get the scalar component.
     #[wasm_bindgen(js_name = "getScalar")]
+    #[must_use]
     pub fn get_scalar(&self) -> f32 {
         self.inner.get_scalar()
     }
 
     /// Get vector components as array [x, y, z].
     #[wasm_bindgen(js_name = "getVector")]
+    #[must_use]
+    // js-sys needs a slice; the array is built from the tuple destructuring
+    // above, which the nursery lint misreads as a tuple→array conversion.
+    #[allow(clippy::tuple_array_conversions)]
     pub fn get_vector(&self) -> Float32Array {
         let (x, y, z) = self.inner.get_vector();
-        Float32Array::from(&[x, y, z][..])
+        Float32Array::from([x, y, z].as_slice())
     }
 
     /// Get all coefficients as array.
     #[wasm_bindgen(js_name = "getCoeffs")]
+    #[must_use]
     pub fn get_coeffs(&self) -> Float32Array {
         Float32Array::from(&self.inner.coeffs[..])
     }
 
     /// Add two multivectors.
     #[wasm_bindgen]
-    pub fn add(&self, other: &WasmMultivector) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn add(&self, other: &Self) -> Self {
+        Self {
             inner: addition_simd(&self.inner, &other.inner),
         }
     }
 
     /// Subtract two multivectors.
     #[wasm_bindgen]
-    pub fn sub(&self, other: &WasmMultivector) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn sub(&self, other: &Self) -> Self {
+        Self {
             inner: subtraction_simd(&self.inner, &other.inner),
         }
     }
 
     /// Multiply by scalar.
     #[wasm_bindgen]
-    pub fn scale(&self, s: f32) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn scale(&self, s: f32) -> Self {
+        Self {
             inner: scalar_mul_simd(&self.inner, s),
         }
     }
 
     /// Geometric product of two multivectors.
     #[wasm_bindgen(js_name = "geometricProduct")]
-    pub fn geometric_product(&self, other: &WasmMultivector) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn geometric_product(&self, other: &Self) -> Self {
+        Self {
             inner: geometric_product_simd(&self.inner, &other.inner),
         }
     }
 
     /// Reverse (reversion) of multivector.
     #[wasm_bindgen]
-    pub fn reverse(&self) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn reverse(&self) -> Self {
+        Self {
             inner: reverse_simd(&self.inner),
         }
     }
 
     /// Normalize the multivector.
     #[wasm_bindgen]
-    pub fn normalize(&self) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn normalize(&self) -> Self {
+        Self {
             inner: normalize_simd(&self.inner),
         }
     }
 
     /// Get the norm (magnitude) of the multivector.
     #[wasm_bindgen]
+    #[must_use]
     pub fn norm(&self) -> f32 {
         norm_simd(&self.inner)
     }
 
     /// Sandwich product: self * other * ~self
     #[wasm_bindgen]
-    pub fn sandwich(&self, other: &WasmMultivector) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn sandwich(&self, other: &Self) -> Self {
+        Self {
             inner: sandwich_simd(&other.inner, &self.inner),
         }
     }
 
     /// Exponential (for bivectors, creates rotors).
     #[wasm_bindgen]
-    pub fn exp(&self) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn exp(&self) -> Self {
+        Self {
             inner: exp_bivector_simd(&self.inner),
         }
     }
 
     /// Linear interpolation.
     #[wasm_bindgen]
-    pub fn lerp(&self, other: &WasmMultivector, t: f32) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn lerp(&self, other: &Self, t: f32) -> Self {
+        Self {
             inner: lerp_simd(&self.inner, &other.inner, t),
         }
     }
 
     /// Spherical linear interpolation (for rotors).
     #[wasm_bindgen]
-    pub fn slerp(&self, other: &WasmMultivector, t: f32) -> WasmMultivector {
-        WasmMultivector {
+    #[must_use]
+    pub fn slerp(&self, other: &Self, t: f32) -> Self {
+        Self {
             inner: rotor_slerp_simd(&self.inner, &other.inner, t),
         }
     }
 
     /// Clone the multivector.
     #[wasm_bindgen(js_name = "clone")]
-    pub fn clone_mv(&self) -> WasmMultivector {
-        WasmMultivector { inner: self.inner }
+    #[must_use]
+    pub fn clone_mv(&self) -> Self {
+        Self { inner: self.inner }
     }
 }
 
@@ -200,12 +221,12 @@ impl Default for WasmMultivector {
 
 /// JavaScript-accessible batch operations using SIMD.
 ///
-/// Uses Float32Array for efficient bulk data transfer.
+/// Uses `Float32Array` for efficient bulk data transfer.
 /// Each multivector is 8 consecutive f32 values.
 #[wasm_bindgen]
 pub struct WasmBatch;
 
-/// Helper to convert Float32Array to Vec<GpuMultivector>.
+/// Helper to convert `Float32Array` to Vec<GpuMultivector>.
 fn float32_to_mvs(data: &Float32Array) -> Vec<GpuMultivector> {
     let vec: Vec<f32> = data.to_vec();
     // A trailing partial multivector (len % 8 != 0) is dropped — same
@@ -217,7 +238,7 @@ fn float32_to_mvs(data: &Float32Array) -> Vec<GpuMultivector> {
         .collect()
 }
 
-/// Helper to convert Vec<GpuMultivector> to Float32Array.
+/// Helper to convert Vec<GpuMultivector> to `Float32Array`.
 fn mvs_to_float32(mvs: &[GpuMultivector]) -> Float32Array {
     let flat: Vec<f32> = mvs.iter().flat_map(|mv| mv.coeffs).collect();
     Float32Array::from(&flat[..])
@@ -227,9 +248,10 @@ fn mvs_to_float32(mvs: &[GpuMultivector]) -> Float32Array {
 impl WasmBatch {
     /// Batch geometric product.
     ///
-    /// Input: Two Float32Arrays where each 8 consecutive values form a multivector.
-    /// Output: Float32Array with results (8 values per multivector).
+    /// Input: Two `Float32Arrays` where each 8 consecutive values form a multivector.
+    /// Output: `Float32Array` with results (8 values per multivector).
     #[wasm_bindgen(js_name = "geometricProduct")]
+    #[must_use]
     pub fn geometric_product(a: &Float32Array, b: &Float32Array) -> Float32Array {
         let a_mvs = float32_to_mvs(a);
         let b_mvs = float32_to_mvs(b);
@@ -239,6 +261,7 @@ impl WasmBatch {
 
     /// Batch addition.
     #[wasm_bindgen]
+    #[must_use]
     pub fn addition(a: &Float32Array, b: &Float32Array) -> Float32Array {
         let a_mvs = float32_to_mvs(a);
         let b_mvs = float32_to_mvs(b);
@@ -248,6 +271,7 @@ impl WasmBatch {
 
     /// Batch sandwich product.
     #[wasm_bindgen]
+    #[must_use]
     pub fn sandwich(rotors: &Float32Array, vectors: &Float32Array) -> Float32Array {
         let rotor_mvs = float32_to_mvs(rotors);
         let vector_mvs = float32_to_mvs(vectors);
@@ -257,6 +281,7 @@ impl WasmBatch {
 
     /// Batch exponential.
     #[wasm_bindgen]
+    #[must_use]
     pub fn exp(bivectors: &Float32Array) -> Float32Array {
         let mvs = float32_to_mvs(bivectors);
         let results = SimdBatch::exp(&mvs);
@@ -265,6 +290,7 @@ impl WasmBatch {
 
     /// Batch normalize.
     #[wasm_bindgen]
+    #[must_use]
     pub fn normalize(mvs: &Float32Array) -> Float32Array {
         let mv_vec = float32_to_mvs(mvs);
         let results = SimdBatch::normalize(&mv_vec);
@@ -273,6 +299,7 @@ impl WasmBatch {
 
     /// Batch rotor SLERP.
     #[wasm_bindgen(js_name = "rotorSlerp")]
+    #[must_use]
     pub fn rotor_slerp(a: &Float32Array, b: &Float32Array, t: f32) -> Float32Array {
         let a_mvs = float32_to_mvs(a);
         let b_mvs = float32_to_mvs(b);
@@ -283,6 +310,7 @@ impl WasmBatch {
 
 /// Create a rotor for rotation in the e1-e2 plane (XY rotation).
 #[wasm_bindgen(js_name = "createRotorXY")]
+#[must_use]
 pub fn create_rotor_xy(angle: f32) -> WasmMultivector {
     // Rotor = cos(θ/2) + sin(θ/2) * e12
     let half = angle / 2.0;
@@ -294,6 +322,7 @@ pub fn create_rotor_xy(angle: f32) -> WasmMultivector {
 
 /// Create a rotor for rotation in the e1-e3 plane (XZ rotation).
 #[wasm_bindgen(js_name = "createRotorXZ")]
+#[must_use]
 pub fn create_rotor_xz(angle: f32) -> WasmMultivector {
     let half = angle / 2.0;
     let mut inner = GpuMultivector::zero();
@@ -304,6 +333,7 @@ pub fn create_rotor_xz(angle: f32) -> WasmMultivector {
 
 /// Create a rotor for rotation in the e2-e3 plane (YZ rotation).
 #[wasm_bindgen(js_name = "createRotorYZ")]
+#[must_use]
 pub fn create_rotor_yz(angle: f32) -> WasmMultivector {
     let half = angle / 2.0;
     let mut inner = GpuMultivector::zero();
@@ -314,6 +344,7 @@ pub fn create_rotor_yz(angle: f32) -> WasmMultivector {
 
 /// Create a rotor from axis-angle representation.
 #[wasm_bindgen(js_name = "createRotorAxisAngle")]
+#[must_use]
 pub fn create_rotor_axis_angle(ax: f32, ay: f32, az: f32, angle: f32) -> WasmMultivector {
     // Normalize axis
     let len = (ax * ax + ay * ay + az * az).sqrt();
@@ -341,6 +372,7 @@ pub fn create_rotor_axis_angle(ax: f32, ay: f32, az: f32, angle: f32) -> WasmMul
 
 /// Get the dispatch threshold for GPU vs CPU selection.
 #[wasm_bindgen(js_name = "getDispatchThreshold")]
+#[must_use]
 pub fn get_dispatch_threshold() -> usize {
     crate::GPU_DISPATCH_THRESHOLD
 }

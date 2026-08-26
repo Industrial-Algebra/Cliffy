@@ -41,6 +41,7 @@ pub enum NetworkTopology {
 
 impl NetworkTopology {
     /// Get the list of peers that a given node can communicate with
+    #[must_use]
     pub fn get_peers(&self, node_index: usize, total_nodes: usize) -> Vec<usize> {
         match self {
             Self::FullMesh => (0..total_nodes).filter(|&i| i != node_index).collect(),
@@ -98,6 +99,7 @@ impl NetworkTopology {
     }
 
     /// Calculate the diameter of the network (maximum hops between any two nodes)
+    #[must_use]
     pub fn diameter(&self, total_nodes: usize) -> usize {
         match self {
             Self::FullMesh => 1,
@@ -106,7 +108,7 @@ impl NetworkTopology {
             Self::Random { edge_probability } => {
                 // Approximate: log_fanout(n) where fanout = edge_probability * n
                 let avg_fanout = (*edge_probability * total_nodes as f64).max(1.0);
-                ((total_nodes as f64).ln() / avg_fanout.ln()).ceil() as usize
+                (total_nodes as f64).log(avg_fanout).ceil() as usize
             }
             Self::Ring => total_nodes / 2,
         }
@@ -134,7 +136,8 @@ impl Default for LatencyModel {
 
 impl LatencyModel {
     /// Create a local network model (very low latency)
-    pub fn local() -> Self {
+    #[must_use]
+    pub const fn local() -> Self {
         Self {
             base_ms: 1.0,
             variance_ms: 0.5,
@@ -144,7 +147,8 @@ impl LatencyModel {
     }
 
     /// Create a LAN model
-    pub fn lan() -> Self {
+    #[must_use]
+    pub const fn lan() -> Self {
         Self {
             base_ms: 5.0,
             variance_ms: 2.0,
@@ -154,7 +158,8 @@ impl LatencyModel {
     }
 
     /// Create a WAN model (typical internet)
-    pub fn wan() -> Self {
+    #[must_use]
+    pub const fn wan() -> Self {
         Self {
             base_ms: 50.0,
             variance_ms: 20.0,
@@ -164,7 +169,8 @@ impl LatencyModel {
     }
 
     /// Create a mobile network model (high latency, variable)
-    pub fn mobile() -> Self {
+    #[must_use]
+    pub const fn mobile() -> Self {
         Self {
             base_ms: 100.0,
             variance_ms: 50.0,
@@ -174,7 +180,8 @@ impl LatencyModel {
     }
 
     /// Create a custom latency model
-    pub fn custom(base_ms: f64, variance_ms: f64, loss_rate: f64, jitter: f64) -> Self {
+    #[must_use]
+    pub const fn custom(base_ms: f64, variance_ms: f64, loss_rate: f64, jitter: f64) -> Self {
         Self {
             base_ms,
             variance_ms,
@@ -184,20 +191,23 @@ impl LatencyModel {
     }
 
     /// Get a random latency value based on the model
+    #[must_use]
     pub fn get_latency(&self) -> Duration {
         let mut rng = rand::rng();
         let variance = (rng.random::<f64>() - 0.5) * 2.0 * self.variance_ms;
-        let jitter_factor = 1.0 + (rng.random::<f64>() - 0.5) * 2.0 * self.jitter;
+        let jitter_factor = f64::mul_add((rng.random::<f64>() - 0.5) * 2.0, self.jitter, 1.0);
         let ms = ((self.base_ms + variance) * jitter_factor).max(0.0);
         Duration::from_secs_f64(ms / 1000.0)
     }
 
     /// Check if a packet should be dropped
+    #[must_use]
     pub fn should_drop(&self) -> bool {
         rand::rng().random::<f64>() < self.loss_rate
     }
 
     /// Get the expected average latency
+    #[must_use]
     pub fn average_latency(&self) -> Duration {
         Duration::from_secs_f64(self.base_ms / 1000.0)
     }
@@ -262,7 +272,7 @@ mod tests {
         }
 
         // Should be roughly 50% (with some variance)
-        let drop_rate = drops as f64 / samples as f64;
+        let drop_rate = f64::from(drops) / f64::from(samples);
         assert!(drop_rate > 0.3 && drop_rate < 0.7);
     }
 }

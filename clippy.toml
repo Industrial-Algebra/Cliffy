@@ -1,0 +1,13 @@
+# 2026-toolkit clippy allowances (No Boilerplate config):
+# panicking helpers belong in tests, not libraries — the library-code
+# denials live in [workspace.lints.clippy] in the root Cargo.toml.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true
+
+# NOTE: arithmetic_side_effects stays denied workspace-wide; the ~11 GA
+# arithmetic functions (custom Multivector operator calls) carry explicit
+# #[allow] at the function level — the clippy.toml type allow-list does not
+# match reference-wrapped operands, and integer-overflow protection is worth
+# keeping.

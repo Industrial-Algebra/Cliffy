@@ -46,18 +46,21 @@ impl Manifold {
     }
 
     /// Set the tolerance for membership tests
-    pub fn with_tolerance(mut self, tolerance: f64) -> Self {
+    #[must_use]
+    pub const fn with_tolerance(mut self, tolerance: f64) -> Self {
         self.tolerance = tolerance;
         self
     }
 
     /// Add a constraint to the manifold
+    #[must_use]
     pub fn with_constraint(mut self, constraint: impl ManifoldConstraint + 'static) -> Self {
         self.constraints.push(Box::new(constraint));
         self
     }
 
     /// Check if a point lies on the manifold
+    #[must_use]
     pub fn contains(&self, point: &GA3) -> bool {
         self.constraints
             .iter()
@@ -76,6 +79,7 @@ impl Manifold {
     ///
     /// Iteratively projects through all constraints.
     /// Note: This is an approximation for non-convex manifolds.
+    #[must_use]
     pub fn project(&self, point: &GA3) -> GA3 {
         let mut result = point.clone();
         for _ in 0..10 {
@@ -95,6 +99,8 @@ impl Manifold {
     }
 
     /// Verify that a point lies on the manifold
+    #[must_use]
+    #[allow(clippy::arithmetic_side_effects)] // GA domain arithmetic: custom Multivector operators, pure and panic-free
     pub fn verify(&self, point: &GA3) -> TestResult {
         let dist = self.distance(point);
         if dist < self.tolerance {
@@ -119,12 +125,14 @@ pub struct MagnitudeConstraint {
 
 impl MagnitudeConstraint {
     /// Create a magnitude constraint
-    pub fn new(target: f64) -> Self {
+    #[must_use]
+    pub const fn new(target: f64) -> Self {
         Self { target }
     }
 
     /// Create a unit magnitude constraint (magnitude = 1)
-    pub fn unit() -> Self {
+    #[must_use]
+    pub const fn unit() -> Self {
         Self { target: 1.0 }
     }
 }
@@ -138,6 +146,7 @@ impl ManifoldConstraint for MagnitudeConstraint {
         (point.magnitude() - self.target).abs()
     }
 
+    #[allow(clippy::arithmetic_side_effects)] // GA domain arithmetic: custom Multivector operators, pure and panic-free
     fn project(&self, point: &GA3) -> GA3 {
         let mag = point.magnitude();
         if mag > 1e-10 {
@@ -148,7 +157,7 @@ impl ManifoldConstraint for MagnitudeConstraint {
         }
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Magnitude constraint"
     }
 }
@@ -160,12 +169,14 @@ pub struct ScalarConstraint {
 
 impl ScalarConstraint {
     /// Create a scalar constraint
-    pub fn new(target: f64) -> Self {
+    #[must_use]
+    pub const fn new(target: f64) -> Self {
         Self { target }
     }
 
     /// Create a zero scalar constraint
-    pub fn zero() -> Self {
+    #[must_use]
+    pub const fn zero() -> Self {
         Self { target: 0.0 }
     }
 }
@@ -182,11 +193,14 @@ impl ManifoldConstraint for ScalarConstraint {
     fn project(&self, point: &GA3) -> GA3 {
         // Create new multivector with modified scalar
         let mut coeffs: Vec<f64> = (0..8).map(|i| point.get(i)).collect();
-        coeffs[0] = self.target; // Set scalar to target
+        // Set scalar to target (coefficient 0 always exists here)
+        if let Some(scalar) = coeffs.get_mut(0) {
+            *scalar = self.target;
+        }
         GA3::from_coefficients(coeffs)
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Scalar constraint"
     }
 }
@@ -214,7 +228,11 @@ impl ManifoldConstraint for PureVectorConstraint {
         let b13 = point.get(5);
         let b23 = point.get(6);
         let tri = point.get(7);
-        (s * s + b12 * b12 + b13 * b13 + b23 * b23 + tri * tri).sqrt()
+        tri.mul_add(
+            tri,
+            b23.mul_add(b23, b13.mul_add(b13, b12.mul_add(b12, s * s))),
+        )
+        .sqrt()
     }
 
     fn project(&self, point: &GA3) -> GA3 {
@@ -222,7 +240,7 @@ impl ManifoldConstraint for PureVectorConstraint {
         vector(point.get(1), point.get(2), point.get(4))
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Pure vector constraint"
     }
 }
@@ -249,7 +267,8 @@ impl ManifoldConstraint for PureBivectorConstraint {
         let v2 = point.get(2);
         let v3 = point.get(4);
         let tri = point.get(7);
-        (s * s + v1 * v1 + v2 * v2 + v3 * v3 + tri * tri).sqrt()
+        tri.mul_add(tri, v3.mul_add(v3, v2.mul_add(v2, v1.mul_add(v1, s * s))))
+            .sqrt()
     }
 
     fn project(&self, point: &GA3) -> GA3 {
@@ -257,12 +276,13 @@ impl ManifoldConstraint for PureBivectorConstraint {
         bivector(point.get(3), point.get(5), point.get(6))
     }
 
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "Pure bivector constraint"
     }
 }
 
 /// Create the unit sphere manifold (vectors with magnitude 1)
+#[must_use]
 pub fn unit_sphere() -> Manifold {
     Manifold::new("Unit Sphere")
         .with_constraint(PureVectorConstraint)
@@ -270,6 +290,7 @@ pub fn unit_sphere() -> Manifold {
 }
 
 /// Create the rotor manifold (even-grade elements with unit magnitude)
+#[must_use]
 pub fn rotor_manifold() -> Manifold {
     Manifold::new("Rotor Manifold").with_constraint(MagnitudeConstraint::unit())
     // Note: Rotors are even-grade (scalar + bivector), but verifying

@@ -22,7 +22,7 @@ use uuid::Uuid;
 ///   replay loop is dead code and **every merge returns `GA3::zero()`**
 ///   (annihilation).
 /// - `create_operation` mints IDs from `operations.len()`, so two empty
-///   replicas both mint id 0; merge's HashMap union silently drops the
+///   replicas both mint id 0; merge's `HashMap` union silently drops the
 ///   collision.
 /// - The magnitude-dominance join with an exp-based tie-break is not a
 ///   join-semilattice (a binary geometric/Fréchet mean is commutative and
@@ -68,7 +68,8 @@ pub enum OperationType {
 
 #[allow(deprecated)] // inherent methods reference the deprecated Self/fields; dies with Phase 1
 impl GeometricCRDT {
-    /// Create a new GeometricCRDT with the given initial state
+    /// Create a new `GeometricCRDT` with the given initial state
+    #[must_use]
     pub fn new(node_id: Uuid, initial_state: GA3) -> Self {
         Self {
             state: initial_state,
@@ -79,7 +80,7 @@ impl GeometricCRDT {
     }
 
     /// Apply a geometric operation to the CRDT state
-    pub fn apply_operation(&mut self, operation: GeometricOperation) {
+    pub fn apply_operation(&mut self, operation: &GeometricOperation) {
         if self.operations.contains_key(&operation.id) {
             return;
         }
@@ -121,7 +122,8 @@ impl GeometricCRDT {
     }
 
     /// Merge this CRDT with another, resolving conflicts using geometric algebra
-    pub fn merge(&mut self, other: &GeometricCRDT) -> GeometricCRDT {
+    #[must_use]
+    pub fn merge(&mut self, other: &Self) -> Self {
         let merged_clock = self.vector_clock.merge(&other.vector_clock);
 
         let mut merged_ops = self.operations.clone();
@@ -143,12 +145,12 @@ impl GeometricCRDT {
             }
         });
 
-        let mut result = GeometricCRDT::new(self.node_id, GA3::zero());
+        let mut result = Self::new(self.node_id, GA3::zero());
         result.vector_clock = merged_clock;
         result.operations = merged_ops;
 
         for op in sorted_ops {
-            result.apply_operation(op);
+            result.apply_operation(&op);
         }
 
         result
@@ -157,6 +159,7 @@ impl GeometricCRDT {
     /// Compute geometric join for conflict resolution.
     ///
     /// Returns the state with larger magnitude, or their geometric mean if equal.
+    #[must_use]
     pub fn geometric_join(&self, other: &GA3) -> GA3 {
         let self_norm = self.state.magnitude();
         let other_norm = other.magnitude();
@@ -187,6 +190,7 @@ impl GeometricCRDT {
     since = "0.3.2",
     note = "arithmetic mean of exponentials; exp/log are not inverse on multivectors — see docs/plans/2026-08-26-geometric-crdt-salvage.md"
 )]
+#[must_use]
 pub fn geometric_mean(multivectors: &[GA3]) -> GA3 {
     if multivectors.is_empty() {
         return GA3::zero();
@@ -195,7 +199,7 @@ pub fn geometric_mean(multivectors: &[GA3]) -> GA3 {
     let n = multivectors.len() as f64;
     let sum_logs: GA3 = multivectors
         .iter()
-        .map(|mv| mv.exp()) // Note: using exp as approximation since log may not exist for all
+        .map(cliffy_core::Multivector::exp) // Note: using exp as approximation since log may not exist for all
         .fold(GA3::zero(), |acc, log_mv| &acc + &log_mv);
 
     // Scale and return
@@ -221,7 +225,7 @@ mod tests {
         // Create and apply an addition operation
         let transform = GA3::scalar(2.0);
         let op = crdt.create_operation(transform, OperationType::Addition);
-        crdt.apply_operation(op);
+        crdt.apply_operation(&op);
 
         // State should now be 3.0 (1.0 + 2.0)
         assert!((crdt.state.scalar_part() - 3.0).abs() < 1e-10);
@@ -238,11 +242,11 @@ mod tests {
 
         // Node 1 applies an operation
         let op1 = crdt1.create_operation(GA3::scalar(2.0), OperationType::Addition);
-        crdt1.apply_operation(op1.clone());
+        crdt1.apply_operation(&op1);
 
         // Node 2 applies a different operation
         let op2 = crdt2.create_operation(GA3::scalar(3.0), OperationType::Addition);
-        crdt2.apply_operation(op2.clone());
+        crdt2.apply_operation(&op2);
 
         // Merge states - should converge
         let merged1 = crdt1.merge(&crdt2);

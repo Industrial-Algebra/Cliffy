@@ -40,6 +40,22 @@ All notable changes to Cliffy are documented here. Format follows
 - CONTRIBUTING.md with the CLA requirement and the verification matrix.
 - This CHANGELOG, backfilled from git history.
 
+### Added
+
+- **Clippy teeth** (2026 toolkit test-drive, PR B): `[workspace.lints.clippy]`
+  with `pedantic`/`nursery` denied and the panic-family set
+  (`unwrap_used`, `expect_used`, `panic`, `panic_in_result_fn`, `todo`,
+  `unimplemented`, `unreachable`, `indexing_slicing`, `string_slice`,
+  `unchecked_time_subtraction`, `exit`) denied across all six crates;
+  `clippy.toml` allows panicking helpers in tests. ~526 findings resolved:
+  176 `#[must_use]`, 110 `use_self`, lock-poisoning unwraps eliminated by
+  moving `GeometricState`/`EmergentRegistry` to `parking_lot::Mutex`,
+  indexing → iterator/`get` rewrites, ID counters → `saturating_add`,
+  `# Errors` doc sections on every public `Result` fn, by-value args →
+  references. Curated, commented allows where library reality warrants
+  (GA operator arithmetic, FMA rewrites, async-by-design GPU/consensus
+  traits, numeric casts).
+
 ### Deprecated
 
 - `cliffy_protocols::GeometricCRDT` and `geometric_mean` (crdt module):

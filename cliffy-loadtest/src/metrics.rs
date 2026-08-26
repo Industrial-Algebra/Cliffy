@@ -26,6 +26,7 @@ pub struct ConvergenceMetrics {
 
 impl ConvergenceMetrics {
     /// Create new metrics
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -43,7 +44,7 @@ impl ConvergenceMetrics {
     }
 
     /// Mark convergence achieved
-    pub fn mark_converged(&mut self, time: Duration) {
+    pub const fn mark_converged(&mut self, time: Duration) {
         self.converged = true;
         self.convergence_time = Some(time);
     }
@@ -72,17 +73,18 @@ pub struct ThroughputMetrics {
 
 impl ThroughputMetrics {
     /// Create new metrics
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Record an operation
-    pub fn record_operation(&mut self) {
+    pub const fn record_operation(&mut self) {
         self.total_operations += 1;
     }
 
     /// Record a message
-    pub fn record_message(&mut self, dropped: bool) {
+    pub const fn record_message(&mut self, dropped: bool) {
         self.total_messages += 1;
         if dropped {
             self.dropped_messages += 1;
@@ -108,12 +110,15 @@ impl ThroughputMetrics {
         latencies.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let len = latencies.len();
-        self.latency_p50_ms = latencies[len * 50 / 100];
-        self.latency_p95_ms = latencies[len * 95 / 100];
-        self.latency_p99_ms = latencies[len * 99 / 100];
+        // len*k/100 < len for len >= 1 (empty case returned above), so these
+        // are provably in-bounds; .get() keeps the panic-freedom auditable.
+        self.latency_p50_ms = latencies.get(len * 50 / 100).copied().unwrap_or_default();
+        self.latency_p95_ms = latencies.get(len * 95 / 100).copied().unwrap_or_default();
+        self.latency_p99_ms = latencies.get(len * 99 / 100).copied().unwrap_or_default();
     }
 
     /// Get drop rate as a percentage
+    #[must_use]
     pub fn drop_rate(&self) -> f64 {
         if self.total_messages == 0 {
             return 0.0;
@@ -131,6 +136,7 @@ pub struct Stopwatch {
 
 impl Stopwatch {
     /// Create and start a new stopwatch
+    #[must_use]
     pub fn start() -> Self {
         Self {
             start: Instant::now(),
@@ -146,11 +152,13 @@ impl Stopwatch {
     }
 
     /// Get total elapsed time
+    #[must_use]
     pub fn elapsed(&self) -> Duration {
         self.start.elapsed()
     }
 
     /// Get all lap times
+    #[must_use]
     pub fn laps(&self) -> &[Duration] {
         &self.laps
     }
@@ -208,7 +216,7 @@ mod tests {
     #[test]
     fn test_latency_percentiles() {
         let mut metrics = ThroughputMetrics::new();
-        let mut latencies: Vec<f64> = (1..=100).map(|i| i as f64).collect();
+        let mut latencies: Vec<f64> = (1..=100).map(f64::from).collect();
 
         metrics.calculate_latency_percentiles(&mut latencies);
 

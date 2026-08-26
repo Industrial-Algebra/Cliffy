@@ -70,6 +70,7 @@ impl<T> Clone for Event<T> {
 
 impl<T: Clone + 'static> Event<T> {
     /// Create a new event stream
+    #[must_use]
     pub fn new() -> Self {
         Self {
             subscribers: Rc::new(RefCell::new(Vec::new())),
@@ -99,7 +100,7 @@ impl<T: Clone + 'static> Event<T> {
         let id = {
             let mut next = self.next_id.borrow_mut();
             let id = *next;
-            *next += 1;
+            *next = next.saturating_add(1);
             id
         };
 
@@ -133,11 +134,12 @@ impl<T: Clone + 'static> Event<T> {
     }
 
     /// Filter events based on a predicate
-    pub fn filter<F>(&self, predicate: F) -> Event<T>
+    #[must_use]
+    pub fn filter<F>(&self, predicate: F) -> Self
     where
         F: Fn(&T) -> bool + 'static,
     {
-        let filtered = Event::<T>::new();
+        let filtered = Self::new();
 
         let filtered_clone = filtered.clone();
         self.subscribe(move |value| {
@@ -150,8 +152,9 @@ impl<T: Clone + 'static> Event<T> {
     }
 
     /// Merge two event streams
-    pub fn merge(&self, other: &Event<T>) -> Event<T> {
-        let merged = Event::<T>::new();
+    #[must_use]
+    pub fn merge(&self, other: &Self) -> Self {
+        let merged = Self::new();
 
         let merged_clone = merged.clone();
         self.subscribe(move |value| {
@@ -217,6 +220,7 @@ impl EventSubscription {
 /// let key_presses = event::<char>();
 /// let values = event::<i32>();
 /// ```
+#[must_use]
 pub fn event<T: Clone + 'static>() -> Event<T> {
     Event::new()
 }
@@ -333,7 +337,7 @@ mod tests {
     #[test]
     fn test_event_fold() {
         let clicks = event::<()>();
-        let count = clicks.fold(0i32, |n, _| n + 1);
+        let count = clicks.fold(0i32, |n, ()| n + 1);
 
         assert_eq!(count.sample(), 0);
 

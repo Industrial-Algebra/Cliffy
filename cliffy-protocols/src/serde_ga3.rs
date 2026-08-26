@@ -10,6 +10,10 @@ use cliffy_core::GA3;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Serialize a `GA3` as a `Vec<f64>` of coefficients
+///
+/// # Errors
+///
+/// Propagates the underlying serializer's error.
 pub fn serialize<S>(mv: &GA3, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -18,6 +22,10 @@ where
 }
 
 /// Deserialize a `GA3` from a `Vec<f64>` of coefficients
+///
+/// # Errors
+///
+/// Propagates the underlying deserializer's error.
 pub fn deserialize<'de, D>(deserializer: D) -> Result<GA3, D::Error>
 where
     D: Deserializer<'de>,
@@ -28,8 +36,11 @@ where
 
 /// Module for serializing `Option<GA3>`
 pub mod option {
-    use super::*;
+    use super::{Deserialize, Deserializer, Serializer, GA3};
 
+    /// # Errors
+    ///
+    /// Propagates the underlying serializer's error.
     pub fn serialize<S>(mv: &Option<GA3>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -40,6 +51,9 @@ pub mod option {
         }
     }
 
+    /// # Errors
+    ///
+    /// Propagates the underlying deserializer's error.
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<GA3>, D::Error>
     where
         D: Deserializer<'de>,

@@ -47,6 +47,7 @@ pub trait GeometricLattice: Clone {
     /// Lattice join (least upper bound) - always converges, no coordination needed.
     ///
     /// The join operation must be idempotent, commutative, and associative.
+    #[must_use]
     fn join(&self, other: &Self) -> Self;
 
     /// Check if this state dominates (is greater than or equal to) another.
@@ -97,16 +98,19 @@ pub struct GA3Lattice {
 #[allow(deprecated)] // inherent constructors reference the deprecated Self; dies with Phase 1
 impl GA3Lattice {
     /// Create a new lattice element from a multivector.
-    pub fn new(mv: GA3) -> Self {
+    #[must_use]
+    pub const fn new(mv: GA3) -> Self {
         Self { inner: mv }
     }
 
     /// Create a lattice element from a scalar.
+    #[must_use]
     pub fn from_scalar(value: f64) -> Self {
         Self::new(GA3::scalar(value))
     }
 
     /// Create a lattice element from vector components.
+    #[must_use]
     pub fn from_vector(x: f64, y: f64, z: f64) -> Self {
         use amari_core::Vector;
         let v = Vector::<3, 0, 0>::from_components(x, y, z);
@@ -114,26 +118,31 @@ impl GA3Lattice {
     }
 
     /// Create the zero element (bottom of the lattice).
+    #[must_use]
     pub fn zero() -> Self {
         Self::new(GA3::zero())
     }
 
     /// Get the underlying multivector.
-    pub fn as_multivector(&self) -> &GA3 {
+    #[must_use]
+    pub const fn as_multivector(&self) -> &GA3 {
         &self.inner
     }
 
     /// Consume and return the underlying multivector.
+    #[must_use]
     pub fn into_multivector(self) -> GA3 {
         self.inner
     }
 
     /// Get the magnitude of this lattice element.
+    #[must_use]
     pub fn magnitude(&self) -> f64 {
         self.inner.magnitude()
     }
 
     /// Get a coefficient at the given index.
+    #[must_use]
     pub fn get(&self, index: usize) -> f64 {
         self.inner.get(index)
     }
@@ -202,21 +211,25 @@ pub struct ComponentLattice {
 
 impl ComponentLattice {
     /// Create a new component lattice element.
-    pub fn new(mv: GA3) -> Self {
+    #[must_use]
+    pub const fn new(mv: GA3) -> Self {
         Self { inner: mv }
     }
 
     /// Create from a scalar value.
+    #[must_use]
     pub fn from_scalar(value: f64) -> Self {
         Self::new(GA3::scalar(value))
     }
 
     /// Get the underlying multivector.
-    pub fn as_multivector(&self) -> &GA3 {
+    #[must_use]
+    pub const fn as_multivector(&self) -> &GA3 {
         &self.inner
     }
 
     /// Consume and return the underlying multivector.
+    #[must_use]
     pub fn into_multivector(self) -> GA3 {
         self.inner
     }
@@ -241,7 +254,7 @@ impl GeometricLattice for ComponentLattice {
         // L-infinity norm (max component difference)
         (0..8)
             .map(|i| (self.inner.get(i) - other.inner.get(i)).abs())
-            .fold(0.0_f64, |acc, d| acc.max(d))
+            .fold(0.0_f64, f64::max)
     }
 
     fn meet(&self, other: &Self) -> Option<Self> {

@@ -249,6 +249,7 @@ name = "cliffy-core"
 version = "0.3.1"
 dependencies = [
  "amari-core",
+ "parking_lot",
  "serde",
  "tokio",
 ]
@@ -308,6 +309,7 @@ version = "0.3.1"
 dependencies = [
  "amari-core",
  "amari-flynn",
+ "parking_lot",
  "quickcheck",
  "quickcheck_macros",
  "rand",

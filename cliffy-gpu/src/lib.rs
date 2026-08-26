@@ -73,14 +73,14 @@ pub enum GpuError {
 /// GPU-compatible multivector representation.
 ///
 /// Uses 8 f32 coefficients for Cl(3,0) geometric algebra:
-/// - coeffs[0]: scalar (1)
-/// - coeffs[1]: e1
-/// - coeffs[2]: e2
-/// - coeffs[3]: e12
-/// - coeffs[4]: e3
-/// - coeffs[5]: e13
-/// - coeffs[6]: e23
-/// - coeffs[7]: e123 (pseudoscalar)
+/// - `coeffs[0]`: scalar (1)
+/// - `coeffs[1]`: e1
+/// - `coeffs[2]`: e2
+/// - `coeffs[3]`: e12
+/// - `coeffs[4]`: e3
+/// - `coeffs[5]`: e13
+/// - `coeffs[6]`: e23
+/// - `coeffs[7]`: e123 (pseudoscalar)
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable, Default)]
 pub struct GpuMultivector {
@@ -301,7 +301,7 @@ impl GpuContext {
         })
     }
 
-    /// Batch geometric product: a[i] * b[i] for all i.
+    /// Batch geometric product: `a[i] * b[i]` for all `i`.
     ///
     /// Computes the geometric product of corresponding elements
     /// from two input arrays in parallel on the GPU.
@@ -326,7 +326,7 @@ impl GpuContext {
         Ok(result.into_iter().map(Into::into).collect())
     }
 
-    /// Batch addition: a[i] + b[i] for all i.
+    /// Batch addition: `a[i] + b[i]` for all `i`.
     pub async fn batch_addition(&self, a: &[GA3], b: &[GA3]) -> Result<Vec<GA3>, GpuError> {
         if a.len() != b.len() {
             return Err(GpuError::BufferSizeMismatch {
@@ -343,7 +343,7 @@ impl GpuContext {
         Ok(result.into_iter().map(Into::into).collect())
     }
 
-    /// Batch sandwich product: rotor[i] * x[i] * ~rotor[i] for all i.
+    /// Batch sandwich product: `rotor[i] * x[i] * ~rotor[i]` for all `i`.
     ///
     /// The sandwich product applies a rotation to each element.
     pub async fn batch_sandwich(
@@ -366,7 +366,7 @@ impl GpuContext {
         Ok(result.into_iter().map(Into::into).collect())
     }
 
-    /// Batch exponential: exp(a[i]) for all i.
+    /// Batch exponential: `exp(a[i])` for all `i`.
     ///
     /// The exponential map converts bivectors to rotors.
     pub async fn batch_exp(&self, a: &[GA3]) -> Result<Vec<GA3>, GpuError> {
@@ -378,7 +378,7 @@ impl GpuContext {
         Ok(result.into_iter().map(Into::into).collect())
     }
 
-    /// Batch rotor SLERP: interpolate from a[i] to b[i] by t.
+    /// Batch rotor SLERP: interpolate from `a[i]` to `b[i]` by `t`.
     ///
     /// Spherical linear interpolation for smooth rotation blending.
     pub async fn batch_rotor_slerp(

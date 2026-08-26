@@ -3,7 +3,7 @@
 
 //! Geometric algebra helpers
 //!
-//! This module provides the bridge between user-facing types (i32, f64, String, Vec<T>)
+//! This module provides the bridge between user-facing types (`i32`, `f64`, `String`, `Vec<T>`)
 //! and the internal geometric algebra representation (GA3 multivectors).
 //!
 //! Users don't need to understand geometric algebra to use Cliffy - these conversions

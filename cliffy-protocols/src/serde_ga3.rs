@@ -9,7 +9,7 @@
 use cliffy_core::GA3;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-/// Serialize a GA3 as a Vec<f64> of coefficients
+/// Serialize a `GA3` as a `Vec<f64>` of coefficients
 pub fn serialize<S>(mv: &GA3, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -17,7 +17,7 @@ where
     mv.as_slice().serialize(serializer)
 }
 
-/// Deserialize a GA3 from a Vec<f64> of coefficients
+/// Deserialize a `GA3` from a `Vec<f64>` of coefficients
 pub fn deserialize<'de, D>(deserializer: D) -> Result<GA3, D::Error>
 where
     D: Deserializer<'de>,
@@ -26,7 +26,7 @@ where
     Ok(GA3::from_slice(&coeffs))
 }
 
-/// Module for serializing Option<GA3>
+/// Module for serializing `Option<GA3>`
 pub mod option {
     use super::*;
 

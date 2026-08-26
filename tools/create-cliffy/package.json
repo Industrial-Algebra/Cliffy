@@ -38,7 +38,7 @@
     "url": "https://github.com/Industrial-Algebra/cliffy/issues"
   },
   "dependencies": {
-    "commander": "^14.0.0",
+    "commander": "^15.0.0",
     "prompts": "^2.4.2",
     "picocolors": "^1.0.0"
   },

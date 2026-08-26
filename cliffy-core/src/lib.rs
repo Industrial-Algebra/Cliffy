@@ -52,8 +52,8 @@
 //!
 //! ## Architecture
 //!
-//! - **Behavior<T>**: Time-varying values backed by geometric algebra
-//! - **Event<T>**: Discrete occurrences with geometric transformations
+//! - **`Behavior<T>`**: Time-varying values backed by geometric algebra
+//! - **`Event<T>`**: Discrete occurrences with geometric transformations
 //! - **GeometricState**: Explicit geometric operations (rotations, translations)
 //! - **Projection**: Extract user types from geometric state
 //! - **Combinators**: `when`, `combine` for composition

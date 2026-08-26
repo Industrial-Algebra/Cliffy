@@ -2,12 +2,7 @@ name: Publish Crates
 
 on:
   push:
-    branches: [main]
-    paths:
-      - 'cliffy-core/**'
-      - 'cliffy-test/**'
-      - 'cliffy-protocols/**'
-      - 'cliffy-gpu/**'
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       crate:

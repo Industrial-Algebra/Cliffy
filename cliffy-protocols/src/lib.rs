@@ -10,7 +10,7 @@
 //!
 //! ## State Management
 //! - [`GeometricCRDT`]: Operation-based CRDT with geometric transforms
-//! - [`GeometricLattice`](lattice::GeometricLattice): Trait for lattice-based conflict resolution
+//! - [`GeometricLattice`]: Trait for lattice-based conflict resolution
 //! - [`VectorClock`]: Causal ordering for distributed operations
 //!
 //! ## Consensus

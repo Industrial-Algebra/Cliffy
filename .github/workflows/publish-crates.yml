@@ -74,6 +74,8 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-08-14
 
       - name: Cache Cargo registry
         uses: actions/cache@v5
@@ -116,6 +118,8 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-08-14
 
       - name: Cache Cargo registry
         uses: actions/cache@v5
@@ -161,6 +165,8 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-08-14
 
       - name: Cache Cargo registry
         uses: actions/cache@v5
@@ -206,6 +212,8 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-08-14
 
       - name: Cache Cargo registry
         uses: actions/cache@v5

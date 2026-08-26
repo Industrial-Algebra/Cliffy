@@ -208,12 +208,12 @@ pub struct WasmBatch;
 /// Helper to convert Float32Array to Vec<GpuMultivector>.
 fn float32_to_mvs(data: &Float32Array) -> Vec<GpuMultivector> {
     let vec: Vec<f32> = data.to_vec();
-    vec.chunks_exact(8)
-        .map(|chunk| {
-            let mut coeffs = [0.0f32; 8];
-            coeffs.copy_from_slice(chunk);
-            GpuMultivector { coeffs }
-        })
+    // A trailing partial multivector (len % 8 != 0) is dropped — same
+    // semantics as the previous `chunks_exact` iterator.
+    vec.as_chunks::<8>()
+        .0
+        .iter()
+        .map(|coeffs| GpuMultivector { coeffs: *coeffs })
         .collect()
 }
 

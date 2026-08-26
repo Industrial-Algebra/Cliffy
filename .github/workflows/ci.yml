@@ -4,7 +4,9 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    # Permissive: stacked PRs target their parent branch (feature/*, chore/*,
+    # docs/*, fix/*) until the stack lands on develop; every PR gets CI.
+    branches: ["**"]
 
 env:
   CARGO_TERM_COLOR: always

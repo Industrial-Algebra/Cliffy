@@ -2,6 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! Geometric consensus protocol implementations
+#![allow(deprecated)]
+// File-level: this module consumes the deprecated GeometricCRDT and
+// geometric_mean throughout (enum payloads, struct fields, constructor,
+// proposal aggregation). It is itself on the Phase 1 rewrite list (salvage
+// plan §3) — slerp/Fréchet-mean consensus replaces the exp-mean. Scoped
+// to this file; deliberately no global allow.
 
 use crate::{geometric_mean, serde_ga3, GeometricCRDT, OperationType};
 use cliffy_core::GA3;
@@ -31,6 +37,15 @@ pub enum MessageType {
 }
 
 /// A geometric consensus protocol implementation
+///
+/// # Warning
+///
+/// Depends on the deprecated `GeometricCRDT` and `geometric_mean` (both
+/// mathematically unsound — see
+/// `docs/plans/2026-08-26-geometric-crdt-salvage.md`). Consensus is on the
+/// Phase 1 rewrite list: the rotor Fréchet mean via slerp/eigen-methods
+/// replaces the exp-mean. Retained undeprecated only to keep the compile
+/// surface stable for one cycle.
 pub struct GeometricConsensus {
     node_id: Uuid,
     current_round: u64,

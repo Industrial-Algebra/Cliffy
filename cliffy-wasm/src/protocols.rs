@@ -24,6 +24,8 @@
 //! const merged = crdt.merge(otherCrdt);
 //! ```
 
+#[allow(deprecated)]
+// imports the deprecated core GeometricCRDT for the wasm wrapper; dies with Phase 1
 use cliffy_protocols::{
     GeometricCRDT as CoreGeometricCRDT, OperationType as CoreOperationType,
     VectorClock as CoreVectorClock,
@@ -222,6 +224,14 @@ impl GeometricOperation {
 
 /// A conflict-free replicated data type using geometric algebra.
 ///
+/// # Deprecated — unsound merge (mirrors the Rust-side deprecation)
+///
+/// The underlying Rust `GeometricCRDT` merge is mathematically broken
+/// (merges annihilate to zero; op-ID collisions; the convergence guarantee
+/// does not hold). Do not build on this. See
+/// `docs/plans/2026-08-26-geometric-crdt-salvage.md`; the successor is the
+/// `ObservationSet` CRDT landing in the v0.4.0 cycle.
+///
 /// `GeometricCRDT` maintains state as a scalar value (simplified from the full
 /// GA3 multivector) and uses vector clocks for causal ordering. Operations
 /// are stored and can be replayed during merge to ensure convergence.
@@ -245,11 +255,13 @@ impl GeometricOperation {
 /// // Merge to converge
 /// const merged = crdt1.merge(crdt2);
 /// ```
+#[allow(deprecated)] // thin wasm wrapper over the deprecated core type; removed with Phase 1
 #[wasm_bindgen]
 pub struct GeometricCRDT {
     inner: CoreGeometricCRDT,
 }
 
+#[allow(deprecated)] // thin wasm wrapper over the deprecated core type; removed with Phase 1
 #[wasm_bindgen]
 impl GeometricCRDT {
     /// Create a new CRDT with the given node ID and initial state.

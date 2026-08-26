@@ -11,6 +11,32 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 /// A CRDT that uses geometric algebra operations for conflict resolution
+///
+/// # Deprecated — verified unsound (2026-08-25 probes, independently re-run)
+///
+/// This type's merge architecture is mathematically broken and **must not
+/// be consumed downstream**:
+///
+/// - `merge` assigns `operations` *before* the replay loop, so
+///   `apply_operation`'s dedup guard short-circuits every replay — the
+///   replay loop is dead code and **every merge returns `GA3::zero()`**
+///   (annihilation).
+/// - `create_operation` mints IDs from `operations.len()`, so two empty
+///   replicas both mint id 0; merge's HashMap union silently drops the
+///   collision.
+/// - The magnitude-dominance join with an exp-based tie-break is not a
+///   join-semilattice (a binary geometric/Fréchet mean is commutative and
+///   idempotent but **not associative**), so no patch restores strong
+///   eventual consistency to this design.
+///
+/// See `docs/plans/2026-08-26-geometric-crdt-salvage.md`. Superseded by the
+/// `ObservationSet` CRDT (G-Set semantics + deterministic geometric
+/// projection) in the v0.4.0 cycle. `ComponentLattice` and `VectorClock`
+/// remain sound.
+#[deprecated(
+    since = "0.3.2",
+    note = "geometric merge is unsound (annihilation to zero; not a join-semilattice); superseded by ObservationSet — see docs/plans/2026-08-26-geometric-crdt-salvage.md"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeometricCRDT {
     #[serde(with = "serde_ga3")]
@@ -40,6 +66,7 @@ pub enum OperationType {
     Exponential,
 }
 
+#[allow(deprecated)] // inherent methods reference the deprecated Self/fields; dies with Phase 1
 impl GeometricCRDT {
     /// Create a new GeometricCRDT with the given initial state
     pub fn new(node_id: Uuid, initial_state: GA3) -> Self {
@@ -146,6 +173,20 @@ impl GeometricCRDT {
 }
 
 /// Compute the geometric mean of a set of multivectors
+///
+/// # Deprecated — not a mean on the manifold
+///
+/// This averages *exponentials* arithmetically (`exp` then fold-add then ÷n).
+/// `exp`/`log` are not inverses on multivectors, so no closed form exists for
+/// this to converge to — e.g. `geometric_mean(&[+1, -1])` yields `cosh(1)`,
+/// outside the hull of its arguments. See
+/// `docs/plans/2026-08-26-geometric-crdt-salvage.md`; the sound replacement
+/// for rotors is the Markley chordal-L₂ eigen-mean (dominant eigenvector of
+/// `M = Σ wᵢqᵢqᵢᵀ`).
+#[deprecated(
+    since = "0.3.2",
+    note = "arithmetic mean of exponentials; exp/log are not inverse on multivectors — see docs/plans/2026-08-26-geometric-crdt-salvage.md"
+)]
 pub fn geometric_mean(multivectors: &[GA3]) -> GA3 {
     if multivectors.is_empty() {
         return GA3::zero();
@@ -164,6 +205,11 @@ pub fn geometric_mean(multivectors: &[GA3]) -> GA3 {
 
 #[cfg(test)]
 mod tests {
+    #![allow(deprecated)]
+    // These tests pin the *current* (broken) behavior until Phase 1 of the
+    // salvage plan replaces this module. test_geometric_crdt_convergence is
+    // documented as vacuous (both replicas annihilate to zero; agreement is
+    // the only oracle) — value oracles land with the ObservationSet rewrite.
     use super::*;
 
     #[test]

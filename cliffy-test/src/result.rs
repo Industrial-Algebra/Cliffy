@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Test result types with geometric information
 //!
 //! Test results are not just pass/fail - they carry geometric error information

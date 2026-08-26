@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! WASM bindings for cliffy-test - Algebraic Testing Framework
 //!
 //! Exposes the test framework to JavaScript/TypeScript for testing

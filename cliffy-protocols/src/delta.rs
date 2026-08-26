@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! State delta computation for efficient synchronization
 //!
 //! This module provides geometric delta computation between states,

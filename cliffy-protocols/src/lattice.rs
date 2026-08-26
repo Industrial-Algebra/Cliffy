@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Lattice-based conflict resolution using geometric algebra
 //!
 //! This module provides the `GeometricLattice` trait for join-semilattice operations

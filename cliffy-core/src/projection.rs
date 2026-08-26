@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Projections from geometric space to user types
 //!
 //! Projections extract meaningful values from multivector state.

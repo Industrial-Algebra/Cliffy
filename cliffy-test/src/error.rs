@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Geometric error types for test failures
 //!
 //! When tests fail, they provide geometric information about the failure:

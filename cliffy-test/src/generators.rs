@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Generators for property-based testing with QuickCheck
 //!
 //! These generators create random geometric algebra elements for testing:

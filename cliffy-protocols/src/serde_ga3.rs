@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Serde serialization helpers for GA3 multivectors
 //!
 //! Since amari-core's Multivector doesn't implement Serialize/Deserialize,

@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Network topology and latency simulation
 //!
 //! Provides configurable network characteristics for realistic testing.

@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Event - Discrete occurrences with geometric transformations
 //!
 //! An `Event<T>` represents a stream of discrete occurrences over time.

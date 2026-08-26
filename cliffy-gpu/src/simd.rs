@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! SIMD-optimized CPU operations for geometric algebra.
 //!
 //! This module provides CPU-based SIMD acceleration for geometric algebra

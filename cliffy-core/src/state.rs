@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Geometric state with explicit transformations
 //!
 //! `GeometricState` exposes the geometric algebra operations that are

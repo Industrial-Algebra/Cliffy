@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Metrics collection for scale testing
 //!
 //! Tracks convergence time, throughput, latency, and other performance indicators.

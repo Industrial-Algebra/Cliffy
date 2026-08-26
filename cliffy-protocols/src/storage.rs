@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Persistence layer for geometric state and operation history
 //!
 //! This module provides traits and implementations for persisting

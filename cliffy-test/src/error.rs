@@ -122,6 +122,10 @@ impl std::error::Error for GeometricError {}
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::float_cmp)]
+    // Assertions compare exactly-representable constants (0.5, 1.0, 2.0)
+    // against constructed values — bit equality is the point. (Stable
+    // clippy lacks the test-context exemption newer nightly has.)
     use super::*;
 
     #[test]

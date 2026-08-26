@@ -249,6 +249,7 @@ name = "cliffy-core"
 version = "0.3.1"
 dependencies = [
  "amari-core",
+ "criterion",
  "parking_lot",
  "serde",
  "tokio",

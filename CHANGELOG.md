@@ -42,6 +42,12 @@ All notable changes to Cliffy are documented here. Format follows
 
 ### Added
 
+- **`flake.nix` devShell** — NixOS-native development environment with the
+  2026 toolkit tools (bacon, cargo-nextest, cargo-seek, watchexec,
+  rust-analyzer; toolchain via `rust-toolchain.toml`). No devenv.
+- **`cliffy-core` propagation benchmarks** (criterion) — subscriber fan-out,
+  map-chain depth, and raw `set` floor: the v0.5.0 hot-path profiling
+  groundwork. `benchmarks.yml` now exercises core, not just gpu.
 - **Clippy teeth** (2026 toolkit test-drive, PR B): `[workspace.lints.clippy]`
   with `pedantic`/`nursery` denied and the panic-family set
   (`unwrap_used`, `expect_used`, `panic`, `panic_in_result_fn`, `todo`,

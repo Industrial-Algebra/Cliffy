@@ -21,6 +21,23 @@ discipline:
    tag `v*` (the tag triggers publish), then backmerge `main → develop`
    **with a merge commit — never squash a backmerge**.
 
+## Development Environment (Nix)
+
+A `flake.nix` devShell provides the toolchain runner and the 2026 toolkit
+developer tools (NixOS-native; no devenv):
+
+```bash
+nix develop            # enter the shell
+bacon clippy           # background clippy watcher — the main feedback loop
+bacon test             # background test watcher
+cargo nextest run      # unit/integration tests
+cargo seek             # crate search/add TUI
+watchexec -e rs "cargo clippy && cargo nextest run"   # custom pipelines
+```
+
+The Rust toolchain itself comes from `rust-toolchain.toml` (pinned nightly +
+rustfmt/clippy/rust-src); rustup inside the shell installs it on first use.
+
 ## Verification Matrix
 
 The default toolchain is **nightly** (`rust-toolchain.toml`); CI lints and

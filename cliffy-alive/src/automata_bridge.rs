@@ -29,12 +29,19 @@ pub struct LayoutAdapter {
 }
 
 #[cfg(feature = "automata")]
-impl LayoutAdapter {
-    /// Create a new layout adapter with default configuration
-    pub fn new() -> Self {
+impl Default for LayoutAdapter {
+    fn default() -> Self {
         Self {
             assembler: UIAssembler::with_default_config(),
         }
+    }
+}
+
+#[cfg(feature = "automata")]
+impl LayoutAdapter {
+    /// Create a new layout adapter with default configuration
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Create with custom configuration
@@ -110,12 +117,19 @@ pub struct InverseDesignAdapter {
 }
 
 #[cfg(feature = "automata")]
-impl InverseDesignAdapter {
-    /// Create a new inverse design adapter
-    pub fn new() -> Self {
+impl Default for InverseDesignAdapter {
+    fn default() -> Self {
         Self {
             designer: InverseCADesigner::new(),
         }
+    }
+}
+
+#[cfg(feature = "automata")]
+impl InverseDesignAdapter {
+    /// Create a new inverse design adapter
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Get a reference to the underlying designer

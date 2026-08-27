@@ -357,6 +357,3 @@ mod tests {
         assert!(form_stats.total_cells > 0);
     }
 }
-
-/// Alias for AliveUI to match test expectations
-pub type LivingUI = AliveUI;

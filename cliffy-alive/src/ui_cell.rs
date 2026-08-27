@@ -309,7 +309,7 @@ impl CellGenome {
         use rand::Rng;
         let mut rng = rand::thread_rng();
 
-        for (_, value) in self.genes.iter_mut() {
+        for value in self.genes.values_mut() {
             if rng.gen::<f64>() < rate {
                 let delta = rng.gen_range(-0.1..=0.1);
                 *value = (*value + delta).clamp(0.0, 1.0);
@@ -995,11 +995,9 @@ impl LivingComponent for UICell {
                     self.state = CellState::Dead;
                 }
             }
-            CellState::Reproducing => {
+            CellState::Reproducing if self.age % 10.0 < dt => {
                 // Reproduction takes time and energy
-                if self.age % 10.0 < dt {
-                    self.state = CellState::Alive;
-                }
+                self.state = CellState::Alive;
             }
             _ => {}
         }
@@ -1113,7 +1111,7 @@ mod tests {
         let mutated_value = genome1.get_gene("growth_rate");
 
         // Value might have changed due to mutation
-        assert!(mutated_value >= 0.0 && mutated_value <= 1.0);
+        assert!((0.0..=1.0).contains(&mutated_value));
     }
 
     #[test]

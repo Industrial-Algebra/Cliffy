@@ -673,7 +673,7 @@ mod tests {
         let cell = UICell::new_at_position(UICellType::ButtonCore, position);
 
         let fitness = engine.calculate_natural_fitness(&cell);
-        assert!(fitness >= 0.0 && fitness <= 1.0);
+        assert!((0.0..=1.0).contains(&fitness));
     }
 
     #[test]
@@ -705,7 +705,7 @@ mod tests {
         // Mutation might or might not change this specific gene
         // Just verify the genome is still valid
         let new_value = genome.get_gene("growth_rate");
-        assert!(new_value >= 0.0 && new_value <= 1.0);
+        assert!((0.0..=1.0).contains(&new_value));
     }
 
     #[test]
@@ -719,6 +719,6 @@ mod tests {
         target_traits.insert("cooperation".to_string(), 0.6);
 
         let fitness = engine.calculate_trait_fitness(&cell, &target_traits);
-        assert!(fitness >= 0.0 && fitness <= 1.0);
+        assert!((0.0..=1.0).contains(&fitness));
     }
 }

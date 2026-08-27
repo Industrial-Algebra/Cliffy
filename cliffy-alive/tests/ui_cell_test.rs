@@ -16,7 +16,7 @@ fn test_ui_cell_has_geometric_state() {
 
     assert!(position.x >= 0.0);
     assert!(size.width > 0.0);
-    assert!(opacity >= 0.0 && opacity <= 1.0);
+    assert!((0.0..=1.0).contains(&opacity));
 }
 
 #[test]

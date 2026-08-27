@@ -49,6 +49,7 @@ use cliffy_core::GA3;
 pub mod consensus;
 pub mod crdt;
 pub mod lattice;
+pub mod observation;
 pub mod serde_ga3;
 pub mod vector_clock;
 
@@ -65,6 +66,10 @@ pub use delta::{
 };
 #[allow(deprecated)] // re-exports GA3Lattice for one more cycle; removed with Phase 1
 pub use lattice::{ComponentLattice, GA3Lattice, GeometricLattice};
+pub use observation::{
+    GrantRef, Observation, ObservationKey, ObservationPayload, ObservationSet, RotorObservation,
+    VectorObservation,
+};
 pub use storage::{GeometricStore, MemoryStore, Snapshot, StorageStats};
 pub use sync::{
     PeerCapabilities, PeerConnectionState, PeerInfo, PeerState, SyncConfig, SyncMessage,

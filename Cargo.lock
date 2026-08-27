@@ -299,7 +299,10 @@ version = "0.3.1"
 dependencies = [
  "amari-core",
  "cliffy-core",
+ "quickcheck",
+ "quickcheck_macros",
  "serde",
+ "serde_json",
  "tokio",
  "uuid",
 ]

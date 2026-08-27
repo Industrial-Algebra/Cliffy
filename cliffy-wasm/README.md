@@ -9,13 +9,13 @@ WebAssembly bindings for the Cliffy reactive framework.
 ## Installation
 
 ```bash
-npm install @cliffy-ga/core
+npm install @industrialalgebra/cliffy-core
 ```
 
 ## Quick Start
 
 ```typescript
-import init, { behavior, html, mount } from '@cliffy-ga/core';
+import init, { behavior, html, mount } from '@industrialalgebra/cliffy-core';
 
 await init();
 
@@ -39,7 +39,7 @@ mount(app, '#app');
 Reactive state containers:
 
 ```typescript
-import { behavior, combine } from '@cliffy-ga/core';
+import { behavior, combine } from '@industrialalgebra/cliffy-core';
 
 const name = behavior('World');
 const greeting = name.map(n => `Hello, ${n}!`);
@@ -58,7 +58,7 @@ const sum = combine(a, b, (x, y) => x + y);
 Discrete event streams:
 
 ```typescript
-import { event } from '@cliffy-ga/core';
+import { event } from '@industrialalgebra/cliffy-core';
 
 const clicks = event();
 const clickCount = clicks.fold(0, (acc, _) => acc + 1);
@@ -72,7 +72,7 @@ clicks.emit({ x: 100, y: 200 });
 Smooth interpolation and transformations:
 
 ```typescript
-import { GeometricState, Rotor, Transform } from '@cliffy-ga/core';
+import { GeometricState, Rotor, Transform } from '@industrialalgebra/cliffy-core';
 
 const state = GeometricState.fromVector(1, 0, 0);
 const rotated = state.applyRotor(Rotor.xy(Math.PI / 2));
@@ -86,7 +86,7 @@ const mid = state.blend(target, 0.5);
 Built-in CRDT and sync support:
 
 ```typescript
-import { GeometricCRDT, VectorClock, SyncState } from '@cliffy-ga/core';
+import { GeometricCRDT, VectorClock, SyncState } from '@industrialalgebra/cliffy-core';
 
 const crdt = new GeometricCRDT('node-1', initialState);
 crdt.add(5);
@@ -99,7 +99,7 @@ const merged = crdt.merge(otherCrdt);
 Algebraic testing in JavaScript:
 
 ```typescript
-import { testImpossible, testRare, Manifold } from '@cliffy-ga/core';
+import { testImpossible, testRare, Manifold } from '@industrialalgebra/cliffy-core';
 
 const report = testImpossible('invariant name', () => {
   // Return true if invariant holds
@@ -114,7 +114,7 @@ expect(report.verified).toBe(true);
 The `html` tagged template creates reactive DOM:
 
 ```typescript
-import { html, mount, behavior } from '@cliffy-ga/core';
+import { html, mount, behavior } from '@industrialalgebra/cliffy-core';
 
 const items = behavior(['Apple', 'Banana', 'Cherry']);
 
@@ -147,7 +147,7 @@ wasm-pack build --target web
 Full TypeScript definitions are included:
 
 ```typescript
-import type { Behavior, Event, GeometricState } from '@cliffy-ga/core';
+import type { Behavior, Event, GeometricState } from '@industrialalgebra/cliffy-core';
 
 function createCounter(): Behavior<number> {
   return behavior(0);

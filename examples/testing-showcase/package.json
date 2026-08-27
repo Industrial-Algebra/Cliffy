@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cliffy-ga/core": "^0.3.1"
+    "@industrialalgebra/cliffy-core": "file:../cliffy-wasm/pkg"
   },
   "devDependencies": {
     "typescript": "^6.0.3",

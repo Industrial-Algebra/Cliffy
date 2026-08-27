@@ -5,8 +5,8 @@
     "baseUrl": ".",
     "paths": {
       "@cliffy/shared/*": ["../shared/src/*"],
-      "@cliffy-ga/core": ["../../cliffy-wasm/pkg"],
-      "@cliffy-ga/core/*": ["../../cliffy-wasm/pkg/*"]
+      "@industrialalgebra/cliffy-core": ["../../cliffy-wasm/pkg"],
+      "@industrialalgebra/cliffy-core/*": ["../../cliffy-wasm/pkg/*"]
     }
   },
   "include": ["src/**/*", "../shared/src/**/*"]

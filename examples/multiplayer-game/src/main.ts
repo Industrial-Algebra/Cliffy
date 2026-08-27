@@ -13,9 +13,8 @@ import init, {
   behavior,
   GeometricState,
   Rotor,
-  GeometricCRDT,
   generateNodeId,
-} from '@cliffy-ga/core';
+} from '@industrialalgebra/cliffy-core';
 
 // =============================================================================
 // Types

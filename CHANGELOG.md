@@ -6,7 +6,27 @@ All notable changes to Cliffy are documented here. Format follows
 
 ## [Unreleased]
 
+### Removed (breaking — the Phase 1 cutover)
+
+- `cliffy_protocols::GeometricCRDT`, `GeometricOperation`, `OperationType`,
+  `geometric_mean` (crdt module) — the deprecated unsound machinery
+  (annihilating merge, colliding op ids). Superseded by `ObservationSet` +
+  deterministic projections, which landed in #312.
+- `cliffy_protocols::GA3Lattice` — the magnitude-dominance join
+  (`join(+1,−1) = cosh(1)`); `ComponentLattice` remains as the sound floor.
+- `cliffy_protocols::consensus` module (built on the broken machinery;
+  Phase 2 rebuilds consensus on the sound floor).
+- WASM: `GeometricCRDT`/`GeometricOperation`/`OperationType` bindings →
+  replaced by `ObservationSet` (observeScalar/observeVector/observeRotor,
+  merge, scalarMean, vectorMean, rotorConsensus).
+
 ### Changed
+
+- **npm: org migration** — `@cliffy-ga/core` → **`@industrialalgebra/cliffy-core`**
+  and `@cliffy-ga/tsukoshi` → **`@industrialalgebra/cliffy-tsukoshi`**
+  (Schubert-pattern `@industrialalgebra` org; `@cliffy-ga` retired for
+  0.4.0+). Examples now consume the local wasm artifact via `file:` deps —
+  builds no longer depend on registry state.
 
 - **Toolchain: nightly-first** (operator decision 2026-08-27, test-driving
   the 2026 Rust toolkit). `rust-toolchain.toml` pins

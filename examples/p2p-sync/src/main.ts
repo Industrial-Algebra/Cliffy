@@ -17,10 +17,9 @@
 import init, {
   behavior,
   Behavior,
-  GeometricCRDT,
   VectorClock as WasmVectorClock,
   generateNodeId,
-} from '@cliffy-ga/core';
+} from '@industrialalgebra/cliffy-core';
 
 import {
   PeerManager,
@@ -46,7 +45,8 @@ const ROOM_ID = 'cliffy-p2p-demo';
 interface AppState {
   localPeerId: string;
   peerManager: PeerManager | null;
-  crdt: GeometricCRDT | null;
+  crdt: ObservationSet | null;
+  crdtSeq: number;
   clock: WasmVectorClock | null;
   sharedCounter: number;
   localOperationCount: number;
@@ -299,8 +299,9 @@ function localIncrement(): void {
   state.localOperationCount++;
   state.clock.tick(state.localPeerId);
 
-  // Use the CRDT's add operation
-  state.crdt.add(1);
+  // Record the increment as a participant-scoped observation
+  state.crdt.observeScalar(state.localPeerId, state.crdtSeq, 1);
+  state.crdtSeq += 1;
 
   counterBehavior.set(state.sharedCounter);
 
@@ -1067,7 +1068,8 @@ async function main() {
 
   // Initialize local peer
   state.localPeerId = generateNodeId();
-  state.crdt = new GeometricCRDT(state.localPeerId, 0);
+  state.crdt = new ObservationSet();
+  state.crdtSeq = 0;
   state.clock = new WasmVectorClock();
 
   // Initialize FRP Behaviors

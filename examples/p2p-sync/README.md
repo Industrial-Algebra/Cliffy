@@ -164,7 +164,7 @@ p2p-sync/
 ### Dependencies
 
 The demo depends on:
-- `@cliffy-ga/core` - Cliffy WASM core (Behavior, CRDT, VectorClock)
+- `@industrialalgebra/cliffy-core` - Cliffy WASM core (Behavior, CRDT, VectorClock)
 - `@cliffy/shared` - Shared WebRTC utilities
 
 ### Scripts

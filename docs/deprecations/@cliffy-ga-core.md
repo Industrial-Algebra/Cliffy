@@ -27,7 +27,7 @@ projection (v0.4.0 cycle).
 
 ```bash
 npm deprecate @cliffy-ga/core@'*' \
-  "Reactivity is sound, but the geometric CRDT merge is broken (merges annihilate to zero) — do not use the CRDT/merge/lattice APIs. Successor: ObservationSet CRDT + deterministic projection, planned for 0.4.0. See https://github.com/Industrial-Algebra/Cliffy/blob/develop/docs/plans/2026-08-26-geometric-crdt-salvage.md"
+  "Superseded by @industrialalgebra/cliffy-core (0.4.0+, ObservationSet CRDT). Reactivity is sound, but the geometric CRDT merge is broken (merges annihilate to zero) — do not use the CRDT/merge/lattice APIs. Successor: ObservationSet CRDT + deterministic projection, planned for 0.4.0. See https://github.com/Industrial-Algebra/Cliffy/blob/develop/docs/plans/2026-08-26-geometric-crdt-salvage.md"
 ```
 
 ## Notes for the operator
@@ -35,9 +35,8 @@ npm deprecate @cliffy-ga/core@'*' \
 - Deprecating `'*'` covers all published versions (0.1.0–0.3.1). If you
   prefer to warn only on affected versions, `@'>=0.1.0'` is equivalent
   here since the CRDT shipped from the first release.
-- The successor package naming/scope (`@industrialalgebra/…` vs
-  `@cliffy-ga/…`) is an open ecosystem decision (see the
-  [handoff](../handoff/2026-08-27-modernization-session.md) §5) — deprecating
-  now does not foreclose either choice.
+- **Successor naming decided (2026-08-27):** `@industrialalgebra/cliffy-core`
+  (Schubert-pattern org migration; `@cliffy-ga/*` retired for 0.4.0+). The
+  suggested deprecation message can now name it directly when publishing.
 - `npm deprecate` is reversible (`npm deprecate <pkg>@<ver> ""` clears the
   message).

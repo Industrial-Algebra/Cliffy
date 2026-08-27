@@ -23,9 +23,9 @@
 //! - [`scalar_mean`] / [`vector_mean`]: componentwise floor
 //! - [`VectorClock`]: Causal ordering for distributed operations
 //!
-//! ## Legacy (deprecated, removed in the Phase 1 cutover)
-//! - [`GeometricCRDT`]: merge annihiliates — **deprecated**, unsound
-//! - [`GeometricLattice`] / [`ComponentLattice`]: the latter is the sound floor
+//! ## Lattice floor
+//! - [`ComponentLattice`]: componentwise join-semilattice — the sound floor
+//!   for per-grade state (via [`GeometricLattice`])
 //!
 //! ## Synchronization (Phase 3)
 //! - [`delta`]: State delta computation for efficient sync
@@ -76,9 +76,7 @@
 
 use cliffy_core::GA3;
 
-// Phase 2: Core CRDT and consensus
-pub mod consensus;
-pub mod crdt;
+// Phase 1: the sound CRDT floor
 pub mod eigen;
 pub mod lattice;
 pub mod observation;
@@ -92,13 +90,10 @@ pub mod storage;
 pub mod sync;
 
 // Re-exports
-pub use consensus::*;
-pub use crdt::*;
 pub use delta::{
     apply_additive_delta, apply_delta, compute_delta, DeltaBatch, DeltaEncoding, StateDelta,
 };
-#[allow(deprecated)] // re-exports GA3Lattice for one more cycle; removed with Phase 1
-pub use lattice::{ComponentLattice, GA3Lattice, GeometricLattice};
+pub use lattice::{ComponentLattice, GeometricLattice};
 pub use observation::{
     GrantRef, Observation, ObservationKey, ObservationPayload, ObservationSet, RotorObservation,
     VectorObservation,

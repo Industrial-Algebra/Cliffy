@@ -1,20 +1,15 @@
 /**
- * Cliffy CRDT Playground
+ * Cliffy CRDT Playground — Phase 1 salvage showcase
  *
  * Demonstrates:
- * - GeometricCRDT from cliffy-protocols via WASM bindings
- * - Multiple peers with concurrent operations
- * - Vector clocks for causal ordering
- * - Merge and convergence visualization
- * - Geometric algebra concepts in CRDT design
+ * - ObservationSet from cliffy-protocols via WASM bindings (the sound floor)
+ * - Participant-scoped observations: peers observe, sets union, nothing annihilates
+ * - Deterministic projections: scalarMean consensus on every replica
+ * - Live probe panel: the four value oracles that answer the February question
+ *   (the old GeometricCRDT failed all four — see the salvage plan)
  */
 
-import init, {
-  GeometricCRDT,
-  VectorClock,
-  OperationType,
-  generateNodeId,
-} from '@cliffy-ga/core';
+import init, { ObservationSet, generateNodeId } from '@industrialalgebra/cliffy-core';
 
 // =============================================================================
 // UI State
@@ -22,7 +17,9 @@ import init, {
 
 interface PeerState {
   id: string;
-  crdt: GeometricCRDT;
+  set: ObservationSet;
+  seq: number;
+  latest: number;
   displayName: string;
 }
 
@@ -35,7 +32,7 @@ interface LogEntry {
 const state = {
   peers: new Map<string, PeerState>(),
   log: [] as LogEntry[],
-  mergeResult: null as GeometricCRDT | null,
+  mergeResult: null as ObservationSet | null,
   initialized: false,
 };
 
@@ -51,62 +48,37 @@ function addLogEntry(peer: string, action: string): void {
 }
 
 // =============================================================================
-// CRDT Operations using real WASM bindings
+// Observation operations using real WASM bindings
 // =============================================================================
+
+function observe(peerId: string, value: number): void {
+  const peer = state.peers.get(peerId);
+  if (!peer) return;
+
+  peer.set.observeScalar(peer.id, peer.seq, value);
+  peer.seq += 1;
+  peer.latest = value;
+  addLogEntry(peerId, `Observed ${value} → set now holds ${peer.set.len()} observation(s)`);
+}
 
 function initializePeers(): void {
   state.peers.clear();
 
-  // Create three peers with the real GeometricCRDT
-  const peer1Id = generateNodeId();
-  const peer2Id = generateNodeId();
-  const peer3Id = generateNodeId();
-
-  state.peers.set('peer1', {
-    id: peer1Id,
-    crdt: new GeometricCRDT(peer1Id, 10.0),
-    displayName: 'Peer 1',
-  });
-
-  state.peers.set('peer2', {
-    id: peer2Id,
-    crdt: new GeometricCRDT(peer2Id, 10.0),
-    displayName: 'Peer 2',
-  });
-
-  state.peers.set('peer3', {
-    id: peer3Id,
-    crdt: new GeometricCRDT(peer3Id, 10.0),
-    displayName: 'Peer 3',
-  });
+  const specs: Array<[string, string]> = [
+    ['peer1', 'Peer 1'],
+    ['peer2', 'Peer 2'],
+    ['peer3', 'Peer 3'],
+  ];
+  for (const [key, displayName] of specs) {
+    const id = generateNodeId();
+    const set = new ObservationSet();
+    set.observeScalar(id, 0, 10.0);
+    state.peers.set(key, { id, set, seq: 1, latest: 10.0, displayName });
+  }
 
   state.log = [];
   state.mergeResult = null;
-  addLogEntry('system', 'Initialized 3 peers with state = 10.0 (using real WASM CRDT)');
-}
-
-function add(peerId: string, value: number): void {
-  const peer = state.peers.get(peerId);
-  if (!peer) return;
-
-  peer.crdt.add(value);
-  addLogEntry(peerId, `Added ${value} → state = ${peer.crdt.state().toFixed(2)}`);
-}
-
-function multiply(peerId: string, value: number): void {
-  const peer = state.peers.get(peerId);
-  if (!peer) return;
-
-  peer.crdt.multiply(value);
-  addLogEntry(peerId, `Multiplied by ${value} → state = ${peer.crdt.state().toFixed(2)}`);
-}
-
-function geometricOp(peerId: string, value: number): void {
-  const peer = state.peers.get(peerId);
-  if (!peer) return;
-
-  peer.crdt.applyOperation(value, OperationType.GeometricProduct);
-  addLogEntry(peerId, `Geometric product with ${value} → state = ${peer.crdt.state().toFixed(2)}`);
+  addLogEntry('system', 'Initialized 3 peers, each observing 10.0 (real WASM ObservationSet)');
 }
 
 function syncPeers(fromId: string, toId: string): void {
@@ -114,48 +86,114 @@ function syncPeers(fromId: string, toId: string): void {
   const to = state.peers.get(toId);
   if (!from || !to) return;
 
-  // Merge the source into the destination
-  const merged = to.crdt.merge(from.crdt);
-
-  // Replace the destination CRDT with the merged result
-  state.peers.set(toId, {
-    ...to,
-    crdt: merged,
-  });
-
-  addLogEntry('system', `Synced ${fromId} → ${toId}, ${toId} state = ${merged.state().toFixed(2)}`);
+  const changed = to.set.merge(from.set);
+  addLogEntry(
+    'system',
+    `Synced ${fromId} → ${toId}: ${changed ? 'absorbed new observations' : 'already convergent'} (len = ${to.set.len()})`
+  );
 }
 
 function mergeAll(): void {
   const peerList = Array.from(state.peers.values());
   if (peerList.length < 2) return;
 
-  // Start with peer1
-  let result = peerList[0].crdt;
-
-  // Merge all others into it
-  for (let i = 1; i < peerList.length; i++) {
-    result = result.merge(peerList[i].crdt);
+  // Full-mesh union: every peer absorbs every other peer's observations.
+  for (const target of peerList) {
+    for (const source of peerList) {
+      if (target !== source) {
+        target.set.merge(source.set);
+      }
+    }
   }
 
+  // Display copy: a fresh set with everything unioned in.
+  const result = new ObservationSet();
+  for (const peer of peerList) {
+    result.merge(peer.set);
+  }
   state.mergeResult = result;
 
-  // Update all peers to the merged state by creating new CRDTs
-  // (In a real app, you'd propagate the merged operations)
-  const finalState = result.state();
-  for (const [key, peer] of state.peers.entries()) {
-    const newCrdt = new GeometricCRDT(peer.id, finalState);
-    state.peers.set(key, {
-      ...peer,
-      crdt: newCrdt,
-    });
-  }
-
-  addLogEntry('system', `Merged all peers → converged state = ${finalState.toFixed(2)}`);
+  addLogEntry('system', `Merged all peers → ${result.len()} observations, consensus = ${result.scalarMean()?.toFixed(2)}`);
 }
 
 function reset(): void {
   initializePeers();
+}
+
+// =============================================================================
+// The February probes — live value oracles (the salvage showcase)
+// =============================================================================
+
+interface ProbeResult {
+  name: string;
+  oldDesign: string;
+  expectation: string;
+  passed: boolean;
+}
+
+function runProbes(): ProbeResult[] {
+  const a = generateNodeId();
+  const b = generateNodeId();
+
+  // Probe 1 — no annihilation: +5 and +10 merge; the mean is exactly 7.5.
+  // (Old design: every merge returned zero.)
+  const p1a = new ObservationSet();
+  p1a.observeScalar(a, 0, 5.0);
+  const p1b = new ObservationSet();
+  p1b.observeScalar(b, 0, 10.0);
+  p1a.merge(p1b);
+  const probe1 = p1a.scalarMean() === 7.5 && p1a.len() === 2;
+
+  // Probe 2 — hull: the mean of +1 and −1 is exactly 0.0.
+  // (Old join: cosh(1) ≈ 1.543 — outside the hull of its arguments.)
+  const p2 = new ObservationSet();
+  p2.observeScalar(a, 0, 1.0);
+  p2.observeScalar(b, 0, -1.0);
+  const probe2 = p2.scalarMean() === 0.0;
+
+  // Probe 3 — participant-scoped identity: two first observations coexist.
+  // (Old design: len()-minted ids collided at 0; one was silently dropped.)
+  const probe3 = p1a.len() === 2;
+
+  // Probe 4 — convergence with a value oracle: diverge, merge both ways,
+  // identical sets AND the specified mean on both replicas.
+  const p4a = new ObservationSet();
+  p4a.observeScalar(a, 0, 10.0);
+  const p4b = new ObservationSet();
+  p4b.observeScalar(b, 0, 5.0);
+  p4a.merge(p4b);
+  p4b.merge(p4a);
+  const probe4 =
+    p4a.len() === p4b.len() &&
+    p4a.scalarMean() === 7.5 &&
+    p4b.scalarMean() === 7.5;
+
+  return [
+    {
+      name: 'Merge does not annihilate',
+      oldDesign: 'old: every merge → 0',
+      expectation: '+5/+10 → mean 7.5, both survive',
+      passed: probe1,
+    },
+    {
+      name: 'Consensus stays in the hull',
+      oldDesign: 'old: join(+1,−1) = cosh(1)',
+      expectation: 'mean(+1,−1) = 0.0 exactly',
+      passed: probe2,
+    },
+    {
+      name: 'Participant-scoped identity',
+      oldDesign: 'old: ids collided at 0',
+      expectation: 'first observations coexist',
+      passed: probe3,
+    },
+    {
+      name: 'Convergence with a value oracle',
+      oldDesign: 'old: agreement-only oracle',
+      expectation: 'both directions → identical, mean 7.5',
+      passed: probe4,
+    },
+  ];
 }
 
 // =============================================================================
@@ -186,17 +224,13 @@ function createElement(
 // =============================================================================
 
 function checkConvergence(): boolean {
-  const states = Array.from(state.peers.values()).map((p) => p.crdt.state());
-  return states.every((s) => Math.abs(s - states[0]) < 0.001);
-}
-
-function formatVectorClock(crdt: GeometricCRDT): string {
-  const clock = crdt.vectorClock;
-  const obj = clock.toObject();
-  const entries = Object.entries(obj)
-    .map(([k, v]) => `${k.slice(0, 4)}:${v}`)
-    .join(', ');
-  return `{${entries || 'empty'}}`;
+  const peers = Array.from(state.peers.values());
+  if (peers.length === 0) return true;
+  const firstLen = peers[0].set.len();
+  const firstMean = peers[0].set.scalarMean();
+  return peers.every(
+    (p) => p.set.len() === firstLen && p.set.scalarMean() === firstMean
+  );
 }
 
 function createPeerCard(key: string, peer: PeerState): HTMLElement {
@@ -216,41 +250,37 @@ function createPeerCard(key: string, peer: PeerState): HTMLElement {
   // State display
   const stateDisplay = createElement('div', { class: 'state-display' });
   stateDisplay.appendChild(
-    createElement('div', { class: 'state-label' }, ['Current State (GA3 Scalar)'])
+    createElement('div', { class: 'state-label' }, ['Latest Observation'])
   );
   stateDisplay.appendChild(
-    createElement('div', { class: 'state-value' }, [peer.crdt.state().toFixed(2)])
+    createElement('div', { class: 'state-value' }, [peer.latest.toFixed(2)])
   );
   stateDisplay.appendChild(
     createElement('div', { class: 'vector-clock' }, [
-      `Vector Clock: ${formatVectorClock(peer.crdt)}`,
+      `Set: ${peer.set.len()} observation(s)`,
     ])
   );
   stateDisplay.appendChild(
     createElement('div', { class: 'op-count' }, [
-      `Operations: ${peer.crdt.operationCount}`,
+      `Consensus (mean): ${peer.set.scalarMean()?.toFixed(2) ?? '—'}`,
     ])
   );
   card.appendChild(stateDisplay);
 
-  // Operations
+  // Operations — each button records an observation
   const ops = createElement('div', { class: 'operations' });
 
-  const btn1 = createElement('button', {}, ['+5']);
-  btn1.onclick = () => add(key, 5);
+  const btn1 = createElement('button', {}, ['observe 15']);
+  btn1.onclick = () => observe(key, 15);
   ops.appendChild(btn1);
 
-  const btn2 = createElement('button', {}, ['-3']);
-  btn2.onclick = () => add(key, -3);
+  const btn2 = createElement('button', {}, ['observe −3']);
+  btn2.onclick = () => observe(key, -3);
   ops.appendChild(btn2);
 
-  const btn3 = createElement('button', {}, ['×2']);
-  btn3.onclick = () => multiply(key, 2);
+  const btn3 = createElement('button', {}, ['observe ×2']);
+  btn3.onclick = () => observe(key, peer.latest * 2);
   ops.appendChild(btn3);
-
-  const btn4 = createElement('button', {}, ['GA ⊗ 1.5']);
-  btn4.onclick = () => geometricOp(key, 1.5);
-  ops.appendChild(btn4);
 
   card.appendChild(ops);
 
@@ -259,7 +289,9 @@ function createPeerCard(key: string, peer: PeerState): HTMLElement {
 
 function createVisualization(): HTMLElement {
   const peerStates = Array.from(state.peers.values());
-  const maxState = Math.max(...peerStates.map((p) => Math.abs(p.crdt.state())), 1);
+  const values = peerStates.map((p) => p.set.scalarMean() ?? 0);
+  const consensus = state.mergeResult?.scalarMean() ?? null;
+  const maxState = Math.max(...values.map(Math.abs), Math.abs(consensus ?? 0), 1);
 
   const viz = createElement('div', { class: 'visualization' });
   viz.appendChild(createElement('div', { class: 'viz-axis x' }));
@@ -270,18 +302,18 @@ function createVisualization(): HTMLElement {
   labelPlus.style.top = '52%';
   viz.appendChild(labelPlus);
 
-  const labelMinus = createElement('div', { class: 'viz-label' }, ['-']);
+  const labelMinus = createElement('div', { class: 'viz-label' }, ['−']);
   labelMinus.style.left = '3%';
   labelMinus.style.top = '52%';
   viz.appendChild(labelMinus);
 
-  const labelState = createElement('div', { class: 'viz-label' }, ['State']);
+  const labelState = createElement('div', { class: 'viz-label' }, ['Consensus']);
   labelState.style.left = '52%';
   labelState.style.top = '5%';
   viz.appendChild(labelState);
 
   peerStates.forEach((peer, i) => {
-    const x = 50 + (peer.crdt.state() / maxState) * 35;
+    const x = 50 + ((values[i] ?? 0) / maxState) * 35;
     const y = 30 + i * 25;
     const point = createElement('div', { class: `viz-point peer${i + 1}` }, [`P${i + 1}`]);
     point.style.left = `${x}%`;
@@ -289,8 +321,8 @@ function createVisualization(): HTMLElement {
     viz.appendChild(point);
   });
 
-  if (state.mergeResult) {
-    const x = 50 + (state.mergeResult.state() / maxState) * 35;
+  if (consensus !== null) {
+    const x = 50 + (consensus / maxState) * 35;
     const point = createElement('div', { class: 'viz-point merged' }, ['M']);
     point.style.left = `${x}%`;
     point.style.top = '80%';
@@ -300,11 +332,38 @@ function createVisualization(): HTMLElement {
   return viz;
 }
 
+function createProbePanel(): HTMLElement {
+  const section = createElement('div', { class: 'section' });
+  section.appendChild(createElement('h2', {}, ['Value-Oracle Probes (live)']));
+  const intro = createElement('p', {});
+  intro.textContent =
+    'Four checks run live against the WASM bindings on every render — the permanent ' +
+    'answers to the 2026-02-25 rabbit-hole question. The old GeometricCRDT failed all four.';
+  section.appendChild(intro);
+
+  const grid = createElement('div', { class: 'peers-grid' });
+  for (const probe of runProbes()) {
+    const box = createElement('div', { class: 'concept-box' });
+    const title = createElement(
+      'h3',
+      {},
+      [`${probe.passed ? '✓' : '✗'} ${probe.name}`]
+    );
+    if (!probe.passed) title.style.color = '#e74c3c';
+    box.appendChild(title);
+    box.appendChild(createElement('div', { class: 'vector-clock' }, [probe.expectation]));
+    box.appendChild(createElement('div', { class: 'op-count' }, [probe.oldDesign]));
+    grid.appendChild(box);
+  }
+  section.appendChild(grid);
+  return section;
+}
+
 function createLogSection(): HTMLElement {
   const log = createElement('div', { class: 'history-log' });
 
   if (state.log.length === 0) {
-    const empty = createElement('div', {}, ['No operations yet...']);
+    const empty = createElement('div', {}, ['No observations yet...']);
     empty.style.color = 'var(--text-dim)';
     log.appendChild(empty);
   } else {
@@ -329,7 +388,6 @@ function render(): void {
     return;
   }
 
-  // Clear existing content
   app.textContent = '';
 
   const isConverged = checkConvergence();
@@ -337,7 +395,7 @@ function render(): void {
 
   // === WASM Badge ===
   const badge = createElement('div', { class: 'wasm-badge' }, [
-    '✓ Using real cliffy-protocols WASM bindings',
+    '✓ Using real cliffy-protocols WASM bindings (Phase 1 sound floor)',
   ]);
   playground.appendChild(badge);
 
@@ -353,7 +411,7 @@ function render(): void {
 
   // === Visualization Section ===
   const vizSection = createElement('div', { class: 'section' });
-  vizSection.appendChild(createElement('h2', {}, ['State Space Visualization']));
+  vizSection.appendChild(createElement('h2', {}, ['Consensus Visualization']));
   vizSection.appendChild(createVisualization());
 
   const convergence = createElement(
@@ -361,14 +419,17 @@ function render(): void {
     { class: `convergence-indicator ${isConverged ? 'converged' : 'diverged'}` }
   );
   convergence.textContent = isConverged
-    ? '✓ All peers converged'
-    : '⚠ Peers have diverged states';
+    ? '✓ All peers convergent (equal sets — same length, same consensus)'
+    : '⚠ Peers hold divergent observation sets';
   vizSection.appendChild(convergence);
   playground.appendChild(vizSection);
 
+  // === Probe Panel ===
+  playground.appendChild(createProbePanel());
+
   // === Sync & Merge Section ===
   const syncSection = createElement('div', { class: 'section' });
-  syncSection.appendChild(createElement('h2', {}, ['Synchronization']));
+  syncSection.appendChild(createElement('h2', {}, ['Synchronization (union merge)']));
 
   const mergeSection = createElement('div', { class: 'merge-section' });
   const controls = createElement('div', { class: 'merge-controls' });
@@ -398,14 +459,11 @@ function render(): void {
   if (state.mergeResult) {
     const result = createElement('div', { class: 'merge-result' });
     result.appendChild(
-      createElement('div', { class: 'state-label' }, ['Merged State (Geometric Join)'])
+      createElement('div', { class: 'state-label' }, ['Union of All Sets'])
     );
     result.appendChild(
-      createElement('div', { class: 'state-value' }, [state.mergeResult.state().toFixed(2)])
-    );
-    result.appendChild(
-      createElement('div', { class: 'vector-clock' }, [
-        `Merged Clock: ${formatVectorClock(state.mergeResult)}`,
+      createElement('div', { class: 'state-value' }, [
+        `${state.mergeResult.len()} obs → mean ${state.mergeResult.scalarMean()?.toFixed(2)}`,
       ])
     );
     mergeSection.appendChild(result);
@@ -414,65 +472,25 @@ function render(): void {
   syncSection.appendChild(mergeSection);
 
   const conceptBox1 = createElement('div', { class: 'concept-box' });
-  conceptBox1.appendChild(createElement('h3', {}, ['How Geometric CRDT Works']));
+  conceptBox1.appendChild(createElement('h3', {}, ['How the Sound Floor Works']));
   const p1 = createElement('p', {});
   p1.textContent =
-    'Each peer maintains state as a GA3 multivector and a vector clock. ' +
-    'Operations are geometric transformations (rotors, translations). ' +
-    'When merging, operations are replayed in causal order. ' +
-    'Conflicts resolve via geometric mean: exp((log(a) + log(b))/2). ' +
-    'This guarantees convergence without coordination.';
+    'Each peer holds a grow-only ObservationSet. Observations are keyed by ' +
+    '(participant_id, seq) — participant-scoped, so identities never collide. ' +
+    'Merging is plain set union: associative, commutative, idempotent by ' +
+    'construction. The consensus value is a deterministic projection (the ' +
+    'arithmetic mean here; the Markley eigen-mean for orientations) — equal ' +
+    'sets render bit-identical values on every replica. The merge is boring; ' +
+    'the render is geometric.';
   conceptBox1.appendChild(p1);
   syncSection.appendChild(conceptBox1);
   playground.appendChild(syncSection);
 
   // === Log Section ===
   const logSection = createElement('div', { class: 'section' });
-  logSection.appendChild(createElement('h2', {}, ['Operation Log']));
+  logSection.appendChild(createElement('h2', {}, ['Observation Log']));
   logSection.appendChild(createLogSection());
   playground.appendChild(logSection);
-
-  // === Concepts Section ===
-  const conceptsSection = createElement('div', { class: 'section' });
-  conceptsSection.appendChild(createElement('h2', {}, ['Key Concepts']));
-
-  const conceptsGrid = createElement('div', { class: 'peers-grid' });
-
-  const box1 = createElement('div', { class: 'concept-box' });
-  box1.appendChild(createElement('h3', {}, ['Vector Clocks']));
-  const text1 = createElement('p', {});
-  text1.textContent =
-    "Each peer tracks logical time for all known peers. " +
-    "This establishes causal ordering: if A happens-before B, " +
-    "then A's effects are applied before B's during merge. " +
-    "Concurrent operations are ordered deterministically by node ID.";
-  box1.appendChild(text1);
-  conceptsGrid.appendChild(box1);
-
-  const box2 = createElement('div', { class: 'concept-box' });
-  box2.appendChild(createElement('h3', {}, ['Geometric Operations']));
-  const text2 = createElement('p', {});
-  text2.textContent =
-    'State changes are geometric transformations in Clifford algebra: ' +
-    'addition (translation), multiplication (scaling), ' +
-    'geometric_product (rotation + scaling). ' +
-    'The geometric product ab encodes both the inner and outer products.';
-  box2.appendChild(text2);
-  conceptsGrid.appendChild(box2);
-
-  const box3 = createElement('div', { class: 'concept-box' });
-  box3.appendChild(createElement('h3', {}, ['Eventual Consistency']));
-  const text3 = createElement('p', {});
-  text3.textContent =
-    'CRDTs guarantee that all peers will eventually converge to the same state, ' +
-    'regardless of the order messages are received. ' +
-    'The key: operations are commutative and associative ' +
-    'when properly ordered by causal history.';
-  box3.appendChild(text3);
-  conceptsGrid.appendChild(box3);
-
-  conceptsSection.appendChild(conceptsGrid);
-  playground.appendChild(conceptsSection);
 
   // === Reset Button ===
   const resetDiv = createElement('div', { class: 'reset-all' });
@@ -489,16 +507,14 @@ function render(): void {
 // =============================================================================
 
 async function main() {
-  // Initialize the WASM module
   await init();
 
   state.initialized = true;
   initializePeers();
   render();
 
-  console.log('Cliffy CRDT Playground initialized');
-  console.log('Using real cliffy-protocols WASM bindings');
-  console.log('Available types: GeometricCRDT, VectorClock, OperationType, generateNodeId');
+  console.log('Cliffy CRDT Playground initialized (Phase 1 sound floor)');
+  console.log('Available types: ObservationSet, VectorClock, generateNodeId');
 }
 
 main().catch((err) => {

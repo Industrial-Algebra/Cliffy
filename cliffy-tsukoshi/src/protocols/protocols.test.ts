@@ -13,7 +13,7 @@ import {
   TestResult,
   InvariantCategory,
   type InvariantTestReport,
-} from '@cliffy-ga/core';
+} from '@industrialalgebra/cliffy-core';
 
 // Import the TypeScript protocols
 import { VectorClock } from './vector-clock.js';

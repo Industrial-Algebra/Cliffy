@@ -18,7 +18,9 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-08-14
 
       - name: Cache dependencies
         uses: actions/cache@v5
@@ -41,7 +43,7 @@ jobs:
           cp benchmark-results.txt benchmark-output/
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-results
           path: benchmark-output/
@@ -57,7 +59,9 @@ jobs:
           fetch-depth: 0
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-08-14
 
       - name: Cache dependencies
         uses: actions/cache@v5
@@ -104,7 +108,7 @@ jobs:
           echo '```' >> comparison.md
 
       - name: Upload comparison
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-comparison
           path: comparison.md
@@ -118,7 +122,9 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-08-14
 
       - name: Cache dependencies
         uses: actions/cache@v5
@@ -157,7 +163,7 @@ jobs:
           echo '```' >> gpu-comparison/report.md
 
       - name: Upload GPU comparison
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: gpu-cpu-comparison
           path: gpu-comparison/

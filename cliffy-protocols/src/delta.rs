@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! State delta computation for efficient synchronization
 //!
 //! This module provides geometric delta computation between states,
@@ -68,7 +71,8 @@ pub enum DeltaEncoding {
 
 impl StateDelta {
     /// Create a new additive delta.
-    pub fn additive(
+    #[must_use]
+    pub const fn additive(
         transform: GA3,
         from_clock: VectorClock,
         to_clock: VectorClock,
@@ -84,7 +88,8 @@ impl StateDelta {
     }
 
     /// Create a new multiplicative (versor) delta.
-    pub fn multiplicative(
+    #[must_use]
+    pub const fn multiplicative(
         transform: GA3,
         from_clock: VectorClock,
         to_clock: VectorClock,
@@ -100,7 +105,8 @@ impl StateDelta {
     }
 
     /// Create a compressed (log-space) delta.
-    pub fn compressed(
+    #[must_use]
+    pub const fn compressed(
         transform: GA3,
         from_clock: VectorClock,
         to_clock: VectorClock,
@@ -116,12 +122,14 @@ impl StateDelta {
     }
 
     /// Get the approximate size of this delta in bytes (for bandwidth estimation).
-    pub fn estimated_size(&self) -> usize {
+    #[must_use]
+    pub const fn estimated_size(&self) -> usize {
         // 8 coefficients * 8 bytes each + overhead
         8 * 8 + 32
     }
 
     /// Check if this delta is causally applicable to a state with the given clock.
+    #[must_use]
     pub fn is_applicable_to(&self, state_clock: &VectorClock) -> bool {
         // Delta is applicable if state_clock >= from_clock
         self.from_clock.happens_before(state_clock) || self.from_clock == *state_clock
@@ -132,6 +140,7 @@ impl StateDelta {
 ///
 /// Returns an additive delta by default. Use `compute_delta_compressed`
 /// for log-space representation.
+#[must_use]
 pub fn compute_delta(from: &GA3, to: &GA3) -> GA3 {
     to - from
 }
@@ -140,6 +149,7 @@ pub fn compute_delta(from: &GA3, to: &GA3) -> GA3 {
 ///
 /// This representation is more compact for states that differ by
 /// multiplicative factors rather than additive differences.
+#[must_use]
 pub fn compute_delta_compressed(from: &GA3, to: &GA3) -> GA3 {
     // For compressed representation, we compute log(to) - log(from)
     // which can be applied as exp(delta) * from
@@ -203,6 +213,7 @@ pub struct DeltaBatch {
 
 impl DeltaBatch {
     /// Create a new empty batch.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             deltas: Vec::new(),
@@ -217,18 +228,21 @@ impl DeltaBatch {
     }
 
     /// Check if the batch is empty.
-    pub fn is_empty(&self) -> bool {
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
         self.deltas.is_empty()
     }
 
     /// Get the number of deltas in the batch.
-    pub fn len(&self) -> usize {
+    #[must_use]
+    pub const fn len(&self) -> usize {
         self.deltas.len()
     }
 
     /// Combine all additive deltas into a single delta.
     ///
     /// This only works for additive deltas; mixed batches are not combined.
+    #[must_use]
     pub fn combine_additive(&self) -> Option<GA3> {
         if self.deltas.is_empty() {
             return None;
@@ -260,8 +274,9 @@ impl DeltaBatch {
     }
 
     /// Get the estimated total size in bytes.
+    #[must_use]
     pub fn estimated_size(&self) -> usize {
-        self.deltas.iter().map(|d| d.estimated_size()).sum()
+        self.deltas.iter().map(StateDelta::estimated_size).sum()
     }
 }
 
@@ -273,7 +288,8 @@ impl Default for DeltaBatch {
 
 /// Compute the size savings from using deltas vs full state sync.
 ///
-/// Returns (delta_size, full_size, savings_ratio).
+/// Returns (`delta_size`, `full_size`, `savings_ratio`).
+#[must_use]
 pub fn compute_savings(delta: &StateDelta, _full_state: &GA3) -> (usize, usize, f64) {
     let delta_size = delta.estimated_size();
     let full_size = 8 * 8; // 8 coefficients * 8 bytes
@@ -315,7 +331,7 @@ mod tests {
             Uuid::new_v4(),
         );
 
-        let mut state = from.clone();
+        let mut state = from;
         apply_delta(&mut state, &delta);
 
         assert!((state.scalar_part() - 7.0).abs() < 1e-10);

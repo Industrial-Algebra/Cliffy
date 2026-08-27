@@ -1,15 +1,20 @@
 version: 2
+
+# Branch strategy:
+# - All dependency PRs target `develop` (integration branch)
+# - `main` receives only releases and hotfixes
+# - Gitflow: feature/* → develop → main
+
 updates:
-  # Rust dependencies
+  # Rust dependencies (workspace root)
   - package-ecosystem: "cargo"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 10
-    reviewers:
-      - "cliffy-team"
     labels:
       - "dependencies"
       - "rust"
@@ -17,16 +22,15 @@ updates:
       prefix: "cargo"
       include: "scope"
 
-  # NPM dependencies
+  # Root NPM dependencies
   - package-ecosystem: "npm"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "10:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "cliffy-team"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "npm"
@@ -34,9 +38,10 @@ updates:
       prefix: "npm"
       include: "scope"
 
-  # TypeScript dependencies
+  # cliffy-tsukoshi (pure TypeScript geometric state)
   - package-ecosystem: "npm"
-    directory: "/cliffy-typescript"
+    directory: "/cliffy-tsukoshi"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "tuesday"
@@ -46,11 +51,13 @@ updates:
       - "dependencies"
       - "typescript"
     commit-message:
-      prefix: "typescript"
+      prefix: "tsukoshi"
+      include: "scope"
 
-  # PureScript dependencies
+  # create-cliffy CLI tool
   - package-ecosystem: "npm"
-    directory: "/cliffy-purescript"
+    directory: "/tools/create-cliffy"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "tuesday"
@@ -58,13 +65,15 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
-      - "purescript"
+      - "tooling"
     commit-message:
-      prefix: "purescript"
+      prefix: "create-cliffy"
+      include: "scope"
 
-  # Example dependencies
+  # Vite plugin
   - package-ecosystem: "npm"
-    directory: "/examples/collaborative-editor"
+    directory: "/vite-plugin-algebraic-tsx"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "wednesday"
@@ -72,26 +81,31 @@ updates:
     open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "examples"
+      - "vite-plugin"
     commit-message:
-      prefix: "examples"
+      prefix: "vite-plugin"
+      include: "scope"
 
+  # Examples workspace
   - package-ecosystem: "npm"
-    directory: "/examples/todo-app"
+    directory: "/examples"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "wednesday"
       time: "10:00"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "examples"
     commit-message:
       prefix: "examples"
+      include: "scope"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "thursday"
@@ -102,3 +116,4 @@ updates:
       - "github-actions"
     commit-message:
       prefix: "actions"
+      include: "scope"

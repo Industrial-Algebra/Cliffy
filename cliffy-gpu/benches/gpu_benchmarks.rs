@@ -30,7 +30,7 @@ fn cpu_addition(a: &[GA3], b: &[GA3]) -> Vec<GA3> {
     a.iter().zip(b.iter()).map(|(a, b)| a.add(b)).collect()
 }
 
-/// Generate random GpuMultivectors for SIMD benchmarking.
+/// Generate random `GpuMultivectors` for SIMD benchmarking.
 fn random_gpu_multivectors(count: usize) -> Vec<GpuMultivector> {
     (0..count)
         .map(|i| {
@@ -59,7 +59,7 @@ fn simd_addition(a: &[GpuMultivector], b: &[GpuMultivector]) -> Vec<GpuMultivect
 fn bench_geometric_product(c: &mut Criterion) {
     let mut group = c.benchmark_group("geometric_product");
 
-    for size in [64, 256, 1024, 4096, 16384].iter() {
+    for size in &[64, 256, 1024, 4096, 16384] {
         let a = random_multivectors(*size);
         let b = random_multivectors(*size);
         let a_gpu = random_gpu_multivectors(*size);
@@ -68,15 +68,15 @@ fn bench_geometric_product(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*size as u64));
 
         group.bench_with_input(BenchmarkId::new("cpu", size), size, |bench, _| {
-            bench.iter(|| cpu_geometric_product(&a, &b))
+            bench.iter(|| cpu_geometric_product(&a, &b));
         });
 
         group.bench_with_input(BenchmarkId::new("simd", size), size, |bench, _| {
-            bench.iter(|| simd_geometric_product(&a_gpu, &b_gpu))
+            bench.iter(|| simd_geometric_product(&a_gpu, &b_gpu));
         });
 
         group.bench_with_input(BenchmarkId::new("simd_batch", size), size, |bench, _| {
-            bench.iter(|| SimdBatch::geometric_product(&a_gpu, &b_gpu))
+            bench.iter(|| SimdBatch::geometric_product(&a_gpu, &b_gpu));
         });
 
         // GPU benchmarks would require async runtime
@@ -91,7 +91,7 @@ fn bench_geometric_product(c: &mut Criterion) {
 fn bench_addition(c: &mut Criterion) {
     let mut group = c.benchmark_group("addition");
 
-    for size in [64, 256, 1024, 4096, 16384].iter() {
+    for size in &[64, 256, 1024, 4096, 16384] {
         let a = random_multivectors(*size);
         let b = random_multivectors(*size);
         let a_gpu = random_gpu_multivectors(*size);
@@ -100,15 +100,15 @@ fn bench_addition(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*size as u64));
 
         group.bench_with_input(BenchmarkId::new("cpu", size), size, |bench, _| {
-            bench.iter(|| cpu_addition(&a, &b))
+            bench.iter(|| cpu_addition(&a, &b));
         });
 
         group.bench_with_input(BenchmarkId::new("simd", size), size, |bench, _| {
-            bench.iter(|| simd_addition(&a_gpu, &b_gpu))
+            bench.iter(|| simd_addition(&a_gpu, &b_gpu));
         });
 
         group.bench_with_input(BenchmarkId::new("simd_batch", size), size, |bench, _| {
-            bench.iter(|| SimdBatch::addition(&a_gpu, &b_gpu))
+            bench.iter(|| SimdBatch::addition(&a_gpu, &b_gpu));
         });
     }
 
@@ -119,14 +119,14 @@ fn bench_batch_sizes(c: &mut Criterion) {
     let mut group = c.benchmark_group("batch_scaling");
 
     // Test how performance scales with batch size
-    for size in [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192].iter() {
+    for size in &[32, 64, 128, 256, 512, 1024, 2048, 4096, 8192] {
         let a = random_multivectors(*size);
         let b = random_multivectors(*size);
 
         group.throughput(Throughput::Elements(*size as u64));
 
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |bench, _| {
-            bench.iter(|| cpu_geometric_product(&a, &b))
+            bench.iter(|| cpu_geometric_product(&a, &b));
         });
     }
 
@@ -136,26 +136,26 @@ fn bench_batch_sizes(c: &mut Criterion) {
 fn bench_simd_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_operations");
 
-    for size in [64, 256, 1024, 4096].iter() {
+    for size in &[64, 256, 1024, 4096] {
         let a_gpu = random_gpu_multivectors(*size);
         let b_gpu = random_gpu_multivectors(*size);
 
         group.throughput(Throughput::Elements(*size as u64));
 
         group.bench_with_input(BenchmarkId::new("sandwich", size), size, |bench, _| {
-            bench.iter(|| SimdBatch::sandwich(&a_gpu, &b_gpu))
+            bench.iter(|| SimdBatch::sandwich(&a_gpu, &b_gpu));
         });
 
         group.bench_with_input(BenchmarkId::new("exp", size), size, |bench, _| {
-            bench.iter(|| SimdBatch::exp(&a_gpu))
+            bench.iter(|| SimdBatch::exp(&a_gpu));
         });
 
         group.bench_with_input(BenchmarkId::new("normalize", size), size, |bench, _| {
-            bench.iter(|| SimdBatch::normalize(&a_gpu))
+            bench.iter(|| SimdBatch::normalize(&a_gpu));
         });
 
         group.bench_with_input(BenchmarkId::new("rotor_slerp", size), size, |bench, _| {
-            bench.iter(|| SimdBatch::rotor_slerp(&a_gpu, &b_gpu, 0.5))
+            bench.iter(|| SimdBatch::rotor_slerp(&a_gpu, &b_gpu, 0.5));
         });
     }
 

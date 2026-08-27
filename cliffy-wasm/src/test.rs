@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! WASM bindings for cliffy-test - Algebraic Testing Framework
 //!
 //! Exposes the test framework to JavaScript/TypeScript for testing
@@ -23,48 +26,55 @@ pub struct TestResult {
 impl TestResult {
     /// Create a passing test result
     #[wasm_bindgen]
-    pub fn pass() -> TestResult {
-        TestResult {
+    #[must_use]
+    pub fn pass() -> Self {
+        Self {
             inner: CoreTestResult::Pass,
         }
     }
 
     /// Create a failing test result with distance and description
     #[wasm_bindgen(js_name = failWithDistance)]
-    pub fn fail_with_distance(distance: f64, description: &str) -> TestResult {
-        TestResult {
+    #[must_use]
+    pub fn fail_with_distance(distance: f64, description: &str) -> Self {
+        Self {
             inner: CoreTestResult::fail_with_distance(distance, description),
         }
     }
 
     /// Create a skipped test result
     #[wasm_bindgen]
-    pub fn skipped(reason: &str) -> TestResult {
-        TestResult {
+    #[must_use]
+    pub fn skipped(reason: &str) -> Self {
+        Self {
             inner: CoreTestResult::skipped(reason),
         }
     }
 
     /// Check if test passed
     #[wasm_bindgen(js_name = isPass)]
+    #[must_use]
     pub fn is_pass(&self) -> bool {
         self.inner.is_pass()
     }
 
     /// Check if test failed
     #[wasm_bindgen(js_name = isFail)]
+    #[must_use]
     pub fn is_fail(&self) -> bool {
         self.inner.is_fail()
     }
 
     /// Check if test was skipped
     #[wasm_bindgen(js_name = isSkipped)]
+    #[must_use]
     pub fn is_skipped(&self) -> bool {
         matches!(self.inner, CoreTestResult::Skipped(_))
     }
 
     /// Get the geometric error if test failed
     #[wasm_bindgen]
+    #[must_use]
     pub fn error(&self) -> Option<GeometricError> {
         self.inner
             .error()
@@ -73,6 +83,7 @@ impl TestResult {
 
     /// Get the skip reason if test was skipped
     #[wasm_bindgen(js_name = skipReason)]
+    #[must_use]
     pub fn skip_reason(&self) -> Option<String> {
         match &self.inner {
             CoreTestResult::Skipped(reason) => Some(reason.clone()),
@@ -82,13 +93,14 @@ impl TestResult {
 
     /// Convert to string representation
     #[wasm_bindgen(js_name = toString)]
+    #[must_use]
     pub fn to_string_js(&self) -> String {
         match &self.inner {
             CoreTestResult::Pass => "Pass".to_string(),
             CoreTestResult::Fail(e) => {
                 format!("Fail: {} (distance: {})", e.description, e.distance)
             }
-            CoreTestResult::Skipped(reason) => format!("Skipped: {}", reason),
+            CoreTestResult::Skipped(reason) => format!("Skipped: {reason}"),
         }
     }
 }
@@ -103,38 +115,44 @@ pub struct GeometricError {
 impl GeometricError {
     /// Create a new geometric error
     #[wasm_bindgen(constructor)]
-    pub fn new(distance: f64, description: &str) -> GeometricError {
-        GeometricError {
+    #[must_use]
+    pub fn new(distance: f64, description: &str) -> Self {
+        Self {
             inner: CoreGeometricError::new(distance, description),
         }
     }
 
     /// Get the distance from expected manifold
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn distance(&self) -> f64 {
         self.inner.distance
     }
 
     /// Get the error description
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn description(&self) -> String {
         self.inner.description.clone()
     }
 
     /// Get the gradient as [x, y, z]
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn gradient(&self) -> Vec<f64> {
         self.inner.gradient.to_vec()
     }
 
     /// Get the correction as [s, e1, e2, e3, e12, e13, e23, e123]
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn correction(&self) -> Vec<f64> {
         self.inner.correction.to_vec()
     }
 
     /// Check if error is within tolerance
     #[wasm_bindgen(js_name = isWithinTolerance)]
+    #[must_use]
     pub fn is_within_tolerance(&self, epsilon: f64) -> bool {
         self.inner.is_within_tolerance(epsilon)
     }
@@ -155,9 +173,9 @@ pub enum InvariantCategory {
 impl From<CoreInvariantCategory> for InvariantCategory {
     fn from(cat: CoreInvariantCategory) -> Self {
         match cat {
-            CoreInvariantCategory::Impossible => InvariantCategory::Impossible,
-            CoreInvariantCategory::Rare => InvariantCategory::Rare,
-            CoreInvariantCategory::Emergent => InvariantCategory::Emergent,
+            CoreInvariantCategory::Impossible => Self::Impossible,
+            CoreInvariantCategory::Rare => Self::Rare,
+            CoreInvariantCategory::Emergent => Self::Emergent,
         }
     }
 }
@@ -183,36 +201,42 @@ pub struct InvariantTestReport {
 impl InvariantTestReport {
     /// Get the invariant name
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn name(&self) -> String {
         self.name.clone()
     }
 
     /// Get the category
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn category(&self) -> InvariantCategory {
         self.category
     }
 
     /// Get number of samples tested
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn samples(&self) -> usize {
         self.samples
     }
 
     /// Get number of failures
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn failures(&self) -> usize {
         self.failures
     }
 
     /// Get the failure rate
     #[wasm_bindgen(getter, js_name = failureRate)]
+    #[must_use]
     pub fn failure_rate(&self) -> f64 {
         self.failure_rate
     }
 
     /// Check if invariant was verified
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn verified(&self) -> bool {
         self.verified
     }
@@ -238,8 +262,9 @@ enum ConstraintType {
 impl Manifold {
     /// Create a new empty manifold
     #[wasm_bindgen(constructor)]
-    pub fn new(name: &str) -> Manifold {
-        Manifold {
+    #[must_use]
+    pub fn new(name: &str) -> Self {
+        Self {
             name: name.to_string(),
             constraints: Vec::new(),
             tolerance: 1e-10,
@@ -248,48 +273,55 @@ impl Manifold {
 
     /// Set the tolerance for membership tests
     #[wasm_bindgen(js_name = withTolerance)]
-    pub fn with_tolerance(mut self, tolerance: f64) -> Manifold {
+    #[must_use]
+    pub fn with_tolerance(mut self, tolerance: f64) -> Self {
         self.tolerance = tolerance;
         self
     }
 
     /// Add a magnitude constraint
     #[wasm_bindgen(js_name = withMagnitude)]
-    pub fn with_magnitude(mut self, target: f64) -> Manifold {
+    #[must_use]
+    pub fn with_magnitude(mut self, target: f64) -> Self {
         self.constraints.push(ConstraintType::Magnitude(target));
         self
     }
 
     /// Add a unit magnitude constraint
     #[wasm_bindgen(js_name = withUnitMagnitude)]
-    pub fn with_unit_magnitude(mut self) -> Manifold {
+    #[must_use]
+    pub fn with_unit_magnitude(mut self) -> Self {
         self.constraints.push(ConstraintType::Magnitude(1.0));
         self
     }
 
     /// Add a scalar constraint
     #[wasm_bindgen(js_name = withScalar)]
-    pub fn with_scalar(mut self, target: f64) -> Manifold {
+    #[must_use]
+    pub fn with_scalar(mut self, target: f64) -> Self {
         self.constraints.push(ConstraintType::Scalar(target));
         self
     }
 
     /// Add a pure vector constraint (only grade 1 components)
     #[wasm_bindgen(js_name = withPureVector)]
-    pub fn with_pure_vector(mut self) -> Manifold {
+    #[must_use]
+    pub fn with_pure_vector(mut self) -> Self {
         self.constraints.push(ConstraintType::PureVector);
         self
     }
 
     /// Add a pure bivector constraint (only grade 2 components)
     #[wasm_bindgen(js_name = withPureBivector)]
-    pub fn with_pure_bivector(mut self) -> Manifold {
+    #[must_use]
+    pub fn with_pure_bivector(mut self) -> Self {
         self.constraints.push(ConstraintType::PureBivector);
         self
     }
 
     /// Check if a point (as [s, e1, e2, e3, e12, e13, e23, e123]) lies on the manifold
     #[wasm_bindgen]
+    #[must_use]
     pub fn contains(&self, coeffs: &[f64]) -> bool {
         if coeffs.len() != 8 {
             return false;
@@ -300,6 +332,7 @@ impl Manifold {
 
     /// Calculate distance from the manifold
     #[wasm_bindgen]
+    #[must_use]
     pub fn distance(&self, coeffs: &[f64]) -> f64 {
         if coeffs.len() != 8 {
             return f64::INFINITY;
@@ -310,6 +343,7 @@ impl Manifold {
 
     /// Project a point onto the manifold
     #[wasm_bindgen]
+    #[must_use]
     pub fn project(&self, coeffs: &[f64]) -> Vec<f64> {
         if coeffs.len() != 8 {
             return coeffs.to_vec();
@@ -321,6 +355,7 @@ impl Manifold {
 
     /// Verify that a point lies on the manifold
     #[wasm_bindgen]
+    #[must_use]
     pub fn verify(&self, coeffs: &[f64]) -> TestResult {
         if coeffs.len() != 8 {
             return TestResult::fail_with_distance(
@@ -341,11 +376,11 @@ impl Manifold {
     fn distance_internal(&self, point: &GA3) -> f64 {
         self.constraints
             .iter()
-            .map(|c| self.constraint_distance(c, point))
+            .map(|c| Self::constraint_distance(c, point))
             .fold(0.0, f64::max)
     }
 
-    fn constraint_distance(&self, constraint: &ConstraintType, point: &GA3) -> f64 {
+    fn constraint_distance(constraint: &ConstraintType, point: &GA3) -> f64 {
         match constraint {
             ConstraintType::Magnitude(target) => (point.magnitude() - target).abs(),
             ConstraintType::Scalar(target) => (point.get(0) - target).abs(),
@@ -373,8 +408,8 @@ impl Manifold {
         for _ in 0..10 {
             let mut changed = false;
             for constraint in &self.constraints {
-                if self.constraint_distance(constraint, &result) >= self.tolerance {
-                    result = self.project_constraint(constraint, &result);
+                if Self::constraint_distance(constraint, &result) >= self.tolerance {
+                    result = Self::project_constraint(constraint, &result);
                     changed = true;
                 }
             }
@@ -385,7 +420,7 @@ impl Manifold {
         result
     }
 
-    fn project_constraint(&self, constraint: &ConstraintType, point: &GA3) -> GA3 {
+    fn project_constraint(constraint: &ConstraintType, point: &GA3) -> GA3 {
         match constraint {
             ConstraintType::Magnitude(target) => {
                 let mag = point.magnitude();
@@ -397,7 +432,9 @@ impl Manifold {
             }
             ConstraintType::Scalar(target) => {
                 let mut coeffs: Vec<f64> = (0..8).map(|i| point.get(i)).collect();
-                coeffs[0] = *target;
+                if let Some(scalar) = coeffs.get_mut(0) {
+                    *scalar = *target;
+                }
                 GA3::from_coefficients(coeffs)
             }
             ConstraintType::PureVector => {
@@ -432,6 +469,7 @@ impl Manifold {
 
 /// Create the unit sphere manifold (pure vectors with magnitude 1)
 #[wasm_bindgen(js_name = unitSphere)]
+#[must_use]
 pub fn unit_sphere() -> Manifold {
     Manifold::new("Unit Sphere")
         .with_pure_vector()
@@ -440,6 +478,7 @@ pub fn unit_sphere() -> Manifold {
 
 /// Create the rotor manifold (unit magnitude elements)
 #[wasm_bindgen(js_name = rotorManifold)]
+#[must_use]
 pub fn rotor_manifold() -> Manifold {
     Manifold::new("Rotor Manifold").with_unit_magnitude()
 }
@@ -448,6 +487,10 @@ pub fn rotor_manifold() -> Manifold {
 ///
 /// The check function should return a boolean (true = pass, false = fail).
 /// This will run the check `samples` times and fail if ANY invocation fails.
+/// # Errors
+///
+/// Returns a `JsValue` when the check callback throws, or when any sample
+/// of the "impossible" invariant fails.
 #[wasm_bindgen(js_name = testImpossible)]
 pub fn test_impossible(
     name: &str,
@@ -481,6 +524,10 @@ pub fn test_impossible(
 ///
 /// The check function should return a boolean (true = pass, false = fail).
 /// This will run the check `samples` times and fail if failure rate exceeds bound.
+/// # Errors
+///
+/// Returns a `JsValue` when the check callback throws, or when the observed
+/// failure rate exceeds the declared probability bound.
 #[wasm_bindgen(js_name = testRare)]
 pub fn test_rare(
     name: &str,
@@ -513,20 +560,22 @@ pub fn test_rare(
 
 /// Generate a random GA3 multivector for property testing
 #[wasm_bindgen(js_name = randomGA3)]
+#[must_use]
 pub fn random_ga3() -> Vec<f64> {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    (0..8).map(|_| rng.gen_range(-10.0..10.0)).collect()
+    use rand::RngExt;
+    let mut rng = rand::rng();
+    (0..8).map(|_| rng.random_range(-10.0..10.0)).collect()
 }
 
 /// Generate a random unit vector for property testing
 #[wasm_bindgen(js_name = randomUnitVector)]
+#[must_use]
 pub fn random_unit_vector() -> Vec<f64> {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    let x: f64 = rng.gen_range(-1.0..1.0);
-    let y: f64 = rng.gen_range(-1.0..1.0);
-    let z: f64 = rng.gen_range(-1.0..1.0);
+    use rand::RngExt;
+    let mut rng = rand::rng();
+    let x: f64 = rng.random_range(-1.0..1.0);
+    let y: f64 = rng.random_range(-1.0..1.0);
+    let z: f64 = rng.random_range(-1.0..1.0);
     let mag = (x * x + y * y + z * z).sqrt();
     if mag > 1e-10 {
         vec![0.0, x / mag, y / mag, 0.0, z / mag, 0.0, 0.0, 0.0]
@@ -537,18 +586,19 @@ pub fn random_unit_vector() -> Vec<f64> {
 
 /// Generate a random rotor for property testing
 #[wasm_bindgen(js_name = randomRotor)]
+#[must_use]
 pub fn random_rotor() -> Vec<f64> {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
+    use rand::RngExt;
+    let mut rng = rand::rng();
 
     // Generate random angle
-    let angle: f64 = rng.gen_range(0.0..std::f64::consts::TAU);
+    let angle: f64 = rng.random_range(0.0..std::f64::consts::TAU);
     let half_angle = angle / 2.0;
 
     // Generate random axis
-    let x: f64 = rng.gen_range(-1.0..1.0);
-    let y: f64 = rng.gen_range(-1.0..1.0);
-    let z: f64 = rng.gen_range(-1.0..1.0);
+    let x: f64 = rng.random_range(-1.0..1.0);
+    let y: f64 = rng.random_range(-1.0..1.0);
+    let z: f64 = rng.random_range(-1.0..1.0);
     let mag = (x * x + y * y + z * z).sqrt();
 
     if mag < 1e-10 {
@@ -578,6 +628,7 @@ pub fn random_rotor() -> Vec<f64> {
 
 /// Assertion helpers for JavaScript tests
 #[wasm_bindgen(js_name = assertGA3Equal)]
+#[must_use]
 pub fn assert_ga3_equal(a: &[f64], b: &[f64], tolerance: f64) -> TestResult {
     if a.len() != 8 || b.len() != 8 {
         return TestResult::fail_with_distance(
@@ -588,7 +639,9 @@ pub fn assert_ga3_equal(a: &[f64], b: &[f64], tolerance: f64) -> TestResult {
 
     let mut max_diff: f64 = 0.0;
     for i in 0..8 {
-        let diff = (a[i] - b[i]).abs();
+        // GA3 always carries 8 coefficients; .get() keeps it panic-free.
+        let diff =
+            (a.get(i).copied().unwrap_or_default() - b.get(i).copied().unwrap_or_default()).abs();
         if diff > max_diff {
             max_diff = diff;
         }
@@ -603,6 +656,7 @@ pub fn assert_ga3_equal(a: &[f64], b: &[f64], tolerance: f64) -> TestResult {
 
 /// Assert magnitude equals expected value
 #[wasm_bindgen(js_name = assertMagnitude)]
+#[must_use]
 pub fn assert_magnitude(coeffs: &[f64], expected: f64, tolerance: f64) -> TestResult {
     if coeffs.len() != 8 {
         return TestResult::fail_with_distance(
@@ -620,13 +674,14 @@ pub fn assert_magnitude(coeffs: &[f64], expected: f64, tolerance: f64) -> TestRe
     } else {
         TestResult::fail_with_distance(
             diff,
-            &format!("Magnitude mismatch: expected {}, got {}", expected, actual),
+            &format!("Magnitude mismatch: expected {expected}, got {actual}"),
         )
     }
 }
 
 /// Assert the value is approximately zero
 #[wasm_bindgen(js_name = assertZero)]
+#[must_use]
 pub fn assert_zero(coeffs: &[f64], tolerance: f64) -> TestResult {
     if coeffs.len() != 8 {
         return TestResult::fail_with_distance(

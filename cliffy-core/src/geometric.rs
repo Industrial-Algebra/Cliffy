@@ -1,6 +1,9 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Geometric algebra helpers
 //!
-//! This module provides the bridge between user-facing types (i32, f64, String, Vec<T>)
+//! This module provides the bridge between user-facing types (`i32`, `f64`, `String`, `Vec<T>`)
 //! and the internal geometric algebra representation (GA3 multivectors).
 //!
 //! Users don't need to understand geometric algebra to use Cliffy - these conversions
@@ -40,13 +43,13 @@ pub trait FromGeometric: Sized {
 
 impl IntoGeometric for i32 {
     fn into_geometric(self) -> GA3 {
-        GA3::scalar(self as f64)
+        GA3::scalar(f64::from(self))
     }
 }
 
 impl FromGeometric for i32 {
     fn from_geometric(mv: &GA3) -> Self {
-        mv.get(0) as i32
+        mv.get(0) as Self
     }
 }
 
@@ -58,19 +61,19 @@ impl IntoGeometric for i64 {
 
 impl FromGeometric for i64 {
     fn from_geometric(mv: &GA3) -> Self {
-        mv.get(0) as i64
+        mv.get(0) as Self
     }
 }
 
 impl IntoGeometric for f32 {
     fn into_geometric(self) -> GA3 {
-        GA3::scalar(self as f64)
+        GA3::scalar(f64::from(self))
     }
 }
 
 impl FromGeometric for f32 {
     fn from_geometric(mv: &GA3) -> Self {
-        mv.get(0) as f32
+        mv.get(0) as Self
     }
 }
 
@@ -94,7 +97,7 @@ impl IntoGeometric for usize {
 
 impl FromGeometric for usize {
     fn from_geometric(mv: &GA3) -> Self {
-        mv.get(0) as usize
+        mv.get(0) as Self
     }
 }
 
@@ -160,8 +163,8 @@ impl<T: IntoGeometric> IntoGeometric for Option<T> {
                 let inner = value.into_geometric();
                 // Add 1.0 to e3 component (index 4) to mark as Some
                 let mut coeffs: Vec<f64> = inner.as_slice().to_vec();
-                if coeffs.len() > 4 {
-                    coeffs[4] = 1.0;
+                if let Some(e3) = coeffs.get_mut(4) {
+                    *e3 = 1.0;
                 }
                 GA3::from_coefficients(coeffs)
             }
@@ -171,13 +174,12 @@ impl<T: IntoGeometric> IntoGeometric for Option<T> {
 
 impl<T: FromGeometric + Default> FromGeometric for Option<T> {
     fn from_geometric(mv: &GA3) -> Self {
-        // Check e3 component (index 4) for Some marker
-        if mv.get(4) > 0.5 {
+        // Check e3 component (index 4) for Some marker; a near-zero
+        // multivector decodes as None, anything else as Some.
+        if mv.get(4) > 0.5 || mv.magnitude() >= 1e-10 {
             Some(T::from_geometric(mv))
-        } else if mv.magnitude() < 1e-10 {
-            None
         } else {
-            Some(T::from_geometric(mv))
+            None
         }
     }
 }
@@ -240,12 +242,17 @@ impl<A: IntoGeometric, B: IntoGeometric> IntoGeometric for (A, B) {
 
         // Store A's scalar in grade 0, B's scalar in e1 component
         // This is a simplified encoding - works for scalar-like types
-        let mut coeffs = vec![0.0; 8];
-        coeffs[0] = a_mv.get(0); // A in scalar
-        coeffs[1] = b_mv.get(0); // B in e1
-                                 // Preserve some additional info in higher grades
-        coeffs[2] = a_mv.get(1); // A's e1 in e2
-        coeffs[3] = b_mv.get(1); // B's e1 in e3
+        // (missing coefficients read as 0.0 = absent blade)
+        let coeffs = vec![
+            a_mv.get(0), // A in scalar
+            b_mv.get(0), // B in e1
+            a_mv.get(1), // A's e1 in e2
+            b_mv.get(1), // B's e1 in e3
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ];
 
         GA3::from_coefficients(coeffs)
     }

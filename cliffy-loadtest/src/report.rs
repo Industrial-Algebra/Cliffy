@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Report generation for scale tests
 //!
 //! Produces human-readable and machine-parseable reports.
@@ -91,7 +94,7 @@ pub struct TestMetadata {
 
 impl ScaleTestReport {
     /// Create a report from simulation results
-    pub fn from_result(scenario: impl Into<String>, result: SimulationResult) -> Self {
+    pub fn from_result(scenario: impl Into<String>, result: &SimulationResult) -> Self {
         Self {
             scenario: scenario.into(),
             summary: TestSummary {
@@ -117,13 +120,14 @@ impl ScaleTestReport {
             },
             metadata: TestMetadata {
                 timestamp: chrono_lite_timestamp(),
-                rust_version: env!("CARGO_PKG_RUST_VERSION").to_string(),
+                rust_version: String::new(),
                 platform: std::env::consts::OS.to_string(),
             },
         }
     }
 
     /// Format the report
+    #[must_use]
     pub fn format(&self, format: ReportFormat) -> String {
         match format {
             ReportFormat::Text => self.format_text(),
@@ -156,7 +160,7 @@ impl ScaleTestReport {
         output.push_str("CONVERGENCE\n");
         output.push_str(&format!("  Converged: {}\n", self.convergence.converged));
         if let Some(time) = self.convergence.convergence_time_ms {
-            output.push_str(&format!("  Time: {}ms\n", time));
+            output.push_str(&format!("  Time: {time}ms\n"));
         }
         output.push_str(&format!(
             "  Max Divergence: {:.6}\n",
@@ -216,7 +220,7 @@ impl ScaleTestReport {
         output.push_str("|--------|-------|\n");
         output.push_str(&format!("| Converged | {} |\n", self.convergence.converged));
         if let Some(time) = self.convergence.convergence_time_ms {
-            output.push_str(&format!("| Time | {}ms |\n", time));
+            output.push_str(&format!("| Time | {time}ms |\n"));
         }
         output.push_str(&format!(
             "| Max Divergence | {:.6} |\n",

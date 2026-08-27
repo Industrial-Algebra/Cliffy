@@ -4,7 +4,9 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    # Permissive: stacked PRs target their parent branch (feature/*, chore/*,
+    # docs/*, fix/*) until the stack lands on develop; every PR gets CI.
+    branches: ["**"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -17,9 +19,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain (pinned nightly)
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: nightly-2026-08-14
           components: rustfmt, clippy
           targets: wasm32-unknown-unknown
 
@@ -38,16 +41,33 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Run clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
   rust-tests:
-    name: Rust Tests
+    name: Rust Tests (${{ matrix.toolchain }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # stable: crates.io compatibility guarantee.
+        # nightly: FLOATING — deliberately ahead of the pinned toolchain file
+        # so test-level regressions surface here before they reach devs.
+        toolchain: [stable, nightly]
+    env:
+      # Beats rust-toolchain.toml: rustup env > file > default.
+      RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
     steps:
       - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
 
       - name: Cache dependencies
         uses: actions/cache@v5
@@ -56,12 +76,15 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ matrix.toolchain }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-${{ matrix.toolchain }}-
 
-      - name: Run tests
-        run: cargo test --workspace
+      - name: Run tests (nextest)
+        run: cargo nextest run --workspace
+
+      - name: Run doctests
+        run: cargo test --doc --workspace
 
   wasm-build:
     name: WASM Build
@@ -70,9 +93,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain (pinned nightly)
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: nightly-2026-08-14
           targets: wasm32-unknown-unknown
 
       - name: Install wasm-pack
@@ -96,7 +120,7 @@ jobs:
         run: node scripts/post-wasm-build.js
 
       - name: Upload WASM artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: wasm-build
           path: cliffy-wasm/pkg/
@@ -109,9 +133,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain (pinned nightly)
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: nightly-2026-08-14
           targets: wasm32-unknown-unknown
 
       - name: Install wasm-pack
@@ -149,7 +174,7 @@ jobs:
           node-version: '20'
 
       - name: Download WASM artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: wasm-build
           path: cliffy-wasm/pkg/
@@ -167,7 +192,7 @@ jobs:
         run: npm run build:all --if-present || npm run build -ws --if-present
 
       - name: Upload example builds
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: examples-build
           path: |
@@ -207,7 +232,7 @@ jobs:
           node-version: '20'
 
       - name: Download WASM artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: wasm-build
           path: cliffy-wasm/pkg/
@@ -236,7 +261,7 @@ jobs:
         run: npx playwright test --project="$BROWSER"
 
       - name: Upload test results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report-${{ matrix.os }}-${{ matrix.browser }}
@@ -254,8 +279,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain (pinned nightly)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-08-14
 
       - name: Cache dependencies
         uses: actions/cache@v5
@@ -307,7 +334,7 @@ jobs:
         run: cp -r src/templates dist/
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: create-cliffy
           path: tools/create-cliffy/dist/
@@ -326,7 +353,7 @@ jobs:
           node-version: '20'
 
       - name: Download WASM artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: wasm-build
           path: cliffy-wasm/pkg/

@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Invariant types for algebraic testing
 //!
 //! Invariants are properties that should hold across state transformations.
@@ -36,14 +39,14 @@ pub trait Invariant {
         Self: Sync,
     {
         let failures = AtomicUsize::new(0);
-        let sample_errors: std::sync::Mutex<Vec<GeometricError>> =
-            std::sync::Mutex::new(Vec::new());
+        let sample_errors: parking_lot::Mutex<Vec<GeometricError>> =
+            parking_lot::Mutex::new(Vec::new());
 
         // Run samples in parallel
         (0..samples).into_par_iter().for_each(|_| {
             if let TestResult::Fail(error) = self.verify_once() {
                 failures.fetch_add(1, Ordering::Relaxed);
-                let mut errors = sample_errors.lock().unwrap();
+                let mut errors = sample_errors.lock();
                 if errors.len() < 10 {
                     // Keep at most 10 sample errors
                     errors.push(error);
@@ -62,7 +65,7 @@ pub trait Invariant {
             failure_rate,
             probability_bound: None,
             verified: failure_count == 0 || self.category() == InvariantCategory::Emergent,
-            sample_errors: sample_errors.into_inner().unwrap(),
+            sample_errors: sample_errors.into_inner(),
             confidence_interval: None,
             confidence_level: None,
         }
@@ -157,6 +160,12 @@ where
     F: Fn() -> TestResult + Send + Sync,
 {
     /// Create a new rare invariant
+    ///
+    /// # Panics
+    ///
+    /// Panics if `probability_bound` is not in the open interval (0, 1) —
+    /// a rare-event definition outside it is a programming error, and this
+    /// is a test-construction API where panicking is the failure protocol.
     pub fn new(name: impl Into<String>, probability_bound: f64, check: F) -> Self {
         assert!(
             probability_bound > 0.0 && probability_bound < 1.0,
@@ -198,8 +207,8 @@ where
         let verifier = MonteCarloVerifier::new(samples);
 
         let failures = AtomicUsize::new(0);
-        let sample_errors: std::sync::Mutex<Vec<GeometricError>> =
-            std::sync::Mutex::new(Vec::new());
+        let sample_errors: parking_lot::Mutex<Vec<GeometricError>> =
+            parking_lot::Mutex::new(Vec::new());
 
         // Use Monte Carlo verification
         let result = verifier.verify_probability_bound(
@@ -207,7 +216,7 @@ where
                 let test_result = (self.check)();
                 if let TestResult::Fail(error) = test_result {
                     failures.fetch_add(1, Ordering::Relaxed);
-                    let mut errors = sample_errors.lock().unwrap();
+                    let mut errors = sample_errors.lock();
                     if errors.len() < 10 {
                         errors.push(error);
                     }
@@ -243,7 +252,7 @@ where
             failure_rate,
             probability_bound: Some(self.probability_bound),
             verified,
-            sample_errors: sample_errors.into_inner().unwrap(),
+            sample_errors: sample_errors.into_inner(),
             confidence_interval: Some(ci),
             confidence_level: Some(conf_level),
         }
@@ -312,7 +321,7 @@ where
 
 /// Registry for tracking emergent behaviors
 pub struct EmergentRegistry {
-    observations: std::sync::Mutex<Vec<EmergentObservation>>,
+    observations: parking_lot::Mutex<Vec<EmergentObservation>>,
 }
 
 /// A recorded emergent observation
@@ -328,15 +337,16 @@ pub struct EmergentObservation {
 
 impl EmergentRegistry {
     /// Create a new empty registry
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
-            observations: std::sync::Mutex::new(Vec::new()),
+            observations: parking_lot::Mutex::new(Vec::new()),
         }
     }
 
     /// Record an observation
     pub fn record(&self, name: impl Into<String>, description: impl Into<String>) {
-        let mut obs = self.observations.lock().unwrap();
+        let mut obs = self.observations.lock();
         obs.push(EmergentObservation {
             name: name.into(),
             description: description.into(),
@@ -346,12 +356,12 @@ impl EmergentRegistry {
 
     /// Get all observations
     pub fn observations(&self) -> Vec<EmergentObservation> {
-        self.observations.lock().unwrap().clone()
+        self.observations.lock().clone()
     }
 
     /// Get count of observations
     pub fn count(&self) -> usize {
-        self.observations.lock().unwrap().len()
+        self.observations.lock().len()
     }
 }
 
@@ -385,15 +395,15 @@ mod tests {
 
     #[test]
     fn test_rare_invariant() {
-        use rand::Rng;
+        use rand::RngExt;
 
         // Invariant that fails ~10% of the time
         let inv = RareInvariant::new(
             "Rarely fails",
             0.2, // Allow up to 20% failure rate
             || {
-                let mut rng = rand::thread_rng();
-                if rng.gen::<f64>() < 0.1 {
+                let mut rng = rand::rng();
+                if rng.random::<f64>() < 0.1 {
                     TestResult::fail_with_distance(0.1, "Random failure")
                 } else {
                     TestResult::Pass
@@ -425,7 +435,7 @@ mod tests {
         let smt_output = obligation.to_smtlib2();
 
         assert!(smt_output.contains("Magnitude non-negative"));
-        assert!(!smt_output.is_empty());
+        assert_ne!(smt_output, "");
     }
 
     #[test]
@@ -446,16 +456,16 @@ mod tests {
         let smt_output = obligation.to_smtlib2();
 
         assert!(smt_output.contains("Rarely fails"));
-        assert!(!smt_output.is_empty());
+        assert_ne!(smt_output, "");
     }
 
     #[test]
     fn test_rare_verify_with_smt() {
-        use rand::Rng;
+        use rand::RngExt;
 
         let inv = RareInvariant::new("Bounded failure", 0.2, || {
-            let mut rng = rand::thread_rng();
-            if rng.gen::<f64>() < 0.05 {
+            let mut rng = rand::rng();
+            if rng.random::<f64>() < 0.05 {
                 TestResult::fail_with_distance(0.1, "Random failure")
             } else {
                 TestResult::Pass

@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Cliffy Test - Algebraic Testing Framework
 //!
 //! Tests are geometric invariants. Failures are geometric distances.
@@ -60,24 +63,28 @@ pub type Vec3 = Vector<3, 0, 0>;
 pub type Biv3 = Bivector<3, 0, 0>;
 
 /// Convenience function to create a GA3 vector from components
+#[must_use]
 pub fn vector(x: f64, y: f64, z: f64) -> GA3 {
     GA3::from_vector(&Vec3::from_components(x, y, z))
 }
 
 /// Convenience function to create a GA3 bivector from components
+#[must_use]
 pub fn bivector(xy: f64, xz: f64, yz: f64) -> GA3 {
     GA3::from_bivector(&Biv3::from_components(xy, xz, yz))
 }
 
 /// Convenience function to create a GA3 from coefficient array
+#[must_use]
 pub fn from_coeffs(coeffs: [f64; 8]) -> GA3 {
     GA3::from_coefficients(coeffs.to_vec())
 }
 
-/// Sandwich product: r * v * r.reverse()
+/// Sandwich product: r * v * `r.reverse()`
 ///
 /// This is the fundamental operation for geometric transformations.
 /// When r is a rotor (unit versor), this preserves magnitude.
+#[must_use]
 pub fn sandwich(rotor: &GA3, value: &GA3) -> GA3 {
     rotor
         .geometric_product(value)

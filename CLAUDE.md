@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Vision
 
-Cliffy enables building collaborative applications at Google Docs scale (10,000+ concurrent users) where **distributed systems problems become geometric algebra problems** with closed-form solutions and guaranteed convergence.
+Cliffy is **geometric state management and distributed synchronization for any UI framework**. It enables building collaborative applications at Google Docs scale (10,000+ concurrent users) where **distributed systems problems become geometric algebra problems** with closed-form solutions and guaranteed convergence.
+
+Cliffy is used *inside* existing frameworks (React, Leptos, Yew, vanilla JS), not *instead of* them. It provides the state and synchronization layer while the framework handles rendering.
 
 ### The Core Insight
 
@@ -48,13 +50,13 @@ mount(app, '#app');
 │  (Collaborative Docs, Games, Design Tools, Whiteboards)         │
 └─────────────────────────────────────────────────────────────────┘
                               │
-        ┌─────────────────────┴─────────────────────┐
-        │                                           │
-        ▼                                           ▼
-┌───────────────────────────────┐     ┌───────────────────────────────┐
-│        Algebraic TSX          │     │      Trebek (Mobile)          │
-│  (Web: dataflow → DOM)        │     │  (RN/Lynx: machines → native) │
-└───────────────────────────────┘     └───────────────────────────────┘
+        ┌─────────────────────┼─────────────────────┐
+        │                     │                     │
+        ▼                     ▼                     ▼
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────┐
+│  Algebraic TSX  │  │ cliffy-tsukoshi │  │  Framework Adapters  │
+│  (html`` → DOM) │  │ (Pure TS path)  │  │ (React, Leptos, Yew) │
+└─────────────────┘  └─────────────────┘  └─────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Synchronization Layer                         │
@@ -82,28 +84,35 @@ mount(app, '#app');
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Current State
+## Current State (v0.3.0)
 
-### Active Crates
+### Rust Crates
 
 | Crate | Tests | Description |
 |-------|-------|-------------|
-| `cliffy-core` | 79 | FRP primitives (Behavior, Event) with GA3 internally |
-| `cliffy-wasm` | - | WASM bindings + html.ts (Algebraic TSX) |
-| `cliffy-purescript` | - | PureScript bindings with type-safe Html DSL |
-| `cliffy-protocols` | 42 | Distributed state (CRDT, sync, storage) |
-| `cliffy-test` | 25 | Geometric testing framework |
-| `cliffy-gpu` | 18 | WebGPU acceleration (SIMD fallback) |
-| `cliffy-loadtest` | 15 | Scale testing simulator |
+| `cliffy-core` | 85 | FRP primitives, Component trait, dataflow, projections, transforms |
+| `cliffy-protocols` | 42 | CRDT, lattice join, delta sync, consensus, storage |
+| `cliffy-test` | 30 | Geometric invariants, manifold testing, SMT proof export |
+| `cliffy-gpu` | 18 | WebGPU compute + SIMD fallback |
+| `cliffy-loadtest` | 15 | Scale simulation (100–10k peers) |
+| `cliffy-wasm` | 4 | WASM bindings + Algebraic TSX (html tagged template) |
 
-### Scaffolding
+### TypeScript
+
+| Package | Tests | Description |
+|---------|-------|-------------|
+| `cliffy-tsukoshi` | 113 (vitest) | Pure TS geometric state + distributed protocols, React component library |
+
+### Tooling
 
 - `tools/create-cliffy` — CLI to scaffold new projects (`npx create-cliffy`)
+- `cliffy-purescript` — PureScript bindings with type-safe Html DSL
 
-### Archived
+### Experimental / Archived
 
-- `cliffy-alive` — Living UI / cellular automata
+- `cliffy-alive` — Living UI / cellular automata (experimental, on feature branch)
 - `cliffy-typescript` — Deprecated by WASM-first approach
+- Trebek (RN + Lynx) — Shelved; tsukoshi covers mobile/edge as pure TS
 
 ## Development Standards
 
@@ -269,16 +278,12 @@ counter = do
 
 See `ROADMAP.md` for full details. Summary:
 
-| Phase | Focus |
-|-------|-------|
-| **0** | Algebraic Testing (cliffy-test + amari-flynn) |
-| **1** | Geometric State (rotors, versors, projections) |
-| **2** | Distributed State (CRDT revival, lattice join) |
-| **3** | Synchronization (WebRTC, deltas, persistence) |
-| **4** | Algebraic TSX (composable components, dataflow graphs) |
-| **5** | Edge Computing (WebGPU, distributed compute) |
-| **6** | Production (scale testing, docs, examples) |
-| **7** | Native Mobile (Trebek: RN + Lynx middleware) |
+| Version | Focus |
+|---------|-------|
+| **0.4.0** | Typed Algebra — replace raw GA3 with typed Rotor/Vector/Bivector |
+| **0.5.0** | Production Polish — memory leaks, type holes, performance |
+| **0.6.0** | API Coherence — unified naming, docs, E2E tests |
+| **1.0.0** | Stable Release — semver commitment, crates.io + npm |
 
 ## Key Principles
 

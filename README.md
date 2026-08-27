@@ -2,8 +2,8 @@
 
 [![npm](https://img.shields.io/npm/v/@cliffy-ga/core)](https://www.npmjs.com/package/@cliffy-ga/core)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/211f9fc6-dbfb-4837-a0b0-11aaf4c04573/deploy-status)](https://app.netlify.com/projects/cliffy-ga/deploys)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/Rust-1.80+-orange.svg)](https://www.rust-lang.org/)
 [![WASM](https://img.shields.io/badge/WebAssembly-ready-blueviolet.svg)](https://webassembly.org/)
 
 A WASM-first reactive framework with classical FRP semantics, powered by geometric algebra.
@@ -194,7 +194,7 @@ const text = ifElse(isLoading, () => "Loading...", () => "Ready");
 
 ```
 cliffy/
-├── cliffy-core/           # Rust FRP implementation (79 tests)
+├── cliffy-core/           # Rust FRP implementation (85 tests)
 │   └── src/
 │       ├── behavior.rs    # Behavior<T> - continuous signals
 │       ├── event.rs       # Event<T> - discrete occurrences
@@ -223,7 +223,7 @@ cliffy/
 │           └── Foreign.js # FFI bridge
 ├── cliffy-protocols/      # Distributed state (42 tests)
 ├── cliffy-gpu/            # WebGPU/SIMD acceleration (18 tests)
-├── cliffy-test/           # Algebraic testing framework (25 tests)
+├── cliffy-test/           # Algebraic testing framework (30 tests)
 ├── cliffy-loadtest/       # Scale testing simulator (15 tests)
 ├── tools/
 │   └── create-cliffy/     # Project scaffolding CLI
@@ -275,7 +275,7 @@ npm run dev            # Watch mode for development
 
 ```bash
 # Run all tests
-cargo test --workspace  # 179 tests
+cargo test --workspace  # 250 tests
 
 # Run specific crate tests
 cargo test -p cliffy-core
@@ -326,9 +326,10 @@ See [ROADMAP.md](ROADMAP.md) for the full development plan.
 | Phase 3 | Planned | Synchronization (WebRTC, persistence) |
 | Phase 4 | Done | Algebraic TSX Components |
 | Phase 5 | Done | Edge Computing (WebGPU) |
-| Phase 6 | **v0.1.0** | Production Readiness |
+| Phase 6 | **v0.3.0** | Production Readiness |
 | Phase 7 | Planned | Native Mobile (Trebek) |
 
 ## License
 
-MIT
+Apache-2.0. See [LICENSE](LICENSE). Industrial Algebra is the copyright holder;
+contributions are made under the [CLA](https://github.com/Industrial-Algebra/.github/blob/main/CLA.md).

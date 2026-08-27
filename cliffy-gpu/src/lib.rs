@@ -176,6 +176,9 @@ impl GpuContext {
                 power_preference: wgpu::PowerPreference::HighPerformance,
                 compatible_surface: None,
                 force_fallback_adapter: false,
+                // Preserve pre-wgpu-30 behavior: report the adapter's raw
+                // limits instead of bucketing them for fallback ordering.
+                apply_limit_buckets: false,
             })
             .await
             .map_err(|_| GpuError::AdapterNotFound)?;
@@ -520,7 +523,10 @@ impl GpuContext {
             .map_err(|e| GpuError::ComputeFailed(e.to_string()))?
             .map_err(|e| GpuError::ComputeFailed(format!("{:?}", e)))?;
 
-        let data = buffer_slice.get_mapped_range();
+        // wgpu 30: `get_mapped_range` returns Result instead of panicking.
+        let data = buffer_slice
+            .get_mapped_range()
+            .map_err(|e| GpuError::ComputeFailed(format!("{e:?}")))?;
         let result: Vec<GpuMultivector> = bytemuck::cast_slice(&data).to_vec();
         drop(data);
         staging_buffer.unmap();

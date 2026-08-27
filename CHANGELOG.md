@@ -8,6 +8,23 @@ All notable changes to Cliffy are documented here. Format follows
 
 ### Changed
 
+- **Toolchain: nightly-first** (operator decision 2026-08-27, test-driving
+  the 2026 Rust toolkit). `rust-toolchain.toml` pins
+  `nightly-2026-08-14` +`rust-src` — date-pinned because floating nightly
+  1.100.0 (2026-08-25) hits a rustc trait-solver recursion overflow on
+  wgpu's `Send` chains in clippy builds (stable unaffected; re-float when
+  it clears). CI lints on the pinned nightly via file-driven installs
+  (`dtolnay/rust-toolchain@master`) and tests on **stable + floating
+  nightly** lanes via `RUSTUP_TOOLCHAIN` override — the library stays
+  crates.io-compatible and regressions surface in CI first. Aligns with
+  amari/minuet/Kagome CI convention.
+- **wgpu 29 → 30** — unblocks dependabot #275; two API fixes
+  (`apply_limit_buckets: false`, `get_mapped_range` → `Result`); clears the
+  doc future-incompat warning.
+- **CI: cargo-nextest** for unit/integration tests (faster, retries);
+  doctests stay on `cargo test --doc` (nextest doesn't run them).
+- All cargo-invoking workflows install the toolchain from
+  `rust-toolchain.toml` (`dtolnay/rust-toolchain@master`).
 - **License: MIT → Apache-2.0** (operator decision 2026-08-27, per IA
   ecosystem standard). LICENSE file added; all crate manifests and the 39
   source files carry Apache-2.0 SPDX identifiers. Published npm artifacts

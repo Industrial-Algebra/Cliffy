@@ -25,10 +25,10 @@ rayon = "1.12"
 tokio = { version = "1.52", features = ["rt", "rt-multi-thread", "time", "sync", "macros"] }
 
 # Random number generation
-rand = "0.10"
+rand = "0.10.2"
 
 # Unique IDs
-uuid = { version = "1.23.3", features = ["v4"] }
+uuid = { version = "1.24.0", features = ["v4"] }
 
 # Time measurement
 instant = "0.1"

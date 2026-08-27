@@ -25,7 +25,7 @@ quickcheck_macros = "1.0"
 rayon = "1.12"
 
 # Random sampling
-rand = "0.10"
+rand = "0.10.2"
 
 # Serialization for test results
 serde = { workspace = true }

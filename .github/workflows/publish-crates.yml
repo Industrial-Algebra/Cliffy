@@ -35,7 +35,7 @@ jobs:
       cliffy-protocols: ${{ steps.changes.outputs.cliffy-protocols }}
       cliffy-gpu: ${{ steps.changes.outputs.cliffy-gpu }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
 
@@ -70,7 +70,7 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.cliffy-core == 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -78,7 +78,7 @@ jobs:
           toolchain: nightly-2026-08-14
 
       - name: Cache Cargo registry
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
@@ -114,7 +114,7 @@ jobs:
       needs.detect-changes.outputs.cliffy-test == 'true' &&
       (needs.publish-cliffy-core.result == 'success' || needs.publish-cliffy-core.result == 'skipped')
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -122,7 +122,7 @@ jobs:
           toolchain: nightly-2026-08-14
 
       - name: Cache Cargo registry
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
@@ -161,7 +161,7 @@ jobs:
       needs.detect-changes.outputs.cliffy-protocols == 'true' &&
       (needs.publish-cliffy-core.result == 'success' || needs.publish-cliffy-core.result == 'skipped')
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -169,7 +169,7 @@ jobs:
           toolchain: nightly-2026-08-14
 
       - name: Cache Cargo registry
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
@@ -208,7 +208,7 @@ jobs:
       needs.detect-changes.outputs.cliffy-gpu == 'true' &&
       (needs.publish-cliffy-core.result == 'success' || needs.publish-cliffy-core.result == 'skipped')
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -216,7 +216,7 @@ jobs:
           toolchain: nightly-2026-08-14
 
       - name: Cache Cargo registry
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}

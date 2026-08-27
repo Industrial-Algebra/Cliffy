@@ -71,7 +71,7 @@ pub struct StoredOperation {
 ///
 /// Implementations may target different backends:
 /// - `MemoryStore`: In-memory (for testing)
-/// - `IndexedDbStore`: Browser IndexedDB (for WASM)
+/// - `IndexedDbStore`: Browser `IndexedDB` (for WASM)
 /// - `FileStore`: File system (for native)
 pub trait GeometricStore {
     /// Save a state snapshot.
@@ -117,7 +117,7 @@ pub struct StorageStats {
     pub pending_operations: usize,
 }
 
-/// In-memory implementation of GeometricStore.
+/// In-memory implementation of `GeometricStore`.
 ///
 /// Useful for testing and as a reference implementation.
 #[derive(Debug, Default)]
@@ -134,7 +134,7 @@ pub struct MemoryStore {
     config: MemoryStoreConfig,
 }
 
-/// Configuration for MemoryStore.
+/// Configuration for `MemoryStore`.
 #[derive(Debug, Clone)]
 pub struct MemoryStoreConfig {
     /// Maximum number of snapshots to keep
@@ -157,11 +157,13 @@ impl Default for MemoryStoreConfig {
 
 impl MemoryStore {
     /// Create a new in-memory store.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Create with custom configuration.
+    #[must_use]
     pub fn with_config(config: MemoryStoreConfig) -> Self {
         Self {
             config,
@@ -170,6 +172,7 @@ impl MemoryStore {
     }
 
     /// Get the current state by replaying from snapshot.
+    #[must_use]
     pub fn get_current_state(&self) -> Option<GA3> {
         let snapshot = self.load_latest_snapshot()?;
         let mut state = snapshot.state;
@@ -181,7 +184,7 @@ impl MemoryStore {
         Some(state)
     }
 
-    /// Prune old snapshots beyond max_snapshots.
+    /// Prune old snapshots beyond `max_snapshots`.
     fn prune_snapshots(&mut self) {
         while self.snapshots.len() > self.config.max_snapshots {
             self.snapshots.remove(0);
@@ -303,8 +306,7 @@ impl MemoryStore {
 fn current_timestamp_ms() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_millis() as u64)
-        .unwrap_or(0)
+        .map_or(0, |d| d.as_millis() as u64)
 }
 
 /// A recovery result from loading stored state.
@@ -437,7 +439,7 @@ mod tests {
         for i in 1..=5 {
             clock.tick(node_id);
             store.append_operation(StateDelta::additive(
-                GA3::scalar(i as f64),
+                GA3::scalar(f64::from(i)),
                 VectorClock::new(),
                 clock.clone(),
                 node_id,
@@ -494,7 +496,7 @@ mod tests {
 
         // Save more snapshots than max
         for i in 0..5 {
-            store.save_snapshot(&GA3::scalar(i as f64), &VectorClock::new());
+            store.save_snapshot(&GA3::scalar(f64::from(i)), &VectorClock::new());
         }
 
         // Should only keep last 3

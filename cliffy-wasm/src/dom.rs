@@ -8,9 +8,9 @@
 //!
 //! # Key Concepts
 //!
-//! - **DOMProjection**: Connects geometric state to a DOM property
-//! - **DOMUpdate**: Types of updates that can be applied to DOM
-//! - **ProjectionScheduler**: Batches updates to animation frames
+//! - **`DOMProjection`**: Connects geometric state to a DOM property
+//! - **`DOMUpdate`**: Types of updates that can be applied to DOM
+//! - **`ProjectionScheduler`**: Batches updates to animation frames
 //!
 //! # Example (JavaScript)
 //!
@@ -55,7 +55,7 @@ pub enum DOMUpdateKind {
 
 /// A projection from geometric state to DOM.
 ///
-/// DOMProjection directly updates DOM properties without virtual DOM
+/// `DOMProjection` directly updates DOM properties without virtual DOM
 /// reconciliation, providing efficient reactive updates.
 #[wasm_bindgen]
 pub struct DOMProjection {
@@ -87,8 +87,9 @@ impl DOMProjection {
     /// * `element` - The DOM element to update
     /// * `project_fn` - Function that takes state and returns string
     #[wasm_bindgen]
-    pub fn text(element: Element, project_fn: Function) -> DOMProjection {
-        DOMProjection {
+    #[must_use]
+    pub fn text(element: Element, project_fn: Function) -> Self {
+        Self {
             element,
             projection_fn: Rc::new(RefCell::new(Some(project_fn))),
             update_type: DOMProjectionType::Text,
@@ -102,8 +103,9 @@ impl DOMProjection {
     /// * `property` - CSS property name (e.g., "color", "transform")
     /// * `project_fn` - Function that takes state and returns CSS value string
     #[wasm_bindgen]
-    pub fn style(element: Element, property: String, project_fn: Function) -> DOMProjection {
-        DOMProjection {
+    #[must_use]
+    pub fn style(element: Element, property: String, project_fn: Function) -> Self {
+        Self {
             element,
             projection_fn: Rc::new(RefCell::new(Some(project_fn))),
             update_type: DOMProjectionType::Style(property),
@@ -117,8 +119,9 @@ impl DOMProjection {
     /// * `attribute` - Attribute name
     /// * `project_fn` - Function that takes state and returns attribute value
     #[wasm_bindgen]
-    pub fn attribute(element: Element, attribute: String, project_fn: Function) -> DOMProjection {
-        DOMProjection {
+    #[must_use]
+    pub fn attribute(element: Element, attribute: String, project_fn: Function) -> Self {
+        Self {
             element,
             projection_fn: Rc::new(RefCell::new(Some(project_fn))),
             update_type: DOMProjectionType::Attribute(attribute),
@@ -132,12 +135,9 @@ impl DOMProjection {
     /// * `class_name` - CSS class name
     /// * `project_fn` - Function that takes state and returns boolean (add/remove)
     #[wasm_bindgen(js_name = classToggle)]
-    pub fn class_toggle(
-        element: Element,
-        class_name: String,
-        project_fn: Function,
-    ) -> DOMProjection {
-        DOMProjection {
+    #[must_use]
+    pub fn class_toggle(element: Element, class_name: String, project_fn: Function) -> Self {
+        Self {
             element,
             projection_fn: Rc::new(RefCell::new(Some(project_fn))),
             update_type: DOMProjectionType::Class(class_name),
@@ -151,8 +151,9 @@ impl DOMProjection {
     /// * `data_key` - Data attribute key (without "data-" prefix)
     /// * `project_fn` - Function that takes state and returns value
     #[wasm_bindgen]
-    pub fn data(element: Element, data_key: String, project_fn: Function) -> DOMProjection {
-        DOMProjection {
+    #[must_use]
+    pub fn data(element: Element, data_key: String, project_fn: Function) -> Self {
+        Self {
             element,
             projection_fn: Rc::new(RefCell::new(Some(project_fn))),
             update_type: DOMProjectionType::Data(data_key),
@@ -162,8 +163,12 @@ impl DOMProjection {
     /// Update the DOM element with a new state value.
     ///
     /// Call this with the result of your projection function.
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when a DOM update or the registered projection
+    /// callback fails.
     #[wasm_bindgen]
-    pub fn update(&self, value: JsValue) -> Result<(), JsValue> {
+    pub fn update(&self, value: &JsValue) -> Result<(), JsValue> {
         match &self.update_type {
             DOMProjectionType::Text => {
                 let text = value.as_string().unwrap_or_default();
@@ -207,6 +212,10 @@ impl DOMProjection {
     ///
     /// # Arguments
     /// * `state` - The geometric state to project
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when the invoked JavaScript callback throws or
+    /// returns an unexpected type.
     #[wasm_bindgen(js_name = applyWithState)]
     pub fn apply_with_state(&self, state: &crate::GeometricState) -> Result<(), JsValue> {
         let fn_ref = self.projection_fn.borrow();
@@ -215,13 +224,14 @@ impl DOMProjection {
             // Convert GeometricState to JsValue for the callback
             let state_array = state.to_array();
             let result = project_fn.call1(&this, &state_array)?;
-            self.update(result)?;
+            self.update(&result)?;
         }
         Ok(())
     }
 
     /// Get the element this projection targets.
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn element(&self) -> Element {
         self.element.clone()
     }
@@ -246,8 +256,9 @@ struct PendingUpdate {
 impl ProjectionScheduler {
     /// Create a new projection scheduler.
     #[wasm_bindgen(constructor)]
-    pub fn new() -> ProjectionScheduler {
-        ProjectionScheduler {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
             pending_updates: Rc::new(RefCell::new(Vec::new())),
             frame_requested: Rc::new(RefCell::new(false)),
         }
@@ -258,6 +269,9 @@ impl ProjectionScheduler {
     /// # Arguments
     /// * `projection` - The DOM projection to update
     /// * `value` - The value to apply
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when the animation-frame request fails.
     #[wasm_bindgen]
     pub fn schedule(&self, projection: DOMProjection, value: JsValue) -> Result<(), JsValue> {
         self.pending_updates
@@ -274,12 +288,15 @@ impl ProjectionScheduler {
     }
 
     /// Flush all pending updates immediately (don't wait for animation frame).
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when any pending projection update fails.
     #[wasm_bindgen]
     pub fn flush(&self) -> Result<(), JsValue> {
         let updates: Vec<_> = self.pending_updates.borrow_mut().drain(..).collect();
 
         for update in updates {
-            update.projection.update(update.value)?;
+            update.projection.update(&update.value)?;
         }
 
         *self.frame_requested.borrow_mut() = false;
@@ -288,6 +305,7 @@ impl ProjectionScheduler {
 
     /// Get the number of pending updates.
     #[wasm_bindgen(getter, js_name = pendingCount)]
+    #[must_use]
     pub fn pending_count(&self) -> usize {
         self.pending_updates.borrow().len()
     }
@@ -300,7 +318,7 @@ impl ProjectionScheduler {
             let updates: Vec<_> = pending.borrow_mut().drain(..).collect();
 
             for update in updates {
-                let _ = update.projection.update(update.value);
+                let _ = update.projection.update(&update.value);
             }
 
             *frame_requested.borrow_mut() = false;
@@ -332,10 +350,11 @@ pub struct ElementProjections {
 
 #[wasm_bindgen]
 impl ElementProjections {
-    /// Create a new ElementProjections builder.
+    /// Create a new `ElementProjections` builder.
     #[wasm_bindgen(constructor)]
-    pub fn new(element: Element) -> ElementProjections {
-        ElementProjections {
+    #[must_use]
+    pub fn new(element: Element) -> Self {
+        Self {
             element,
             projections: Vec::new(),
         }
@@ -343,7 +362,8 @@ impl ElementProjections {
 
     /// Add a text content projection.
     #[wasm_bindgen]
-    pub fn text(mut self, project_fn: Function) -> ElementProjections {
+    #[must_use]
+    pub fn text(mut self, project_fn: Function) -> Self {
         let proj = DOMProjection::text(self.element.clone(), project_fn);
         self.projections.push(proj);
         self
@@ -351,7 +371,8 @@ impl ElementProjections {
 
     /// Add a style projection.
     #[wasm_bindgen]
-    pub fn style(mut self, property: String, project_fn: Function) -> ElementProjections {
+    #[must_use]
+    pub fn style(mut self, property: String, project_fn: Function) -> Self {
         let proj = DOMProjection::style(self.element.clone(), property, project_fn);
         self.projections.push(proj);
         self
@@ -359,7 +380,8 @@ impl ElementProjections {
 
     /// Add an attribute projection.
     #[wasm_bindgen]
-    pub fn attribute(mut self, name: String, project_fn: Function) -> ElementProjections {
+    #[must_use]
+    pub fn attribute(mut self, name: String, project_fn: Function) -> Self {
         let proj = DOMProjection::attribute(self.element.clone(), name, project_fn);
         self.projections.push(proj);
         self
@@ -367,7 +389,8 @@ impl ElementProjections {
 
     /// Add a class toggle projection.
     #[wasm_bindgen(js_name = classToggle)]
-    pub fn class_toggle(mut self, class_name: String, project_fn: Function) -> ElementProjections {
+    #[must_use]
+    pub fn class_toggle(mut self, class_name: String, project_fn: Function) -> Self {
         let proj = DOMProjection::class_toggle(self.element.clone(), class_name, project_fn);
         self.projections.push(proj);
         self
@@ -375,11 +398,16 @@ impl ElementProjections {
 
     /// Get the number of projections.
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn count(&self) -> usize {
         self.projections.len()
     }
 
     /// Apply all projections with the given state.
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when the invoked JavaScript callback throws or
+    /// returns an unexpected type.
     #[wasm_bindgen(js_name = applyAll)]
     pub fn apply_all(&self, state: &crate::GeometricState) -> Result<(), JsValue> {
         for proj in &self.projections {
@@ -393,6 +421,7 @@ impl ElementProjections {
 ///
 /// Useful for CSS transform properties.
 #[wasm_bindgen(js_name = stateToTransform)]
+#[must_use]
 pub fn state_to_transform(x: f64, y: f64, z: f64, rotate: f64, scale: f64) -> String {
     format!("translate3d({x}px, {y}px, {z}px) rotate({rotate}deg) scale({scale})")
 }
@@ -401,6 +430,7 @@ pub fn state_to_transform(x: f64, y: f64, z: f64, rotate: f64, scale: f64) -> St
 ///
 /// Maps 4 components to RGBA values.
 #[wasm_bindgen(js_name = stateToColor)]
+#[must_use]
 pub fn state_to_color(r: f64, g: f64, b: f64, a: f64) -> String {
     let r = (r.clamp(0.0, 1.0) * 255.0) as u8;
     let g = (g.clamp(0.0, 1.0) * 255.0) as u8;

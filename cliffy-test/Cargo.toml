@@ -10,6 +10,7 @@ keywords = ["testing", "geometric-algebra", "property-testing", "invariants", "p
 categories = ["development-tools::testing", "mathematics"]
 
 [dependencies]
+parking_lot = "0.12"
 # Geometric algebra
 amari-core = { workspace = true }
 
@@ -32,3 +33,6 @@ serde = { workspace = true }
 [dev-dependencies]
 # For testing the test framework
 tokio = { workspace = true, features = ["rt", "macros"] }
+
+[lints]
+workspace = true

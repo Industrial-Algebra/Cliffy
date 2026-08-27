@@ -65,6 +65,7 @@ pub struct GeometricConsensus {
 
 impl GeometricConsensus {
     /// Create a new consensus protocol instance
+    #[must_use]
     pub fn new(node_id: Uuid, initial_state: GA3) -> Self {
         let (sender, receiver) = broadcast::channel(1000);
         let crdt = GeometricCRDT::new(node_id, initial_state);
@@ -82,6 +83,10 @@ impl GeometricConsensus {
     }
 
     /// Propose a value for consensus
+    /// # Errors
+    ///
+    /// Returns an error when consensus cannot make progress in the current
+    /// round (no quorum of votes).
     pub async fn propose(&mut self, value: GA3) -> Result<(), Box<dyn std::error::Error>> {
         let round = self.current_round;
         self.current_round += 1;
@@ -98,6 +103,10 @@ impl GeometricConsensus {
     }
 
     /// Compute consensus from a set of proposals using geometric algebra
+    /// # Errors
+    ///
+    /// Returns an error when consensus cannot make progress in the current
+    /// round (no quorum of votes).
     pub async fn geometric_consensus(
         &self,
         proposals: &[GA3],
@@ -117,7 +126,7 @@ impl GeometricConsensus {
                 let diff = &consensus_value - proposal;
                 diff.magnitude()
             })
-            .fold(0.0_f64, |acc, dist| acc.max(dist));
+            .fold(0.0_f64, f64::max);
 
         if max_distance <= threshold {
             Ok(consensus_value)
@@ -133,7 +142,10 @@ impl GeometricConsensus {
         proposals: &[GA3],
     ) -> Result<GA3, Box<dyn std::error::Error>> {
         // Weight proposals by their geometric magnitude
-        let weights: Vec<f64> = proposals.iter().map(|p| p.magnitude()).collect();
+        let weights: Vec<f64> = proposals
+            .iter()
+            .map(cliffy_core::Multivector::magnitude)
+            .collect();
 
         let total_weight: f64 = weights.iter().sum();
 
@@ -157,6 +169,10 @@ impl GeometricConsensus {
     }
 
     /// Run a full consensus round
+    /// # Errors
+    ///
+    /// Returns an error when consensus cannot make progress in the current
+    /// round (no quorum of votes).
     pub async fn run_consensus_round(
         &mut self,
         proposal: GA3,
@@ -223,7 +239,7 @@ impl GeometricConsensus {
             let mut crdt_guard = self.crdt_state.write().await;
             let op =
                 crdt_guard.create_operation(consensus_candidate.clone(), OperationType::Addition);
-            crdt_guard.apply_operation(op);
+            crdt_guard.apply_operation(&op);
 
             Ok(Some(consensus_candidate))
         } else {
@@ -232,6 +248,10 @@ impl GeometricConsensus {
     }
 
     /// Sync CRDT state with another node
+    /// # Errors
+    ///
+    /// Returns an error when consensus cannot make progress in the current
+    /// round (no quorum of votes).
     pub async fn sync_crdt_state(
         &self,
         _other_node: Uuid,
@@ -262,6 +282,7 @@ impl GeometricConsensus {
 }
 
 /// Compute the lattice join (least upper bound) of two multivectors
+#[must_use]
 pub fn lattice_join(a: &GA3, b: &GA3) -> GA3 {
     let a_coeffs = a.as_slice();
     let b_coeffs = b.as_slice();
@@ -276,6 +297,7 @@ pub fn lattice_join(a: &GA3, b: &GA3) -> GA3 {
 }
 
 /// Compute the lattice meet (greatest lower bound) of two multivectors
+#[must_use]
 pub fn lattice_meet(a: &GA3, b: &GA3) -> GA3 {
     let a_coeffs = a.as_slice();
     let b_coeffs = b.as_slice();

@@ -36,3 +36,6 @@ tokio = { version = "1", features = ["rt", "macros"] }
 [[bench]]
 name = "gpu_benchmarks"
 harness = false
+
+[lints]
+workspace = true

@@ -67,6 +67,7 @@ pub fn init() {
 
 /// Get the Cliffy version.
 #[wasm_bindgen]
+#[must_use]
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
@@ -109,8 +110,9 @@ pub struct Behavior {
 impl Behavior {
     /// Create a new Behavior with an initial value.
     #[wasm_bindgen(constructor)]
-    pub fn new(initial: JsValue) -> Behavior {
-        Behavior {
+    #[must_use]
+    pub fn new(initial: JsValue) -> Self {
+        Self {
             value: Rc::new(RefCell::new(initial)),
             subscribers: Rc::new(RefCell::new(Vec::new())),
             next_id: Rc::new(RefCell::new(0)),
@@ -119,6 +121,7 @@ impl Behavior {
 
     /// Get the current value.
     #[wasm_bindgen]
+    #[must_use]
     pub fn sample(&self) -> JsValue {
         self.value.borrow().clone()
     }
@@ -133,6 +136,10 @@ impl Behavior {
     /// Update the value using a transformation function.
     ///
     /// The function receives the current value and should return the new value.
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when the invoked JavaScript callback throws or
+    /// returns an unexpected type.
     #[wasm_bindgen]
     pub fn update(&self, f: &Function) -> Result<(), JsValue> {
         let current = self.value.borrow().clone();
@@ -147,6 +154,7 @@ impl Behavior {
     ///
     /// Returns a Subscription that can be used to unsubscribe.
     #[wasm_bindgen]
+    #[must_use]
     pub fn subscribe(&self, callback: Function) -> Subscription {
         let id = {
             let mut next = self.next_id.borrow_mut();
@@ -166,13 +174,17 @@ impl Behavior {
     /// Create a derived Behavior by mapping a function over this one.
     ///
     /// The derived Behavior will automatically update when this Behavior changes.
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when the invoked JavaScript callback throws or
+    /// returns an unexpected type.
     #[wasm_bindgen]
-    pub fn map(&self, f: &Function) -> Result<Behavior, JsValue> {
+    pub fn map(&self, f: &Function) -> Result<Self, JsValue> {
         let current = self.value.borrow().clone();
         let this_js = JsValue::null();
         let initial = f.call1(&this_js, &current)?;
 
-        let derived = Behavior::new(initial);
+        let derived = Self::new(initial);
 
         // Subscribe to changes
         let derived_value = Rc::clone(&derived.value);
@@ -208,14 +220,18 @@ impl Behavior {
     }
 
     /// Combine this Behavior with another using a function.
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when the invoked JavaScript callback throws or
+    /// returns an unexpected type.
     #[wasm_bindgen]
-    pub fn combine(&self, other: &Behavior, f: &Function) -> Result<Behavior, JsValue> {
+    pub fn combine(&self, other: &Self, f: &Function) -> Result<Self, JsValue> {
         let a = self.value.borrow().clone();
         let b = other.value.borrow().clone();
         let this_js = JsValue::null();
         let initial = f.call2(&this_js, &a, &b)?;
 
-        let combined = Behavior::new(initial);
+        let combined = Self::new(initial);
 
         // Subscribe to self
         let combined_value = Rc::clone(&combined.value);
@@ -282,7 +298,7 @@ impl Behavior {
 
     /// Project a value through this Behavior (used when this holds a boolean).
     ///
-    /// When the condition is true, returns the value from value_fn.
+    /// When the condition is true, returns the value from `value_fn`.
     /// When false, returns null.
     ///
     /// This is the GA-inspired projection operator: projecting a value
@@ -299,8 +315,12 @@ impl Behavior {
     /// showMessage.set(false);
     /// console.log(message.sample()); // null
     /// ```
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when the invoked JavaScript callback throws or
+    /// returns an unexpected type.
     #[wasm_bindgen]
-    pub fn project(&self, value_fn: &Function) -> Result<Behavior, JsValue> {
+    pub fn project(&self, value_fn: &Function) -> Result<Self, JsValue> {
         let cond_value = self.value.borrow().clone();
         let this_js = JsValue::null();
 
@@ -310,7 +330,7 @@ impl Behavior {
             JsValue::null()
         };
 
-        let result = Behavior::new(initial);
+        let result = Self::new(initial);
 
         let result_value = Rc::clone(&result.value);
         let result_subscribers = Rc::clone(&result.subscribers);
@@ -347,8 +367,8 @@ impl Behavior {
 
     /// Select between two values based on this Behavior (used when this holds a boolean).
     ///
-    /// When the condition is true, returns the value from then_fn.
-    /// When false, returns the value from else_fn.
+    /// When the condition is true, returns the value from `then_fn`.
+    /// When false, returns the value from `else_fn`.
     ///
     /// This is the GA-inspired selection operator: selecting which subspace
     /// to project onto based on a condition.
@@ -364,8 +384,12 @@ impl Behavior {
     /// isDarkMode.set(true);
     /// console.log(theme.sample()); // "dark"
     /// ```
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when the invoked JavaScript callback throws or
+    /// returns an unexpected type.
     #[wasm_bindgen]
-    pub fn select(&self, then_fn: &Function, else_fn: &Function) -> Result<Behavior, JsValue> {
+    pub fn select(&self, then_fn: &Function, else_fn: &Function) -> Result<Self, JsValue> {
         let cond_value = self.value.borrow().clone();
         let this_js = JsValue::null();
 
@@ -375,7 +399,7 @@ impl Behavior {
             else_fn.call0(&this_js)?
         };
 
-        let result = Behavior::new(initial);
+        let result = Self::new(initial);
 
         let result_value = Rc::clone(&result.value);
         let result_subscribers = Rc::clone(&result.subscribers);
@@ -467,8 +491,9 @@ pub struct Event {
 impl Event {
     /// Create a new Event stream.
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Event {
-        Event {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
             subscribers: Rc::new(RefCell::new(Vec::new())),
             next_id: Rc::new(RefCell::new(0)),
         }
@@ -476,15 +501,16 @@ impl Event {
 
     /// Emit a value to all subscribers.
     #[wasm_bindgen]
-    pub fn emit(&self, value: JsValue) {
+    pub fn emit(&self, value: &JsValue) {
         let this = JsValue::null();
         for (_, callback) in self.subscribers.borrow().iter() {
-            let _ = callback.call1(&this, &value);
+            let _ = callback.call1(&this, value);
         }
     }
 
     /// Subscribe to this event stream.
     #[wasm_bindgen]
+    #[must_use]
     pub fn subscribe(&self, callback: Function) -> Subscription {
         let id = {
             let mut next = self.next_id.borrow_mut();
@@ -503,8 +529,9 @@ impl Event {
 
     /// Map a function over this event stream.
     #[wasm_bindgen]
-    pub fn map(&self, f: &Function) -> Event {
-        let mapped = Event::new();
+    #[must_use]
+    pub fn map(&self, f: &Function) -> Self {
+        let mapped = Self::new();
 
         let mapped_subscribers = Rc::clone(&mapped.subscribers);
         let f_clone = f.clone();
@@ -536,8 +563,9 @@ impl Event {
 
     /// Filter events based on a predicate.
     #[wasm_bindgen]
-    pub fn filter(&self, predicate: &Function) -> Event {
-        let filtered = Event::new();
+    #[must_use]
+    pub fn filter(&self, predicate: &Function) -> Self {
+        let filtered = Self::new();
 
         let filtered_subscribers = Rc::clone(&filtered.subscribers);
         let predicate_clone = predicate.clone();
@@ -571,8 +599,9 @@ impl Event {
 
     /// Merge two event streams into one.
     #[wasm_bindgen]
-    pub fn merge(&self, other: &Event) -> Event {
-        let merged = Event::new();
+    #[must_use]
+    pub fn merge(&self, other: &Self) -> Self {
+        let merged = Self::new();
 
         // Subscribe to self
         let merged_subscribers_1 = Rc::clone(&merged.subscribers);
@@ -627,6 +656,10 @@ impl Event {
     ///
     /// * `initial` - The initial accumulated value
     /// * `f` - A function that takes (accumulator, event) and returns new accumulator
+    /// # Errors
+    ///
+    /// Returns a `JsValue` when the invoked JavaScript callback throws or
+    /// returns an unexpected type.
     #[wasm_bindgen]
     pub fn fold(&self, initial: JsValue, f: &Function) -> Result<Behavior, JsValue> {
         let behavior = Behavior::new(initial);
@@ -686,6 +719,10 @@ impl Default for Event {
 /// // New style (preferred):
 /// const message = showMessage.project(() => "Hello!");
 /// ```
+/// # Errors
+///
+/// Returns a `JsValue` when the invoked JavaScript callback throws or
+/// returns an unexpected type.
 #[wasm_bindgen]
 pub fn when(condition: &Behavior, then_fn: &Function) -> Result<Behavior, JsValue> {
     let cond_value = condition.value.borrow().clone();
@@ -746,6 +783,10 @@ pub fn when(condition: &Behavior, then_fn: &Function) -> Result<Behavior, JsValu
 /// // New style (preferred):
 /// const theme = isDarkMode.select(() => "dark", () => "light");
 /// ```
+/// # Errors
+///
+/// Returns a `JsValue` when the invoked JavaScript callback throws or
+/// returns an unexpected type.
 #[wasm_bindgen(js_name = ifElse)]
 pub fn if_else(
     condition: &Behavior,
@@ -815,6 +856,10 @@ pub fn if_else(
 ///
 /// console.log(area.sample()); // 5000
 /// ```
+/// # Errors
+///
+/// Returns a `JsValue` when the invoked JavaScript callback throws or
+/// returns an unexpected type.
 #[wasm_bindgen]
 pub fn combine(a: &Behavior, b: &Behavior, f: &Function) -> Result<Behavior, JsValue> {
     a.combine(b, f)
@@ -846,6 +891,7 @@ pub fn combine(a: &Behavior, b: &Behavior, f: &Function) -> Result<Behavior, JsV
 /// count.update(n => n + 1);
 /// ```
 #[wasm_bindgen]
+#[must_use]
 pub fn behavior(initial: JsValue) -> Behavior {
     Behavior::new(initial)
 }
@@ -859,6 +905,7 @@ pub fn behavior(initial: JsValue) -> Behavior {
 /// clicks.subscribe(e => console.log('Clicked!', e));
 /// ```
 #[wasm_bindgen]
+#[must_use]
 pub fn event() -> Event {
     Event::new()
 }
@@ -895,8 +942,9 @@ pub struct Rotor {
 impl Rotor {
     /// Create the identity rotor (no rotation).
     #[wasm_bindgen]
-    pub fn identity() -> Rotor {
-        Rotor {
+    #[must_use]
+    pub fn identity() -> Self {
+        Self {
             inner: CoreRotor::identity(),
         }
     }
@@ -906,8 +954,9 @@ impl Rotor {
     /// # Arguments
     /// * `angle` - Rotation angle in radians
     #[wasm_bindgen]
-    pub fn xy(angle: f64) -> Rotor {
-        Rotor {
+    #[must_use]
+    pub fn xy(angle: f64) -> Self {
+        Self {
             inner: CoreRotor::xy(angle),
         }
     }
@@ -917,8 +966,9 @@ impl Rotor {
     /// # Arguments
     /// * `angle` - Rotation angle in radians
     #[wasm_bindgen]
-    pub fn xz(angle: f64) -> Rotor {
-        Rotor {
+    #[must_use]
+    pub fn xz(angle: f64) -> Self {
+        Self {
             inner: CoreRotor::xz(angle),
         }
     }
@@ -928,8 +978,9 @@ impl Rotor {
     /// # Arguments
     /// * `angle` - Rotation angle in radians
     #[wasm_bindgen]
-    pub fn yz(angle: f64) -> Rotor {
-        Rotor {
+    #[must_use]
+    pub fn yz(angle: f64) -> Self {
+        Self {
             inner: CoreRotor::yz(angle),
         }
     }
@@ -940,30 +991,34 @@ impl Rotor {
     /// * `x`, `y`, `z` - Axis vector components (doesn't need to be normalized)
     /// * `angle` - Rotation angle in radians
     #[wasm_bindgen(js_name = fromAxisAngle)]
-    pub fn from_axis_angle(x: f64, y: f64, z: f64, angle: f64) -> Rotor {
-        Rotor {
+    #[must_use]
+    pub fn from_axis_angle(x: f64, y: f64, z: f64, angle: f64) -> Self {
+        Self {
             inner: CoreRotor::from_axis_angle(x, y, z, angle),
         }
     }
 
     /// Get the rotation angle in radians.
     #[wasm_bindgen]
+    #[must_use]
     pub fn angle(&self) -> f64 {
         self.inner.angle()
     }
 
     /// Compose this rotor with another (apply self, then other).
     #[wasm_bindgen]
-    pub fn then(&self, other: &Rotor) -> Rotor {
-        Rotor {
+    #[must_use]
+    pub fn then(&self, other: &Self) -> Self {
+        Self {
             inner: self.inner.then(&other.inner),
         }
     }
 
     /// Get the inverse rotor (reverse rotation).
     #[wasm_bindgen]
-    pub fn inverse(&self) -> Rotor {
-        Rotor {
+    #[must_use]
+    pub fn inverse(&self) -> Self {
+        Self {
             inner: self.inner.inverse(),
         }
     }
@@ -973,8 +1028,9 @@ impl Rotor {
     /// # Arguments
     /// * `t` - Interpolation factor (0 = identity, 1 = this rotor)
     #[wasm_bindgen]
-    pub fn slerp(&self, t: f64) -> Rotor {
-        Rotor {
+    #[must_use]
+    pub fn slerp(&self, t: f64) -> Self {
+        Self {
             inner: self.inner.slerp(t),
         }
     }
@@ -985,8 +1041,9 @@ impl Rotor {
     /// * `other` - Target rotor
     /// * `t` - Interpolation factor (0 = this, 1 = other)
     #[wasm_bindgen(js_name = slerpTo)]
-    pub fn slerp_to(&self, other: &Rotor, t: f64) -> Rotor {
-        Rotor {
+    #[must_use]
+    pub fn slerp_to(&self, other: &Self, t: f64) -> Self {
+        Self {
             inner: self.inner.slerp_to(&other.inner, t),
         }
     }
@@ -1009,7 +1066,8 @@ impl Rotor {
     /// const mid = start.blend(end, 0.5);  // 45-degree rotation
     /// ```
     #[wasm_bindgen]
-    pub fn blend(&self, other: &Rotor, t: f64) -> Rotor {
+    #[must_use]
+    pub fn blend(&self, other: &Self, t: f64) -> Self {
         self.slerp_to(other, t)
     }
 }
@@ -1041,8 +1099,9 @@ pub struct Versor {
 impl Versor {
     /// Create the identity versor (no transformation).
     #[wasm_bindgen]
-    pub fn identity() -> Versor {
-        Versor {
+    #[must_use]
+    pub fn identity() -> Self {
+        Self {
             inner: CoreVersor::identity(),
         }
     }
@@ -1055,8 +1114,9 @@ impl Versor {
     /// # Arguments
     /// * `x`, `y`, `z` - Normal vector components
     #[wasm_bindgen]
-    pub fn reflection(x: f64, y: f64, z: f64) -> Versor {
-        Versor {
+    #[must_use]
+    pub fn reflection(x: f64, y: f64, z: f64) -> Self {
+        Self {
             inner: CoreVersor::reflection(x, y, z),
         }
     }
@@ -1065,22 +1125,25 @@ impl Versor {
     ///
     /// This converts a pure rotation into a versor representation.
     #[wasm_bindgen(js_name = fromRotor)]
-    pub fn from_rotor(rotor: &Rotor) -> Versor {
-        Versor {
+    #[must_use]
+    pub fn from_rotor(rotor: &Rotor) -> Self {
+        Self {
             inner: CoreVersor::from_rotor(rotor.inner.clone()),
         }
     }
 
     /// Compose this versor with another (apply self, then other).
     #[wasm_bindgen]
-    pub fn then(&self, other: &Versor) -> Versor {
-        Versor {
+    #[must_use]
+    pub fn then(&self, other: &Self) -> Self {
+        Self {
             inner: self.inner.then(&other.inner),
         }
     }
 
     /// Check if this is an even versor (a rotor, i.e., pure rotation).
     #[wasm_bindgen(js_name = isRotor)]
+    #[must_use]
     pub fn is_rotor(&self) -> bool {
         self.inner.is_rotor()
     }
@@ -1089,6 +1152,7 @@ impl Versor {
     ///
     /// Returns null if this is an odd versor (includes reflection).
     #[wasm_bindgen(js_name = toRotor)]
+    #[must_use]
     pub fn to_rotor(&self) -> Option<Rotor> {
         self.inner.to_rotor().map(|r| Rotor { inner: r })
     }
@@ -1112,64 +1176,72 @@ pub struct Translation {
 impl Translation {
     /// Create a new translation.
     #[wasm_bindgen(constructor)]
-    pub fn new(x: f64, y: f64, z: f64) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        Self {
             inner: CoreTranslation::new(x, y, z),
         }
     }
 
     /// Create a translation along the X axis.
     #[wasm_bindgen]
-    pub fn x(amount: f64) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn x(amount: f64) -> Self {
+        Self {
             inner: CoreTranslation::x(amount),
         }
     }
 
     /// Create a translation along the Y axis.
     #[wasm_bindgen]
-    pub fn y(amount: f64) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn y(amount: f64) -> Self {
+        Self {
             inner: CoreTranslation::y(amount),
         }
     }
 
     /// Create a translation along the Z axis.
     #[wasm_bindgen]
-    pub fn z(amount: f64) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn z(amount: f64) -> Self {
+        Self {
             inner: CoreTranslation::z(amount),
         }
     }
 
     /// Compose this translation with another.
     #[wasm_bindgen]
-    pub fn then(&self, other: &Translation) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn then(&self, other: &Self) -> Self {
+        Self {
             inner: self.inner.then(&other.inner),
         }
     }
 
     /// Get the inverse translation.
     #[wasm_bindgen]
-    pub fn inverse(&self) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn inverse(&self) -> Self {
+        Self {
             inner: self.inner.inverse(),
         }
     }
 
     /// Linear interpolation from zero to this translation.
     #[wasm_bindgen]
-    pub fn lerp(&self, t: f64) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn lerp(&self, t: f64) -> Self {
+        Self {
             inner: self.inner.lerp(t),
         }
     }
 
     /// Linear interpolation to another translation.
     #[wasm_bindgen(js_name = lerpTo)]
-    pub fn lerp_to(&self, other: &Translation, t: f64) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn lerp_to(&self, other: &Self, t: f64) -> Self {
+        Self {
             inner: self.inner.lerp_to(&other.inner, t),
         }
     }
@@ -1191,7 +1263,8 @@ impl Translation {
     /// const mid = start.blend(end, 0.5);  // (5, 0, 0)
     /// ```
     #[wasm_bindgen]
-    pub fn blend(&self, other: &Translation, t: f64) -> Translation {
+    #[must_use]
+    pub fn blend(&self, other: &Self, t: f64) -> Self {
         self.lerp_to(other, t)
     }
 }
@@ -1217,64 +1290,72 @@ pub struct Transform {
 impl Transform {
     /// Create an identity transform (no rotation or translation).
     #[wasm_bindgen]
-    pub fn identity() -> Transform {
-        Transform {
+    #[must_use]
+    pub fn identity() -> Self {
+        Self {
             inner: CoreTransform::identity(),
         }
     }
 
     /// Create a transform from a rotor and translation.
     #[wasm_bindgen(js_name = fromRotorAndTranslation)]
-    pub fn from_rotor_and_translation(rotor: &Rotor, translation: &Translation) -> Transform {
-        Transform {
+    #[must_use]
+    pub fn from_rotor_and_translation(rotor: &Rotor, translation: &Translation) -> Self {
+        Self {
             inner: CoreTransform::new(rotor.inner.clone(), translation.inner.clone()),
         }
     }
 
     /// Create a pure rotation transform.
     #[wasm_bindgen(js_name = fromRotor)]
-    pub fn from_rotor(rotor: &Rotor) -> Transform {
-        Transform {
+    #[must_use]
+    pub fn from_rotor(rotor: &Rotor) -> Self {
+        Self {
             inner: CoreTransform::rotation(rotor.inner.clone()),
         }
     }
 
     /// Create a pure translation transform.
     #[wasm_bindgen(js_name = fromTranslation)]
-    pub fn from_translation(translation: &Translation) -> Transform {
-        Transform {
+    #[must_use]
+    pub fn from_translation(translation: &Translation) -> Self {
+        Self {
             inner: CoreTransform::translation(translation.inner.clone()),
         }
     }
 
     /// Compose this transform with another (apply self, then other).
     #[wasm_bindgen]
-    pub fn then(&self, other: &Transform) -> Transform {
-        Transform {
+    #[must_use]
+    pub fn then(&self, other: &Self) -> Self {
+        Self {
             inner: self.inner.then(&other.inner),
         }
     }
 
     /// Get the inverse transform.
     #[wasm_bindgen]
-    pub fn inverse(&self) -> Transform {
-        Transform {
+    #[must_use]
+    pub fn inverse(&self) -> Self {
+        Self {
             inner: self.inner.inverse(),
         }
     }
 
     /// Interpolate from identity to this transform.
     #[wasm_bindgen]
-    pub fn interpolate(&self, t: f64) -> Transform {
-        Transform {
+    #[must_use]
+    pub fn interpolate(&self, t: f64) -> Self {
+        Self {
             inner: self.inner.interpolate(t),
         }
     }
 
     /// Interpolate to another transform.
     #[wasm_bindgen(js_name = interpolateTo)]
-    pub fn interpolate_to(&self, other: &Transform, t: f64) -> Transform {
-        Transform {
+    #[must_use]
+    pub fn interpolate_to(&self, other: &Self, t: f64) -> Self {
+        Self {
             inner: self.inner.interpolate_to(&other.inner, t),
         }
     }
@@ -1296,7 +1377,8 @@ impl Transform {
     /// const mid = start.blend(end, 0.5);
     /// ```
     #[wasm_bindgen]
-    pub fn blend(&self, other: &Transform, t: f64) -> Transform {
+    #[must_use]
+    pub fn blend(&self, other: &Self, t: f64) -> Self {
         self.interpolate_to(other, t)
     }
 }
@@ -1304,7 +1386,7 @@ impl Transform {
 /// Geometric state with explicit transformation support.
 ///
 /// Unlike regular Behavior which hides the geometric algebra,
-/// GeometricState exposes it for animation, physics, and advanced use cases.
+/// `GeometricState` exposes it for animation, physics, and advanced use cases.
 ///
 /// # JavaScript Example
 ///
@@ -1332,36 +1414,41 @@ pub struct GeometricState {
 impl GeometricState {
     /// Create a geometric state from a scalar value.
     #[wasm_bindgen(js_name = fromScalar)]
-    pub fn from_scalar(value: f64) -> GeometricState {
-        GeometricState {
+    #[must_use]
+    pub fn from_scalar(value: f64) -> Self {
+        Self {
             inner: CoreGeometricState::from_scalar(value),
         }
     }
 
     /// Create a geometric state from a 3D vector.
     #[wasm_bindgen(js_name = fromVector)]
-    pub fn from_vector(x: f64, y: f64, z: f64) -> GeometricState {
-        GeometricState {
+    #[must_use]
+    pub fn from_vector(x: f64, y: f64, z: f64) -> Self {
+        Self {
             inner: CoreGeometricState::from_vector(x, y, z),
         }
     }
 
     /// Create the zero state.
     #[wasm_bindgen]
-    pub fn zero() -> GeometricState {
-        GeometricState {
+    #[must_use]
+    pub fn zero() -> Self {
+        Self {
             inner: CoreGeometricState::zero(),
         }
     }
 
     /// Get the scalar component.
     #[wasm_bindgen]
+    #[must_use]
     pub fn scalar(&self) -> f64 {
         self.inner.scalar()
     }
 
     /// Get the vector components as an array [x, y, z].
     #[wasm_bindgen(js_name = asVector)]
+    #[must_use]
     pub fn as_vector(&self) -> Vec<f64> {
         let (x, y, z) = self.inner.as_vector();
         vec![x, y, z]
@@ -1369,6 +1456,7 @@ impl GeometricState {
 
     /// Get the magnitude (length) of the state.
     #[wasm_bindgen]
+    #[must_use]
     pub fn magnitude(&self) -> f64 {
         self.inner.magnitude()
     }
@@ -1387,54 +1475,61 @@ impl GeometricState {
 
     /// Apply a rotor transformation (returns new state).
     #[wasm_bindgen(js_name = applyRotor)]
-    pub fn apply_rotor(&self, rotor: &Rotor) -> GeometricState {
-        GeometricState {
+    #[must_use]
+    pub fn apply_rotor(&self, rotor: &Rotor) -> Self {
+        Self {
             inner: self.inner.apply_rotor(&rotor.inner),
         }
     }
 
     /// Apply a translation (returns new state).
     #[wasm_bindgen(js_name = applyTranslation)]
-    pub fn apply_translation(&self, translation: &Translation) -> GeometricState {
-        GeometricState {
+    #[must_use]
+    pub fn apply_translation(&self, translation: &Translation) -> Self {
+        Self {
             inner: self.inner.apply_translation(&translation.inner),
         }
     }
 
     /// Apply a transform (returns new state).
     #[wasm_bindgen(js_name = applyTransform)]
-    pub fn apply_transform(&self, transform: &Transform) -> GeometricState {
-        GeometricState {
+    #[must_use]
+    pub fn apply_transform(&self, transform: &Transform) -> Self {
+        Self {
             inner: self.inner.apply_transform(&transform.inner),
         }
     }
 
     /// Scale the state by a factor (returns new state).
     #[wasm_bindgen]
-    pub fn scale(&self, factor: f64) -> GeometricState {
-        GeometricState {
+    #[must_use]
+    pub fn scale(&self, factor: f64) -> Self {
+        Self {
             inner: self.inner.scale(factor),
         }
     }
 
     /// Normalize to unit magnitude (returns new state).
     #[wasm_bindgen]
-    pub fn normalize(&self) -> Option<GeometricState> {
-        self.inner.normalize().map(|inner| GeometricState { inner })
+    #[must_use]
+    pub fn normalize(&self) -> Option<Self> {
+        self.inner.normalize().map(|inner| Self { inner })
     }
 
     /// Linear interpolation to another state.
     #[wasm_bindgen]
-    pub fn lerp(&self, other: &GeometricState, t: f64) -> GeometricState {
-        GeometricState {
+    #[must_use]
+    pub fn lerp(&self, other: &Self, t: f64) -> Self {
+        Self {
             inner: self.inner.lerp(&other.inner, t),
         }
     }
 
     /// Spherical linear interpolation (for rotor-like states).
     #[wasm_bindgen]
-    pub fn slerp(&self, other: &GeometricState, t: f64) -> GeometricState {
-        GeometricState {
+    #[must_use]
+    pub fn slerp(&self, other: &Self, t: f64) -> Self {
+        Self {
             inner: self.inner.slerp(&other.inner, t),
         }
     }
@@ -1442,8 +1537,8 @@ impl GeometricState {
     /// Blend (interpolate) to another geometric state.
     ///
     /// This is the unified interpolation method for all geometric types.
-    /// For GeometricState, it uses linear interpolation (lerp).
-    /// Use slerp() explicitly for rotor-like states that need spherical interpolation.
+    /// For `GeometricState`, it uses linear interpolation (lerp).
+    /// Use `slerp()` explicitly for rotor-like states that need spherical interpolation.
     ///
     /// # Arguments
     /// * `other` - Target state
@@ -1457,14 +1552,16 @@ impl GeometricState {
     /// const mid = start.blend(end, 0.5);  // (5, 0, 0)
     /// ```
     #[wasm_bindgen]
-    pub fn blend(&self, other: &GeometricState, t: f64) -> GeometricState {
+    #[must_use]
+    pub fn blend(&self, other: &Self, t: f64) -> Self {
         self.lerp(other, t)
     }
 
     /// Get state as coefficients array for JS interop.
     ///
-    /// Returns a Float64Array with 8 coefficients representing the multivector.
+    /// Returns a `Float64Array` with 8 coefficients representing the multivector.
     #[wasm_bindgen(js_name = toArray)]
+    #[must_use]
     pub fn to_array(&self) -> js_sys::Float64Array {
         let mv = self.inner.multivector();
         let coeffs: Vec<f64> = (0..8).map(|i| mv.get(i)).collect();

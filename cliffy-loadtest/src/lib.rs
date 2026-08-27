@@ -18,7 +18,8 @@
 //! use cliffy_loadtest::{Simulation, UserBehavior, NetworkTopology, LatencyModel};
 //!
 //! // Create a simulation with 100 users
-//! let mut sim = Simulation::new(100, UserBehavior::Random { ops_per_second: 10.0 });
+//! let behavior = UserBehavior::Random { ops_per_second: 10.0 };
+//! let mut sim = Simulation::new(100, &behavior);
 //!
 //! // Run until all users converge
 //! let result = sim.run_until_convergence(std::time::Duration::from_secs(30));

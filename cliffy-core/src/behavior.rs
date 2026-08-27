@@ -90,6 +90,7 @@ impl<T: IntoGeometric + FromGeometric + Clone + 'static> Behavior<T> {
     }
 
     /// Sample the current value
+    #[must_use]
     pub fn sample(&self) -> T {
         self.cache.borrow().clone()
     }
@@ -131,7 +132,7 @@ impl<T: IntoGeometric + FromGeometric + Clone + 'static> Behavior<T> {
         let id = {
             let mut next = self.next_id.borrow_mut();
             let id = *next;
-            *next += 1;
+            *next = next.saturating_add(1);
             id
         };
 
@@ -197,6 +198,7 @@ impl<T: IntoGeometric + FromGeometric + Clone + 'static> Behavior<T> {
     }
 
     /// Get the internal geometric state (for advanced users)
+    #[must_use]
     pub fn geometric_state(&self) -> GA3 {
         self.state.borrow().clone()
     }

@@ -59,6 +59,7 @@ impl Default for UserBehavior {
 
 impl UserBehavior {
     /// Get operations per second for this behavior
+    #[must_use]
     pub fn ops_per_second(&self) -> f64 {
         match self {
             Self::Random { ops_per_second } => *ops_per_second,
@@ -93,6 +94,7 @@ pub struct SimulatedUser {
 
 impl SimulatedUser {
     /// Create a new simulated user
+    #[must_use]
     pub fn new(behavior: UserBehavior) -> Self {
         Self {
             id: Uuid::new_v4(),
@@ -119,6 +121,7 @@ impl SimulatedUser {
     }
 
     /// Calculate divergence from a reference state
+    #[must_use]
     pub fn divergence_from(&self, reference: &GA3) -> f64 {
         let diff = &self.state - reference;
         diff.magnitude()
@@ -154,7 +157,8 @@ pub struct Simulation {
 
 impl Simulation {
     /// Create a new simulation with the specified number of users
-    pub fn new(user_count: usize, behavior: UserBehavior) -> Self {
+    #[must_use]
+    pub fn new(user_count: usize, behavior: &UserBehavior) -> Self {
         let users = (0..user_count)
             .map(|_| SimulatedUser::new(behavior.clone()))
             .collect();
@@ -168,19 +172,22 @@ impl Simulation {
     }
 
     /// Set the network topology
-    pub fn with_topology(mut self, topology: NetworkTopology) -> Self {
+    #[must_use]
+    pub const fn with_topology(mut self, topology: NetworkTopology) -> Self {
         self.topology = topology;
         self
     }
 
     /// Set the latency model
-    pub fn with_latency(mut self, latency: LatencyModel) -> Self {
+    #[must_use]
+    pub const fn with_latency(mut self, latency: LatencyModel) -> Self {
         self.latency_model = latency;
         self
     }
 
     /// Set the convergence threshold
-    pub fn with_threshold(mut self, threshold: f64) -> Self {
+    #[must_use]
+    pub const fn with_threshold(mut self, threshold: f64) -> Self {
         self.convergence_threshold = threshold;
         self
     }
@@ -191,8 +198,9 @@ impl Simulation {
         let mut convergence_metrics = ConvergenceMetrics::new();
         let mut throughput_metrics = ThroughputMetrics::new();
 
-        let ops_per_user =
-            (self.users[0].behavior.ops_per_second() * duration.as_secs_f64()) as usize;
+        let ops_per_user = self.users.first().map_or(0.0, |u| {
+            u.behavior.ops_per_second() * duration.as_secs_f64()
+        }) as usize;
 
         // Run operations in parallel using Rayon
         self.users.par_iter_mut().for_each(|user| {
@@ -303,7 +311,9 @@ impl Simulation {
                 metrics.record_message(dropped);
 
                 if !dropped {
-                    user.merge(&states[peer_idx]);
+                    if let Some(peer_state) = states.get(peer_idx) {
+                        user.merge(peer_state);
+                    }
                 }
             }
         }
@@ -315,7 +325,10 @@ impl Simulation {
             return 0.0;
         }
 
-        let reference = &self.users[0].state;
+        let Some(first_user) = self.users.first() else {
+            return 0.0;
+        };
+        let reference = &first_user.state;
         self.users
             .iter()
             .skip(1)
@@ -324,7 +337,8 @@ impl Simulation {
     }
 
     /// Get user count
-    pub fn user_count(&self) -> usize {
+    #[must_use]
+    pub const fn user_count(&self) -> usize {
         self.users.len()
     }
 }
@@ -347,12 +361,10 @@ mod tests {
 
     #[test]
     fn test_simulation_basic() {
-        let mut sim = Simulation::new(
-            10,
-            UserBehavior::Random {
-                ops_per_second: 10.0,
-            },
-        );
+        let behavior = UserBehavior::Random {
+            ops_per_second: 10.0,
+        };
+        let mut sim = Simulation::new(10, &behavior);
         let result = sim.run(Duration::from_millis(100));
 
         assert_eq!(result.user_count, 10);
@@ -361,15 +373,13 @@ mod tests {
 
     #[test]
     fn test_simulation_convergence() {
-        let mut sim = Simulation::new(
-            5,
-            UserBehavior::Random {
-                ops_per_second: 1.0,
-            },
-        )
-        .with_topology(NetworkTopology::FullMesh)
-        .with_latency(LatencyModel::local())
-        .with_threshold(10.0); // Relaxed threshold for quick test
+        let behavior = UserBehavior::Random {
+            ops_per_second: 1.0,
+        };
+        let mut sim = Simulation::new(5, &behavior)
+            .with_topology(NetworkTopology::FullMesh)
+            .with_latency(LatencyModel::local())
+            .with_threshold(10.0); // Relaxed threshold for quick test
 
         let result = sim.run_until_convergence(Duration::from_secs(2));
 

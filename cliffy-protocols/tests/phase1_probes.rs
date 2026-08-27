@@ -17,7 +17,7 @@
 //! Probes `probe_merge_does_not_annihilate` and `probe_convergence_with_value_oracle`
 //! land together with `scalar_mean` (Task 7 of the Phase 1 plan).
 
-use cliffy_protocols::{Observation, ObservationSet};
+use cliffy_protocols::{scalar_mean, Observation, ObservationSet};
 use uuid::Uuid;
 
 fn scalar_obs(participant: Uuid, seq: u64, value: f64) -> Observation {
@@ -107,5 +107,74 @@ fn probe_merge_is_a_semilattice_union() {
         ab.len(),
         3,
         "duplicate observation keyed identically unions once"
+    );
+}
+
+/// THE annihilation probe. The old `GeometricCRDT::merge` returned
+/// `GA3::zero()` for every merge (verified 2026-08-25: replicas at 10 and 5
+/// both merged to 0). Here: scalar observations +5 and +10 → consensus is
+/// the exact mean, 7.5 — no information is destroyed by merging.
+#[test]
+fn probe_merge_does_not_annihilate() {
+    let a = Uuid::new_v4();
+    let b = Uuid::new_v4();
+    let mut left = ObservationSet::new();
+    left.insert(scalar_obs(a, 0, 5.0));
+    let mut right = ObservationSet::new();
+    right.insert(scalar_obs(b, 0, 10.0));
+
+    left.merge(&right);
+
+    assert_eq!(
+        scalar_mean(&left),
+        Some(7.5),
+        "consensus is the exact mean — merging must not destroy information"
+    );
+}
+
+/// THE convergence probe, with the value oracle the old test never had.
+/// Two replicas diverge (10 vs 5), merge in BOTH directions: identical
+/// sets AND the same specified consensus value — agreement alone is not
+/// convergence (the old suite's annihilated replicas also "agreed").
+#[test]
+fn probe_convergence_with_value_oracle() {
+    let a = Uuid::new_v4();
+    let b = Uuid::new_v4();
+
+    let mut replica_a = ObservationSet::new();
+    replica_a.insert(scalar_obs(a, 0, 10.0));
+    let mut replica_b = ObservationSet::new();
+    replica_b.insert(scalar_obs(b, 0, 5.0));
+
+    replica_a.merge(&replica_b);
+    replica_b.merge(&replica_a);
+
+    // Convergence: identical sets...
+    assert_eq!(replica_a, replica_b, "replicas converge to identical sets");
+    // ...AND the specified value — the oracle the February test lacked.
+    assert_eq!(scalar_mean(&replica_a), Some(7.5));
+    assert_eq!(
+        scalar_mean(&replica_b),
+        Some(7.5),
+        "both replicas render the same consensus"
+    );
+}
+
+/// Hull floor with the mean oracle attached (companion to the set-level
+/// probe above): +1 and -1 average to exactly 0.0 — where the old
+/// `join(+1, -1)` returned `cosh(1) = 1.543080634815244`, outside the hull
+/// of its arguments, and no patch could fix that class.
+#[test]
+fn probe_scalar_mean_stays_in_hull() {
+    let a = Uuid::new_v4();
+    let b = Uuid::new_v4();
+    let mut set = ObservationSet::new();
+    set.insert(scalar_obs(a, 0, 1.0));
+    set.insert(scalar_obs(b, 0, -1.0));
+
+    assert_eq!(
+        scalar_mean(&set),
+        Some(0.0),
+        "mean(+1, -1) = 0.0 exactly — inside the hull"
     );
 }

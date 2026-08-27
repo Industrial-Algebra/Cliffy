@@ -6,15 +6,26 @@
 //! This crate provides CRDT, consensus, and synchronization implementations
 //! using Clifford algebra for coordination-free distributed systems.
 //!
-//! # Key Components
+//! # The Phase 1 architecture (salvage)
 //!
-//! ## State Management
-//! - [`GeometricCRDT`]: Operation-based CRDT with geometric transforms — **deprecated** (merge is unsound; see the [salvage plan](docs/plans/2026-08-26-geometric-crdt-salvage.md))
-//! - [`GeometricLattice`]: Trait for lattice-based conflict resolution
+//! The CRDT **is** an [`ObservationSet`] — a grow-only set of attributed
+//! observations whose merge is plain union (a true join-semilattice:
+//! convergence by construction). The geometry is a **deterministic
+//! projection** over the set ([`scalar_mean`], [`vector_mean`],
+//! [`rotor_consensus`] — the Markley eigen-mean): equal sets ⇒ bit-identical
+//! consensus on every replica. *The merge is boring; the render is
+//! geometric.* See the [salvage plan](docs/plans/2026-08-26-geometric-crdt-salvage.md).
+//!
+//! ## State Management (Phase 1)
+//! - [`ObservationSet`]: G-Set CRDT — merge is set union
+//! - [`Observation`]: Attributed observation, key = `(participant_id, seq)`
+//! - [`rotor_consensus`]: Markley chordal-L₂ eigen-mean for orientations
+//! - [`scalar_mean`] / [`vector_mean`]: componentwise floor
 //! - [`VectorClock`]: Causal ordering for distributed operations
 //!
-//! ## Consensus
-//! - [`GeometricConsensus`]: Consensus protocol using geometric mean
+//! ## Legacy (deprecated, removed in the Phase 1 cutover)
+//! - [`GeometricCRDT`]: merge annihiliates — **deprecated**, unsound
+//! - [`GeometricLattice`] / [`ComponentLattice`]: the latter is the sound floor
 //!
 //! ## Synchronization (Phase 3)
 //! - [`delta`]: State delta computation for efficient sync
@@ -27,6 +38,26 @@
 //! [salvage plan](docs/plans/2026-08-26-geometric-crdt-salvage.md)); this
 //! example shows the sound pieces that survive: vector clocks and the
 //! componentwise lattice floor.
+//!
+//! ```rust
+//! use cliffy_protocols::{scalar_mean, Observation, ObservationSet};
+//! use uuid::Uuid;
+//!
+//! // Two replicas, concurrent observations, no coordination.
+//! let (a, b) = (Uuid::new_v4(), Uuid::new_v4());
+//! let mut left = ObservationSet::new();
+//! left.insert(Observation::new_scalar(a, 0, 5.0));
+//! let mut right = ObservationSet::new();
+//! right.insert(Observation::new_scalar(b, 0, 10.0));
+//!
+//! // Union merge — both observations survive; consensus is the exact mean.
+//! left.merge(&right);
+//! right.merge(&left);
+//! assert_eq!(left, right);
+//! assert_eq!(scalar_mean(&left), Some(7.5));
+//! ```
+//!
+//! The sound floor (componentwise lattice), pre-dating Phase 1:
 //!
 //! ```rust
 //! use cliffy_protocols::{ComponentLattice, GeometricLattice, VectorClock};
@@ -71,6 +102,9 @@ pub use lattice::{ComponentLattice, GA3Lattice, GeometricLattice};
 pub use observation::{
     GrantRef, Observation, ObservationKey, ObservationPayload, ObservationSet, RotorObservation,
     VectorObservation,
+};
+pub use projection::{
+    from_amari_rotor, rotor_consensus, rotor_consensus_with_weights, scalar_mean, vector_mean,
 };
 pub use storage::{GeometricStore, MemoryStore, Snapshot, StorageStats};
 pub use sync::{

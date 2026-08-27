@@ -48,8 +48,10 @@ use cliffy_core::GA3;
 // Phase 2: Core CRDT and consensus
 pub mod consensus;
 pub mod crdt;
+pub mod eigen;
 pub mod lattice;
 pub mod observation;
+pub mod projection;
 pub mod serde_ga3;
 pub mod vector_clock;
 

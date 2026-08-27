@@ -422,6 +422,9 @@ impl SimdBatch {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::float_cmp)]
+    // Exactly-representable constants: bit equality is the point.
+    // (Stable clippy lacks the test-context exemption newer nightly has.)
     use super::*;
 
     #[test]

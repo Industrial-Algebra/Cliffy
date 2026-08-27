@@ -25,10 +25,20 @@ All notable changes to Cliffy are documented here. Format follows
 
 ### Deprecated
 
-- (Pending Phase 0 PR) `cliffy-protocols::crdt` (`GeometricCRDT`) and
-  `GA3Lattice::join`: the geometric merge is mathematically unsound — see
+- `cliffy_protocols::GeometricCRDT` and `geometric_mean` (crdt module):
+  the geometric merge is mathematically unsound — merges annihilate to
+  `GA3::zero()` (dead replay loop), op IDs collide across replicas, and the
+  exp-mean is not a mean on the manifold. Verified 2026-08-25; see
   [the salvage plan](docs/plans/2026-08-26-geometric-crdt-salvage.md).
-  Superseded by `ObservationSet` in the v0.4.0 cycle.
+  Superseded by `ObservationSet` in the v0.4.0 cycle. The wasm
+  `GeometricCRDT` wrapper carries the same deprecation.
+- `cliffy_protocols::GA3Lattice`: the magnitude-dominance join violates the
+  join-semilattice hull property (`join(+1, -1) = cosh(1)`). Use
+  `ComponentLattice` (componentwise max/min) — the boring, correct floor.
+  `VectorClock` and the FRP core are unaffected.
+- npm: deprecation draft for `@cliffy-ga/core` prepared at
+  `docs/deprecations/@cliffy-ga-core.md` — **operator approval required
+  before executing**.
 
 ## [0.4.0] — Planned
 

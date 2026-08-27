@@ -32,6 +32,8 @@
 //! assert!(joined.dominates(&state_b));
 //! ```
 
+#[allow(deprecated)]
+// imports the deprecated geometric_mean for the GA3Lattice tie-break; dies with Phase 1
 use crate::geometric_mean;
 use cliffy_core::GA3;
 
@@ -71,17 +73,28 @@ pub trait GeometricLattice: Clone {
     fn meet(&self, other: &Self) -> Option<Self>;
 }
 
-/// A wrapper around GA3 that implements GeometricLattice.
+/// A lattice over raw `GA3` multivectors using a magnitude-dominance join
+/// (dominance by magnitude; the exp-based geometric mean as tie-break).
 ///
-/// This provides lattice operations for multivectors where:
-/// - Join uses geometric mean for equal-magnitude states
-/// - Dominance is based on magnitude ordering
-/// - Divergence is the geometric distance
+/// # Deprecated — the join is not a join-semilattice
+///
+/// The magnitude-dominance rule with the exp-based tie-break violates the
+/// hull property: `join(+1, -1)` returns `cosh(1) ≈ 1.543`, outside the
+/// hull of its arguments, and the tie-break mean is non-associative — so
+/// this cannot form a join-semilattice and cannot back strong eventual
+/// consistency. See `docs/plans/2026-08-26-geometric-crdt-salvage.md`.
+/// Use `ComponentLattice` (componentwise max/min) for per-grade state —
+/// the boring, correct floor.
 #[derive(Debug, Clone, PartialEq)]
+#[deprecated(
+    since = "0.3.2",
+    note = "magnitude-dominance join violates the join-semilattice hull property; use ComponentLattice — see docs/plans/2026-08-26-geometric-crdt-salvage.md"
+)]
 pub struct GA3Lattice {
     inner: GA3,
 }
 
+#[allow(deprecated)] // inherent constructors reference the deprecated Self; dies with Phase 1
 impl GA3Lattice {
     /// Create a new lattice element from a multivector.
     pub fn new(mv: GA3) -> Self {
@@ -126,6 +139,11 @@ impl GA3Lattice {
     }
 }
 
+/// # Deprecated
+///
+/// See the struct-level deprecation: the magnitude-dominance rule with the
+/// exp-based tie-break is not a join-semilattice (`join(+1,-1) = cosh(1)`).
+#[allow(deprecated)] // all trait methods construct/read the deprecated Self; dies with Phase 1
 impl GeometricLattice for GA3Lattice {
     fn join(&self, other: &Self) -> Self {
         // Check for structural equality first (idempotence optimization)
@@ -238,6 +256,10 @@ impl GeometricLattice for ComponentLattice {
 
 #[cfg(test)]
 mod tests {
+    #![allow(deprecated)]
+    // GA3Lattice::join tests pin the deprecated magnitude-dominance behavior
+    // until Phase 1 of the salvage plan; ComponentLattice tests below are the
+    // sound floor and unaffected.
     use super::*;
 
     #[test]

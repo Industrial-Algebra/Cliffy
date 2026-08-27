@@ -9,7 +9,7 @@
 //! # Key Components
 //!
 //! ## State Management
-//! - [`GeometricCRDT`]: Operation-based CRDT with geometric transforms
+//! - [`GeometricCRDT`]: Operation-based CRDT with geometric transforms — **deprecated** (merge is unsound; see the [salvage plan](docs/plans/2026-08-26-geometric-crdt-salvage.md))
 //! - [`GeometricLattice`]: Trait for lattice-based conflict resolution
 //! - [`VectorClock`]: Causal ordering for distributed operations
 //!
@@ -23,17 +23,24 @@
 //!
 //! # Example
 //!
+//! The geometric CRDT below is deprecated (unsound merge — see the
+//! [salvage plan](docs/plans/2026-08-26-geometric-crdt-salvage.md)); this
+//! example shows the sound pieces that survive: vector clocks and the
+//! componentwise lattice floor.
+//!
 //! ```rust
-//! use cliffy_protocols::{GeometricCRDT, OperationType};
-//! use cliffy_core::GA3;
+//! use cliffy_protocols::{ComponentLattice, GeometricLattice, VectorClock};
 //! use uuid::Uuid;
 //!
-//! let node_id = Uuid::new_v4();
-//! let mut crdt = GeometricCRDT::new(node_id, GA3::scalar(0.0));
+//! let node = Uuid::new_v4();
+//! let mut clock = VectorClock::new();
+//! clock.tick(node);
 //!
-//! // Apply a geometric transformation
-//! let op = crdt.create_operation(GA3::scalar(5.0), OperationType::Addition);
-//! crdt.apply_operation(op);
+//! // Componentwise max/min: a genuine join-semilattice
+//! let a = ComponentLattice::from_scalar(5.0);
+//! let b = ComponentLattice::from_scalar(3.0);
+//! let joined = a.join(&b);
+//! assert!((joined.as_multivector().scalar_part() - 5.0).abs() < 1e-10);
 //! ```
 
 use cliffy_core::GA3;
@@ -56,6 +63,7 @@ pub use crdt::*;
 pub use delta::{
     apply_additive_delta, apply_delta, compute_delta, DeltaBatch, DeltaEncoding, StateDelta,
 };
+#[allow(deprecated)] // re-exports GA3Lattice for one more cycle; removed with Phase 1
 pub use lattice::{ComponentLattice, GA3Lattice, GeometricLattice};
 pub use storage::{GeometricStore, MemoryStore, Snapshot, StorageStats};
 pub use sync::{

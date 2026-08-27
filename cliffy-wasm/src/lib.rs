@@ -21,6 +21,10 @@
 //!
 //! # Distributed State (CRDT)
 //!
+//! **Deprecated:** `GeometricCRDT`'s merge is unsound (annihilation to
+//! zero — see `docs/plans/2026-08-26-geometric-crdt-salvage.md`). Shown for
+//! reference only; the successor `ObservationSet` lands in v0.4.0.
+//! `VectorClock` and `generateNodeId` remain sound.
 //! ```javascript
 //! import { GeometricCRDT, VectorClock, generateNodeId } from '@cliffy-ga/core';
 //!

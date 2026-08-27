@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@industrialalgebra/cliffy-core": "file:../cliffy-wasm/pkg"
+    "@industrialalgebra/cliffy-core": "file:../../cliffy-wasm/pkg"
   },
   "devDependencies": {
     "typescript": "^6.0.3",

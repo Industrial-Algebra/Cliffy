@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@industrialalgebra/cliffy-core": "file:../cliffy-wasm/pkg",
+    "@industrialalgebra/cliffy-core": "file:../../cliffy-wasm/pkg",
     "@cliffy/shared": "*"
   },
   "devDependencies": {

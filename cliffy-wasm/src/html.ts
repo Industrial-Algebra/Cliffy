@@ -74,6 +74,7 @@ function processAttributes(
     values: unknown[],
     DOMProjectionClass: typeof DOMProjection
 ): void {
+    void DOMProjectionClass; // threaded through for the projection contract
     const attributes = Array.from(element.attributes);
 
     for (const attr of attributes) {

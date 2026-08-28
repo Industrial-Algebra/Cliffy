@@ -26,10 +26,10 @@ async function main() {
   // =========================================================================
 
   const rotorAngle = behavior(0);
-  const rotorPlane = behavior<'xy' | 'xz' | 'yz'>('xy');
+  const rotorPlane = behavior('xy');
 
   // Compute the current rotor based on angle and plane
-  const currentRotor = behavior<Rotor>(Rotor.identity());
+  const currentRotor = behavior(Rotor.identity());
 
   // Update rotor when angle or plane changes
   rotorAngle.subscribe((angle: number) => {
@@ -86,7 +86,7 @@ async function main() {
   const composeAngle = behavior(0);
 
   // Create composed transform
-  const composedTransform = behavior<Transform>(Transform.identity());
+  const composedTransform = behavior(Transform.identity());
 
   function updateComposedTransform() {
     const tx = translateX.sample() as number;
@@ -122,7 +122,7 @@ async function main() {
   const endAngle = behavior(180);
 
   // Create start and end rotors
-  const blendedRotor = behavior<Rotor>(Rotor.identity());
+  const blendedRotor = behavior(Rotor.identity());
 
   function updateBlend() {
     const t = blendT.sample() as number;

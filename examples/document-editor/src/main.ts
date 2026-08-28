@@ -10,6 +10,8 @@
  */
 
 import init, {
+  Behavior,
+  ObservationSet,
   behavior,
   VectorClock,
   generateNodeId,
@@ -62,8 +64,8 @@ const state: DocumentState = {
 };
 
 // FRP Behaviors (initialized after WASM init)
-let contentBehavior: ReturnType<typeof behavior<string>>;
-let cursorBehavior: ReturnType<typeof behavior<number>>;
+let contentBehavior: Behavior;
+let cursorBehavior: Behavior;
 
 // User colors
 const USER_COLORS = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#a855f7'];

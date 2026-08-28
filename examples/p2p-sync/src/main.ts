@@ -15,6 +15,7 @@
  */
 
 import init, {
+  ObservationSet,
   behavior,
   Behavior,
   VectorClock as WasmVectorClock,
@@ -83,6 +84,7 @@ const state: AppState = {
   localPeerId: '',
   peerManager: null,
   crdt: null,
+  crdtSeq: 0,
   clock: null,
   sharedCounter: 0,
   localOperationCount: 0,

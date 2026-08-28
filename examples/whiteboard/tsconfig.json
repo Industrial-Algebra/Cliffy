@@ -1,13 +1,20 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "baseUrl": ".",
     "paths": {
-      "@cliffy/shared/*": ["../shared/src/*"],
-      "@industrialalgebra/cliffy-core": ["../../cliffy-wasm/pkg"],
-      "@industrialalgebra/cliffy-core/*": ["../../cliffy-wasm/pkg/*"]
+      "@cliffy/shared/*": [
+        "../shared/src/*"
+      ],
+      "@industrialalgebra/cliffy-core": [
+        "../../cliffy-wasm/pkg"
+      ],
+      "@industrialalgebra/cliffy-core/*": [
+        "../../cliffy-wasm/pkg/*"
+      ]
     }
   },
-  "include": ["src/**/*", "../shared/src/**/*"]
+  "include": [
+    "src/**/*",
+    "../shared/src/**/*"
+  ]
 }

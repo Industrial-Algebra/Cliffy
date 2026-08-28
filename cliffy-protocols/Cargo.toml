@@ -3,8 +3,8 @@ name = "cliffy-protocols"
 version = "0.3.1"
 edition = "2021"
 description = "Distributed consensus protocols using geometric algebra"
-license = "MIT"
-repository = "https://github.com/justinelliottcobb/Cliffy"
+license = "Apache-2.0"
+repository = "https://github.com/Industrial-Algebra/Cliffy"
 readme = "README.md"
 keywords = ["distributed", "crdt", "consensus", "geometric-algebra", "sync"]
 categories = ["algorithms", "data-structures", "concurrency"]
@@ -14,7 +14,13 @@ cliffy-core = { version = "0.3.1", path = "../cliffy-core" }
 amari-core = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
-uuid = { version = "1.0", features = ["v4", "serde"] }
+uuid = { version = "1.23.3", features = ["v4", "serde"] }
 
 [dev-dependencies]
+quickcheck = "1.0"
+quickcheck_macros = "1.0"
+serde_json = "1.0"
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+
+[lints]
+workspace = true

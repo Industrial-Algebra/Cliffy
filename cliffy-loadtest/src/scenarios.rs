@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Predefined test scenarios for scale testing
 //!
 //! Provides ready-to-use scenarios for common testing patterns.
@@ -68,7 +71,8 @@ pub enum ScaleTestScenario {
 
 impl ScaleTestScenario {
     /// Create a 100-user test scenario
-    pub fn scale_100() -> Self {
+    #[must_use]
+    pub const fn scale_100() -> Self {
         Self::Counter {
             users: 100,
             ops_per_user: 10,
@@ -76,7 +80,8 @@ impl ScaleTestScenario {
     }
 
     /// Create a 1000-user test scenario
-    pub fn scale_1000() -> Self {
+    #[must_use]
+    pub const fn scale_1000() -> Self {
         Self::Counter {
             users: 1000,
             ops_per_user: 10,
@@ -84,7 +89,8 @@ impl ScaleTestScenario {
     }
 
     /// Create a 10000-user test scenario
-    pub fn scale_10000() -> Self {
+    #[must_use]
+    pub const fn scale_10000() -> Self {
         Self::Counter {
             users: 10000,
             ops_per_user: 5,
@@ -92,6 +98,7 @@ impl ScaleTestScenario {
     }
 
     /// Get the configuration for this scenario
+    #[must_use]
     pub fn config(&self) -> ScenarioConfig {
         match self {
             Self::Counter {
@@ -161,10 +168,11 @@ impl ScaleTestScenario {
     }
 
     /// Run the scenario and return results
+    #[must_use]
     pub fn run(&self) -> SimulationResult {
         let config = self.config();
 
-        let mut sim = Simulation::new(config.user_count, config.behavior)
+        let mut sim = Simulation::new(config.user_count, &config.behavior)
             .with_topology(config.topology)
             .with_latency(config.latency)
             .with_threshold(config.convergence_threshold);
@@ -173,26 +181,32 @@ impl ScaleTestScenario {
     }
 
     /// Run the scenario and generate a report
+    #[must_use]
     pub fn run_with_report(&self) -> ScaleTestReport {
         let result = self.run();
-        ScaleTestReport::from_result(self.name(), result)
+        ScaleTestReport::from_result(self.name(), &result)
     }
 
     /// Get the scenario name
+    #[must_use]
     pub fn name(&self) -> String {
         match self {
-            Self::Counter { users, .. } => format!("Counter ({})", users),
-            Self::Whiteboard { users, .. } => format!("Whiteboard ({})", users),
-            Self::DocumentEditor { users, .. } => format!("Document Editor ({})", users),
-            Self::MultiplayerGame { users, .. } => format!("Multiplayer Game ({})", users),
+            Self::Counter { users, .. } => format!("Counter ({users})"),
+            Self::Whiteboard { users, .. } => format!("Whiteboard ({users})"),
+            Self::DocumentEditor { users, .. } => format!("Document Editor ({users})"),
+            Self::MultiplayerGame { users, .. } => format!("Multiplayer Game ({users})"),
             Self::Custom(config) => format!("Custom ({})", config.user_count),
         }
     }
 }
 
 /// Run multiple scenarios and collect results
+#[must_use]
 pub fn run_scenarios(scenarios: &[ScaleTestScenario]) -> Vec<ScaleTestReport> {
-    scenarios.iter().map(|s| s.run_with_report()).collect()
+    scenarios
+        .iter()
+        .map(ScaleTestScenario::run_with_report)
+        .collect()
 }
 
 #[cfg(test)]

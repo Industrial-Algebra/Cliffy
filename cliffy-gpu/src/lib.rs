@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Cliffy GPU
 //!
 //! WebGPU compute shaders and SIMD-optimized CPU operations for geometric algebra.
@@ -70,14 +73,14 @@ pub enum GpuError {
 /// GPU-compatible multivector representation.
 ///
 /// Uses 8 f32 coefficients for Cl(3,0) geometric algebra:
-/// - coeffs[0]: scalar (1)
-/// - coeffs[1]: e1
-/// - coeffs[2]: e2
-/// - coeffs[3]: e12
-/// - coeffs[4]: e3
-/// - coeffs[5]: e13
-/// - coeffs[6]: e23
-/// - coeffs[7]: e123 (pseudoscalar)
+/// - `coeffs[0]`: scalar (1)
+/// - `coeffs[1]`: e1
+/// - `coeffs[2]`: e2
+/// - `coeffs[3]`: e12
+/// - `coeffs[4]`: e3
+/// - `coeffs[5]`: e13
+/// - `coeffs[6]`: e23
+/// - `coeffs[7]`: e123 (pseudoscalar)
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable, Default)]
 pub struct GpuMultivector {
@@ -86,11 +89,13 @@ pub struct GpuMultivector {
 
 impl GpuMultivector {
     /// Create a new GPU multivector with all zeros.
+    #[must_use]
     pub fn zero() -> Self {
         Self { coeffs: [0.0; 8] }
     }
 
     /// Create a scalar multivector.
+    #[must_use]
     pub fn scalar(s: f32) -> Self {
         let mut mv = Self::zero();
         mv.coeffs[0] = s;
@@ -98,6 +103,7 @@ impl GpuMultivector {
     }
 
     /// Create a vector multivector (e1, e2, e3 components).
+    #[must_use]
     pub fn vector(x: f32, y: f32, z: f32) -> Self {
         let mut mv = Self::zero();
         mv.coeffs[1] = x;
@@ -107,11 +113,13 @@ impl GpuMultivector {
     }
 
     /// Get the scalar component.
+    #[must_use]
     pub fn get_scalar(&self) -> f32 {
         self.coeffs[0]
     }
 
     /// Get the vector components (e1, e2, e3).
+    #[must_use]
     pub fn get_vector(&self) -> (f32, f32, f32) {
         (self.coeffs[1], self.coeffs[2], self.coeffs[4])
     }
@@ -123,10 +131,10 @@ impl From<&GA3> for GpuMultivector {
         // GA3 = Multivector<3,0,0> has 8 components
         // Map from amari-core's storage to our layout
         let slice = mv.as_slice();
-        for (i, &c) in slice.iter().enumerate() {
-            if i < 8 {
-                coeffs[i] = c as f32;
-            }
+        // zip stops at the shorter side: extra coefficients are dropped,
+        // missing ones stay zero — same semantics as the old bound-checked loop.
+        for (dst, &c) in coeffs.iter_mut().zip(slice.iter()) {
+            *dst = c as f32;
         }
         Self { coeffs }
     }
@@ -134,8 +142,8 @@ impl From<&GA3> for GpuMultivector {
 
 impl From<GpuMultivector> for GA3 {
     fn from(gpu_mv: GpuMultivector) -> Self {
-        let coeffs: Vec<f64> = gpu_mv.coeffs.iter().map(|&c| c as f64).collect();
-        GA3::from_slice(&coeffs)
+        let coeffs: Vec<f64> = gpu_mv.coeffs.iter().map(|&c| f64::from(c)).collect();
+        Self::from_slice(&coeffs)
     }
 }
 
@@ -162,10 +170,19 @@ impl GpuContext {
     /// Create a new GPU context.
     ///
     /// This initializes WebGPU and creates all compute pipelines.
+    /// # Errors
+    ///
+    /// Returns [`GpuError::AdapterNotFound`] when no suitable GPU adapter
+    /// is available, and [`GpuError::DeviceRequestFailed`] when the device
+    /// cannot be acquired; shader or pipeline setup failures surface as
+    /// [`GpuError::ComputeFailed`].
+    // Linear init sequence (instance → adapter → device → pipelines);
+    // helper extraction would just thread six locals through three fns.
+    #[allow(clippy::too_many_lines)]
     pub async fn new() -> Result<Self, GpuError> {
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
-            ..Default::default()
+            ..wgpu::InstanceDescriptor::new_without_display_handle()
         });
 
         let adapter = instance
@@ -173,20 +190,22 @@ impl GpuContext {
                 power_preference: wgpu::PowerPreference::HighPerformance,
                 compatible_surface: None,
                 force_fallback_adapter: false,
+                // Preserve pre-wgpu-30 behavior: report the adapter's raw
+                // limits instead of bucketing them for fallback ordering.
+                apply_limit_buckets: false,
             })
             .await
-            .ok_or(GpuError::AdapterNotFound)?;
+            .map_err(|_| GpuError::AdapterNotFound)?;
 
         let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    label: Some("Cliffy GPU Device"),
-                    required_features: wgpu::Features::empty(),
-                    required_limits: wgpu::Limits::default(),
-                    memory_hints: wgpu::MemoryHints::Performance,
-                },
-                None,
-            )
+            .request_device(&wgpu::DeviceDescriptor {
+                label: Some("Cliffy GPU Device"),
+                required_features: wgpu::Features::empty(),
+                required_limits: wgpu::Limits::default(),
+                memory_hints: wgpu::MemoryHints::Performance,
+                experimental_features: wgpu::ExperimentalFeatures::default(),
+                trace: wgpu::Trace::default(),
+            })
             .await?;
 
         let device = Arc::new(device);
@@ -236,8 +255,8 @@ impl GpuContext {
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Geometric Compute Pipeline Layout"),
-            bind_group_layouts: &[&bind_group_layout],
-            push_constant_ranges: &[],
+            bind_group_layouts: &[Some(&bind_group_layout)],
+            immediate_size: 0,
         });
 
         let geometric_product_pipeline =
@@ -246,7 +265,7 @@ impl GpuContext {
                 layout: Some(&pipeline_layout),
                 module: &shader_module,
                 entry_point: Some("geometric_product_kernel"),
-                compilation_options: Default::default(),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
                 cache: None,
             });
 
@@ -255,7 +274,7 @@ impl GpuContext {
             layout: Some(&pipeline_layout),
             module: &shader_module,
             entry_point: Some("addition_kernel"),
-            compilation_options: Default::default(),
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
             cache: None,
         });
 
@@ -264,7 +283,7 @@ impl GpuContext {
             layout: Some(&pipeline_layout),
             module: &shader_module,
             entry_point: Some("sandwich_kernel"),
-            compilation_options: Default::default(),
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
             cache: None,
         });
 
@@ -273,7 +292,7 @@ impl GpuContext {
             layout: Some(&pipeline_layout),
             module: &shader_module,
             entry_point: Some("exp_kernel"),
-            compilation_options: Default::default(),
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
             cache: None,
         });
 
@@ -283,7 +302,7 @@ impl GpuContext {
                 layout: Some(&pipeline_layout),
                 module: &shader_module,
                 entry_point: Some("rotor_slerp_kernel"),
-                compilation_options: Default::default(),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
                 cache: None,
             });
 
@@ -299,10 +318,15 @@ impl GpuContext {
         })
     }
 
-    /// Batch geometric product: a[i] * b[i] for all i.
+    /// Batch geometric product: `a[i] * b[i]` for all `i`.
     ///
     /// Computes the geometric product of corresponding elements
     /// from two input arrays in parallel on the GPU.
+    /// # Errors
+    ///
+    /// Returns [`GpuError::BufferSizeMismatch`] if the inputs differ in
+    /// length, or [`GpuError::ComputeFailed`] if the GPU dispatch or
+    /// readback fails.
     pub async fn batch_geometric_product(
         &self,
         a: &[GA3],
@@ -316,15 +340,20 @@ impl GpuContext {
         }
 
         // Convert to GPU format
-        let a_gpu: Vec<GpuMultivector> = a.iter().map(|mv| mv.into()).collect();
-        let b_gpu: Vec<GpuMultivector> = b.iter().map(|mv| mv.into()).collect();
+        let a_gpu: Vec<GpuMultivector> = a.iter().map(std::convert::Into::into).collect();
+        let b_gpu: Vec<GpuMultivector> = b.iter().map(std::convert::Into::into).collect();
 
         let result = self.run_binary_kernel(&self.geometric_product_pipeline, &a_gpu, &b_gpu)?;
 
         Ok(result.into_iter().map(Into::into).collect())
     }
 
-    /// Batch addition: a[i] + b[i] for all i.
+    /// Batch addition: `a[i] + b[i]` for all `i`.
+    /// # Errors
+    ///
+    /// Returns [`GpuError::BufferSizeMismatch`] if the inputs differ in
+    /// length, or [`GpuError::ComputeFailed`] if the GPU dispatch or
+    /// readback fails.
     pub async fn batch_addition(&self, a: &[GA3], b: &[GA3]) -> Result<Vec<GA3>, GpuError> {
         if a.len() != b.len() {
             return Err(GpuError::BufferSizeMismatch {
@@ -333,17 +362,22 @@ impl GpuContext {
             });
         }
 
-        let a_gpu: Vec<GpuMultivector> = a.iter().map(|mv| mv.into()).collect();
-        let b_gpu: Vec<GpuMultivector> = b.iter().map(|mv| mv.into()).collect();
+        let a_gpu: Vec<GpuMultivector> = a.iter().map(std::convert::Into::into).collect();
+        let b_gpu: Vec<GpuMultivector> = b.iter().map(std::convert::Into::into).collect();
 
         let result = self.run_binary_kernel(&self.addition_pipeline, &a_gpu, &b_gpu)?;
 
         Ok(result.into_iter().map(Into::into).collect())
     }
 
-    /// Batch sandwich product: rotor[i] * x[i] * ~rotor[i] for all i.
+    /// Batch sandwich product: `rotor[i] * x[i] * ~rotor[i]` for all `i`.
     ///
     /// The sandwich product applies a rotation to each element.
+    /// # Errors
+    ///
+    /// Returns [`GpuError::BufferSizeMismatch`] if the inputs differ in
+    /// length, or [`GpuError::ComputeFailed`] if the GPU dispatch or
+    /// readback fails.
     pub async fn batch_sandwich(
         &self,
         rotors: &[GA3],
@@ -356,19 +390,24 @@ impl GpuContext {
             });
         }
 
-        let rotors_gpu: Vec<GpuMultivector> = rotors.iter().map(|mv| mv.into()).collect();
-        let vectors_gpu: Vec<GpuMultivector> = vectors.iter().map(|mv| mv.into()).collect();
+        let rotors_gpu: Vec<GpuMultivector> = rotors.iter().map(std::convert::Into::into).collect();
+        let vectors_gpu: Vec<GpuMultivector> =
+            vectors.iter().map(std::convert::Into::into).collect();
 
         let result = self.run_binary_kernel(&self.sandwich_pipeline, &rotors_gpu, &vectors_gpu)?;
 
         Ok(result.into_iter().map(Into::into).collect())
     }
 
-    /// Batch exponential: exp(a[i]) for all i.
+    /// Batch exponential: `exp(a[i])` for all `i`.
     ///
     /// The exponential map converts bivectors to rotors.
+    /// # Errors
+    ///
+    /// Returns [`GpuError::ComputeFailed`] if the GPU dispatch or readback
+    /// fails.
     pub async fn batch_exp(&self, a: &[GA3]) -> Result<Vec<GA3>, GpuError> {
-        let a_gpu: Vec<GpuMultivector> = a.iter().map(|mv| mv.into()).collect();
+        let a_gpu: Vec<GpuMultivector> = a.iter().map(std::convert::Into::into).collect();
 
         // For unary operations, use same input for both buffers
         let result = self.run_binary_kernel(&self.exp_pipeline, &a_gpu, &a_gpu)?;
@@ -376,9 +415,14 @@ impl GpuContext {
         Ok(result.into_iter().map(Into::into).collect())
     }
 
-    /// Batch rotor SLERP: interpolate from a[i] to b[i] by t.
+    /// Batch rotor SLERP: interpolate from `a[i]` to `b[i]` by `t`.
     ///
     /// Spherical linear interpolation for smooth rotation blending.
+    /// # Errors
+    ///
+    /// Returns [`GpuError::BufferSizeMismatch`] if the inputs differ in
+    /// length, or [`GpuError::ComputeFailed`] if the GPU dispatch or
+    /// readback fails.
     pub async fn batch_rotor_slerp(
         &self,
         a: &[GA3],
@@ -392,7 +436,7 @@ impl GpuContext {
             });
         }
 
-        let a_gpu: Vec<GpuMultivector> = a.iter().map(|mv| mv.into()).collect();
+        let a_gpu: Vec<GpuMultivector> = a.iter().map(std::convert::Into::into).collect();
         // Encode t in the first coefficient of b
         let b_gpu: Vec<GpuMultivector> = b
             .iter()
@@ -506,14 +550,22 @@ impl GpuContext {
             let _ = sender.send(result);
         });
 
-        self.device.poll(wgpu::Maintain::Wait);
+        self.device
+            .poll(wgpu::PollType::Wait {
+                submission_index: None,
+                timeout: None,
+            })
+            .ok();
 
         receiver
             .recv()
             .map_err(|e| GpuError::ComputeFailed(e.to_string()))?
-            .map_err(|e| GpuError::ComputeFailed(format!("{:?}", e)))?;
+            .map_err(|e| GpuError::ComputeFailed(format!("{e:?}")))?;
 
-        let data = buffer_slice.get_mapped_range();
+        // wgpu 30: `get_mapped_range` returns Result instead of panicking.
+        let data = buffer_slice
+            .get_mapped_range()
+            .map_err(|e| GpuError::ComputeFailed(format!("{e:?}")))?;
         let result: Vec<GpuMultivector> = bytemuck::cast_slice(&data).to_vec();
         drop(data);
         staging_buffer.unmap();
@@ -522,11 +574,13 @@ impl GpuContext {
     }
 
     /// Check if GPU dispatch is recommended for the given batch size.
+    #[must_use]
     pub fn should_use_gpu(&self, batch_size: usize) -> bool {
         batch_size >= GPU_DISPATCH_THRESHOLD
     }
 
     /// Get the device info for debugging.
+    #[must_use]
     pub fn device_info(&self) -> String {
         "Cliffy GPU Context (wgpu)".to_string()
     }
@@ -558,6 +612,7 @@ impl AutoDispatcher {
     }
 
     /// Create a CPU-only dispatcher (no GPU).
+    #[must_use]
     pub fn cpu_only() -> Self {
         Self {
             gpu_ctx: None,
@@ -566,11 +621,13 @@ impl AutoDispatcher {
     }
 
     /// Check if GPU is available.
+    #[must_use]
     pub fn has_gpu(&self) -> bool {
         self.gpu_ctx.is_some()
     }
 
     /// Get the current dispatch threshold.
+    #[must_use]
     pub fn threshold(&self) -> usize {
         self.threshold
     }
@@ -578,6 +635,12 @@ impl AutoDispatcher {
     /// Batch geometric product with automatic dispatch.
     ///
     /// Uses GPU for large batches, SIMD-optimized CPU for small batches.
+    /// Dispatches to the GPU when the batch clears the threshold.
+    ///
+    /// # Errors
+    ///
+    /// Propagates [`GpuError`] from the GPU path on dispatch failure; the
+    /// CPU fallback path is infallible.
     pub async fn geometric_product(&self, a: &[GA3], b: &[GA3]) -> Result<Vec<GA3>, GpuError> {
         if let Some(ref ctx) = self.gpu_ctx {
             if a.len() >= self.threshold {
@@ -602,6 +665,12 @@ impl AutoDispatcher {
     /// Batch addition with automatic dispatch.
     ///
     /// Uses GPU for large batches, SIMD-optimized CPU for small batches.
+    /// Dispatches to the GPU when the batch clears the threshold.
+    ///
+    /// # Errors
+    ///
+    /// Propagates [`GpuError`] from the GPU path on dispatch failure; the
+    /// CPU fallback path is infallible.
     pub async fn addition(&self, a: &[GA3], b: &[GA3]) -> Result<Vec<GA3>, GpuError> {
         if let Some(ref ctx) = self.gpu_ctx {
             if a.len() >= self.threshold {
@@ -626,6 +695,12 @@ impl AutoDispatcher {
     /// Batch sandwich product with automatic dispatch.
     ///
     /// Uses GPU for large batches, SIMD-optimized CPU for small batches.
+    /// Dispatches to the GPU when the batch clears the threshold.
+    ///
+    /// # Errors
+    ///
+    /// Propagates [`GpuError`] from the GPU path on dispatch failure; the
+    /// CPU fallback path is infallible.
     pub async fn sandwich(&self, rotors: &[GA3], vectors: &[GA3]) -> Result<Vec<GA3>, GpuError> {
         if let Some(ref ctx) = self.gpu_ctx {
             if rotors.len() >= self.threshold {
@@ -650,6 +725,12 @@ impl AutoDispatcher {
     /// Batch exponential with automatic dispatch.
     ///
     /// Uses GPU for large batches, SIMD-optimized CPU for small batches.
+    /// Dispatches to the GPU when the batch clears the threshold.
+    ///
+    /// # Errors
+    ///
+    /// Propagates [`GpuError`] from the GPU path on dispatch failure; the
+    /// CPU fallback path is infallible.
     pub async fn exp(&self, a: &[GA3]) -> Result<Vec<GA3>, GpuError> {
         if let Some(ref ctx) = self.gpu_ctx {
             if a.len() >= self.threshold {
@@ -666,6 +747,12 @@ impl AutoDispatcher {
     /// Batch rotor SLERP with automatic dispatch.
     ///
     /// Uses GPU for large batches, SIMD-optimized CPU for small batches.
+    /// Dispatches to the GPU when the batch clears the threshold.
+    ///
+    /// # Errors
+    ///
+    /// Propagates [`GpuError`] from the GPU path on dispatch failure; the
+    /// CPU fallback path is infallible.
     pub async fn rotor_slerp(&self, a: &[GA3], b: &[GA3], t: f32) -> Result<Vec<GA3>, GpuError> {
         if let Some(ref ctx) = self.gpu_ctx {
             if a.len() >= self.threshold {
@@ -690,6 +777,9 @@ impl AutoDispatcher {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::float_cmp)]
+    // Exactly-representable constants: bit equality is the point.
+    // (Stable clippy lacks the test-context exemption newer nightly has.)
     use super::*;
 
     #[test]

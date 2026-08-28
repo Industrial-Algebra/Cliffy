@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! SIMD-optimized CPU operations for geometric algebra.
 //!
 //! This module provides CPU-based SIMD acceleration for geometric algebra
@@ -16,6 +19,7 @@ use cliffy_core::GA3;
 /// Computes the geometric product of two multivectors using SIMD
 /// operations where possible. The Cl(3,0) geometric product follows
 /// the multiplication table for basis elements {1, e1, e2, e12, e3, e13, e23, e123}.
+#[must_use]
 pub fn geometric_product_simd(a: &GpuMultivector, b: &GpuMultivector) -> GpuMultivector {
     // For Cl(3,0), the geometric product expands to:
     // result[i] = sum over j,k where basis[j] * basis[k] = ±basis[i]
@@ -116,6 +120,7 @@ pub fn geometric_product_simd(a: &GpuMultivector, b: &GpuMultivector) -> GpuMult
 
 /// SIMD-optimized addition of two multivectors.
 #[inline]
+#[must_use]
 pub fn addition_simd(a: &GpuMultivector, b: &GpuMultivector) -> GpuMultivector {
     let a_vec = f32x8::from(a.coeffs);
     let b_vec = f32x8::from(b.coeffs);
@@ -127,6 +132,7 @@ pub fn addition_simd(a: &GpuMultivector, b: &GpuMultivector) -> GpuMultivector {
 
 /// SIMD-optimized subtraction of two multivectors.
 #[inline]
+#[must_use]
 pub fn subtraction_simd(a: &GpuMultivector, b: &GpuMultivector) -> GpuMultivector {
     let a_vec = f32x8::from(a.coeffs);
     let b_vec = f32x8::from(b.coeffs);
@@ -138,6 +144,7 @@ pub fn subtraction_simd(a: &GpuMultivector, b: &GpuMultivector) -> GpuMultivecto
 
 /// SIMD-optimized scalar multiplication.
 #[inline]
+#[must_use]
 pub fn scalar_mul_simd(a: &GpuMultivector, scalar: f32) -> GpuMultivector {
     let a_vec = f32x8::from(a.coeffs);
     let s_vec = f32x8::splat(scalar);
@@ -152,6 +159,7 @@ pub fn scalar_mul_simd(a: &GpuMultivector, scalar: f32) -> GpuMultivector {
 /// For Cl(3,0), the reverse negates bivector and pseudoscalar components:
 /// ~(a + b*e12 + c*e13 + d*e23 + e*e123) = a - b*e12 - c*e13 - d*e23 - e*e123
 #[inline]
+#[must_use]
 pub fn reverse_simd(a: &GpuMultivector) -> GpuMultivector {
     // Reverse: negate grades 2 and 3
     // Grade 0 (scalar): coeffs[0] - keep
@@ -170,6 +178,7 @@ pub fn reverse_simd(a: &GpuMultivector) -> GpuMultivector {
 ///
 /// Negates odd-grade components.
 #[inline]
+#[must_use]
 pub fn grade_involution_simd(a: &GpuMultivector) -> GpuMultivector {
     // Grade involution: negate odd grades
     // Grade 0: keep, Grade 1: negate, Grade 2: keep, Grade 3: negate
@@ -185,6 +194,7 @@ pub fn grade_involution_simd(a: &GpuMultivector) -> GpuMultivector {
 ///
 /// Combines reversion and grade involution.
 #[inline]
+#[must_use]
 pub fn conjugate_simd(a: &GpuMultivector) -> GpuMultivector {
     // Conjugate = reverse ∘ grade_involution
     // Grade 0: keep, Grade 1: negate, Grade 2: negate, Grade 3: keep
@@ -198,6 +208,7 @@ pub fn conjugate_simd(a: &GpuMultivector) -> GpuMultivector {
 
 /// SIMD-optimized squared magnitude (norm squared).
 #[inline]
+#[must_use]
 pub fn norm_squared_simd(a: &GpuMultivector) -> f32 {
     // ||a||² = a * ~a (scalar part only)
     let rev = reverse_simd(a);
@@ -207,12 +218,14 @@ pub fn norm_squared_simd(a: &GpuMultivector) -> f32 {
 
 /// SIMD-optimized norm (magnitude).
 #[inline]
+#[must_use]
 pub fn norm_simd(a: &GpuMultivector) -> f32 {
     norm_squared_simd(a).sqrt()
 }
 
 /// SIMD-optimized normalization.
 #[inline]
+#[must_use]
 pub fn normalize_simd(a: &GpuMultivector) -> GpuMultivector {
     let n = norm_simd(a);
     if n > 1e-10 {
@@ -226,6 +239,7 @@ pub fn normalize_simd(a: &GpuMultivector) -> GpuMultivector {
 ///
 /// Used for rotations and reflections.
 #[inline]
+#[must_use]
 pub fn sandwich_simd(a: &GpuMultivector, b: &GpuMultivector) -> GpuMultivector {
     let b_rev = reverse_simd(b);
     let temp = geometric_product_simd(b, a);
@@ -234,6 +248,7 @@ pub fn sandwich_simd(a: &GpuMultivector, b: &GpuMultivector) -> GpuMultivector {
 
 /// SIMD-optimized dot product (inner product).
 #[inline]
+#[must_use]
 pub fn dot_simd(a: &GpuMultivector, b: &GpuMultivector) -> f32 {
     let a_vec = f32x8::from(a.coeffs);
     let b_vec = f32x8::from(b.coeffs);
@@ -245,6 +260,7 @@ pub fn dot_simd(a: &GpuMultivector, b: &GpuMultivector) -> f32 {
 /// SIMD-optimized exponential for bivectors (creates rotors).
 ///
 /// For a bivector B, exp(B) = cos(|B|) + sin(|B|) * B/|B|
+#[must_use]
 pub fn exp_bivector_simd(b: &GpuMultivector) -> GpuMultivector {
     // Extract bivector components
     let bx = b.coeffs[3]; // e12
@@ -283,6 +299,7 @@ pub fn exp_bivector_simd(b: &GpuMultivector) -> GpuMultivector {
 
 /// SIMD-optimized linear interpolation.
 #[inline]
+#[must_use]
 pub fn lerp_simd(a: &GpuMultivector, b: &GpuMultivector, t: f32) -> GpuMultivector {
     let a_vec = f32x8::from(a.coeffs);
     let b_vec = f32x8::from(b.coeffs);
@@ -297,6 +314,7 @@ pub fn lerp_simd(a: &GpuMultivector, b: &GpuMultivector, t: f32) -> GpuMultivect
 /// SIMD-optimized rotor spherical linear interpolation (SLERP).
 ///
 /// Interpolates smoothly between two rotors.
+#[must_use]
 pub fn rotor_slerp_simd(a: &GpuMultivector, b: &GpuMultivector, t: f32) -> GpuMultivector {
     // Compute dot product to find angle between rotors
     let dot = dot_simd(a, b);
@@ -343,6 +361,7 @@ pub struct SimdBatch;
 
 impl SimdBatch {
     /// Batch geometric product using SIMD.
+    #[must_use]
     pub fn geometric_product(a: &[GpuMultivector], b: &[GpuMultivector]) -> Vec<GpuMultivector> {
         a.iter()
             .zip(b.iter())
@@ -351,6 +370,7 @@ impl SimdBatch {
     }
 
     /// Batch addition using SIMD.
+    #[must_use]
     pub fn addition(a: &[GpuMultivector], b: &[GpuMultivector]) -> Vec<GpuMultivector> {
         a.iter()
             .zip(b.iter())
@@ -359,6 +379,7 @@ impl SimdBatch {
     }
 
     /// Batch sandwich product using SIMD.
+    #[must_use]
     pub fn sandwich(rotors: &[GpuMultivector], vectors: &[GpuMultivector]) -> Vec<GpuMultivector> {
         rotors
             .iter()
@@ -373,6 +394,7 @@ impl SimdBatch {
     }
 
     /// Batch rotor SLERP using SIMD.
+    #[must_use]
     pub fn rotor_slerp(a: &[GpuMultivector], b: &[GpuMultivector], t: f32) -> Vec<GpuMultivector> {
         a.iter()
             .zip(b.iter())
@@ -386,11 +408,13 @@ impl SimdBatch {
     }
 
     /// Convert from GA3 to GPU format.
+    #[must_use]
     pub fn from_ga3(mvs: &[GA3]) -> Vec<GpuMultivector> {
-        mvs.iter().map(|mv| mv.into()).collect()
+        mvs.iter().map(std::convert::Into::into).collect()
     }
 
     /// Convert from GPU format to GA3.
+    #[must_use]
     pub fn to_ga3(mvs: &[GpuMultivector]) -> Vec<GA3> {
         mvs.iter().map(|mv| (*mv).into()).collect()
     }
@@ -398,6 +422,9 @@ impl SimdBatch {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::float_cmp)]
+    // Exactly-representable constants: bit equality is the point.
+    // (Stable clippy lacks the test-context exemption newer nightly has.)
     use super::*;
 
     #[test]

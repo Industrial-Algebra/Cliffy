@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Test result types with geometric information
 //!
 //! Test results are not just pass/fail - they carry geometric error information
@@ -25,49 +28,59 @@ pub enum TestResult {
 
 impl TestResult {
     /// Check if test passed
-    pub fn is_pass(&self) -> bool {
-        matches!(self, TestResult::Pass)
+    #[must_use]
+    pub const fn is_pass(&self) -> bool {
+        matches!(self, Self::Pass)
     }
 
     /// Check if test failed
-    pub fn is_fail(&self) -> bool {
-        matches!(self, TestResult::Fail(_))
+    #[must_use]
+    pub const fn is_fail(&self) -> bool {
+        matches!(self, Self::Fail(_))
     }
 
     /// Get the error if test failed
-    pub fn error(&self) -> Option<&GeometricError> {
+    #[must_use]
+    pub const fn error(&self) -> Option<&GeometricError> {
         match self {
-            TestResult::Fail(e) => Some(e),
+            Self::Fail(e) => Some(e),
             _ => None,
         }
     }
 
     /// Create a pass result
-    pub fn pass() -> Self {
-        TestResult::Pass
+    #[must_use]
+    pub const fn pass() -> Self {
+        Self::Pass
     }
 
     /// Create a fail result from geometric error
-    pub fn fail(error: GeometricError) -> Self {
-        TestResult::Fail(error)
+    #[must_use]
+    pub const fn fail(error: GeometricError) -> Self {
+        Self::Fail(error)
     }
 
     /// Create a fail result from distance and description
     pub fn fail_with_distance(distance: f64, description: impl Into<String>) -> Self {
-        TestResult::Fail(GeometricError::new(distance, description))
+        Self::Fail(GeometricError::new(distance, description))
     }
 
     /// Create a skipped result
     pub fn skipped(reason: impl Into<String>) -> Self {
-        TestResult::Skipped(reason.into())
+        Self::Skipped(reason.into())
     }
 
     /// Convert to standard Result type for use with ?
+    ///
+    /// # Errors
+    ///
+    /// Returns the inner `GeometricError` for `Fail`; a `Skipped` result
+    /// converts to an error carrying its skip reason.
     pub fn into_result(self) -> Result<(), GeometricError> {
         match self {
-            TestResult::Pass => Ok(()),
-            TestResult::Fail(e) => Err(e),
-            TestResult::Skipped(reason) => Err(GeometricError::new(0.0, reason)),
+            Self::Pass => Ok(()),
+            Self::Fail(e) => Err(e),
+            Self::Skipped(reason) => Err(GeometricError::new(0.0, reason)),
         }
     }
 
@@ -75,24 +88,24 @@ impl TestResult {
     ///
     /// Returns Pass only if all results are Pass.
     /// Returns the first Fail if any failed.
-    pub fn combine(results: impl IntoIterator<Item = TestResult>) -> Self {
+    pub fn combine(results: impl IntoIterator<Item = Self>) -> Self {
         for result in results {
             match result {
-                TestResult::Pass => continue,
-                TestResult::Fail(e) => return TestResult::Fail(e),
-                TestResult::Skipped(reason) => return TestResult::Skipped(reason),
+                Self::Pass => {}
+                Self::Fail(e) => return Self::Fail(e),
+                Self::Skipped(reason) => return Self::Skipped(reason),
             }
         }
-        TestResult::Pass
+        Self::Pass
     }
 }
 
 impl From<bool> for TestResult {
     fn from(passed: bool) -> Self {
         if passed {
-            TestResult::Pass
+            Self::Pass
         } else {
-            TestResult::Fail(GeometricError::new(1.0, "Boolean test failed"))
+            Self::Fail(GeometricError::new(1.0, "Boolean test failed"))
         }
     }
 }
@@ -157,6 +170,7 @@ pub enum InvariantCategory {
 
 impl InvariantTestReport {
     /// Check if the invariant was violated
+    #[must_use]
     pub fn is_violated(&self) -> bool {
         match self.category {
             InvariantCategory::Impossible => self.failures > 0,
@@ -174,6 +188,9 @@ impl InvariantTestReport {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::float_cmp)]
+    // Exactly-representable constants: bit equality is the point.
+    // (Stable clippy lacks the test-context exemption newer nightly has.)
     use super::*;
 
     #[test]

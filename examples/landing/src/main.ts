@@ -67,7 +67,7 @@ async function main() {
         <h1>Cliffy Examples</h1>
         <p>Classical FRP + Geometric Algebra in action. Explore reactive patterns, distributed state, and creative tools.</p>
         <div class="hero-links">
-          <a href="https://github.com/justinelliottcobb/Cliffy" class="primary" target="_blank">
+          <a href="https://github.com/Industrial-Algebra/Cliffy" class="primary" target="_blank">
             GitHub
           </a>
           <a href="https://www.npmjs.com/package/@cliffy-ga/core" class="secondary" target="_blank">
@@ -93,9 +93,9 @@ async function main() {
       <footer>
         <p>Built with Cliffy v0.1.2 - Classical FRP without the complexity</p>
         <div class="links">
-          <a href="https://github.com/justinelliottcobb/Cliffy" target="_blank">GitHub</a>
+          <a href="https://github.com/Industrial-Algebra/Cliffy" target="_blank">GitHub</a>
           <a href="https://www.npmjs.com/package/@cliffy-ga/core" target="_blank">npm</a>
-          <a href="https://github.com/justinelliottcobb/Cliffy/blob/main/docs/getting-started.md" target="_blank">Docs</a>
+          <a href="https://github.com/Industrial-Algebra/Cliffy/blob/main/docs/getting-started.md" target="_blank">Docs</a>
         </div>
       </footer>
     </div>

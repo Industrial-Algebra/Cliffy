@@ -1,4 +1,7 @@
-//! Generators for property-based testing with QuickCheck
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
+//! Generators for property-based testing with `QuickCheck`
 //!
 //! These generators create random geometric algebra elements for testing:
 //! - Arbitrary GA3 multivectors
@@ -9,14 +12,14 @@
 use crate::{bivector, vector, GA3};
 use quickcheck::{Arbitrary, Gen};
 
-/// Generate a random f64 in a range using QuickCheck's Gen
+/// Generate a random f64 in a range using `QuickCheck`'s Gen
 fn gen_f64_range(g: &mut Gen, min: f64, max: f64) -> f64 {
     // Use u64::arbitrary and normalize to the desired range
     // This avoids NaN/infinity issues from f64::arbitrary
     let val: u64 = u64::arbitrary(g);
     // Normalize to [0, 1)
     let normalized = (val as f64) / (u64::MAX as f64);
-    min + normalized * (max - min)
+    normalized.mul_add(max - min, min)
 }
 
 /// Generate an arbitrary GA3 multivector
@@ -63,6 +66,7 @@ pub fn arbitrary_unit_vector(g: &mut Gen) -> GA3 {
 ///
 /// A rotor is constructed as exp(B/2) where B is a bivector representing
 /// the rotation plane and angle.
+#[allow(clippy::arithmetic_side_effects)] // GA domain arithmetic: custom Multivector operators, pure and panic-free
 pub fn arbitrary_rotor(g: &mut Gen) -> GA3 {
     // Generate random bivector for rotation plane
     let angle: f64 = gen_f64_range(g, 0.0, std::f64::consts::TAU);
@@ -97,15 +101,16 @@ pub fn arbitrary_bivector(g: &mut Gen) -> GA3 {
     )
 }
 
-/// Wrapper for QuickCheck Arbitrary trait
+/// Wrapper for `QuickCheck` Arbitrary trait
 #[derive(Clone, Debug)]
 pub struct ArbitraryGA3(pub GA3);
 
 impl Arbitrary for ArbitraryGA3 {
     fn arbitrary(g: &mut Gen) -> Self {
-        ArbitraryGA3(arbitrary_ga3(g))
+        Self(arbitrary_ga3(g))
     }
 
+    #[allow(clippy::arithmetic_side_effects)] // GA domain arithmetic: custom Multivector operators, pure and panic-free
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         // Shrink by reducing magnitude
         let mv = self.0.clone();
@@ -114,7 +119,7 @@ impl Arbitrary for ArbitraryGA3 {
             Box::new(std::iter::empty())
         } else {
             let shrunk = &mv * 0.5;
-            Box::new(std::iter::once(ArbitraryGA3(shrunk)))
+            Box::new(std::iter::once(Self(shrunk)))
         }
     }
 }
@@ -125,7 +130,7 @@ pub struct ArbitraryVector(pub GA3);
 
 impl Arbitrary for ArbitraryVector {
     fn arbitrary(g: &mut Gen) -> Self {
-        ArbitraryVector(arbitrary_vector(g))
+        Self(arbitrary_vector(g))
     }
 }
 
@@ -135,7 +140,7 @@ pub struct ArbitraryUnitVector(pub GA3);
 
 impl Arbitrary for ArbitraryUnitVector {
     fn arbitrary(g: &mut Gen) -> Self {
-        ArbitraryUnitVector(arbitrary_unit_vector(g))
+        Self(arbitrary_unit_vector(g))
     }
 }
 
@@ -145,7 +150,7 @@ pub struct ArbitraryRotor(pub GA3);
 
 impl Arbitrary for ArbitraryRotor {
     fn arbitrary(g: &mut Gen) -> Self {
-        ArbitraryRotor(arbitrary_rotor(g))
+        Self(arbitrary_rotor(g))
     }
 }
 
@@ -171,7 +176,7 @@ mod tests {
         for _ in 0..10 {
             let v = arbitrary_unit_vector(&mut gen);
             let mag = v.magnitude();
-            assert!((mag - 1.0).abs() < 1e-10, "Unit vector magnitude: {}", mag);
+            assert!((mag - 1.0).abs() < 1e-10, "Unit vector magnitude: {mag}");
         }
     }
 
@@ -182,16 +187,15 @@ mod tests {
             let r = arbitrary_rotor(&mut gen);
             // A rotor should have magnitude close to 1
             let norm_sq = r.geometric_product(&r.reverse()).get(0);
-            assert!(
-                (norm_sq - 1.0).abs() < 0.1,
-                "Rotor norm squared: {}",
-                norm_sq
-            );
+            assert!((norm_sq - 1.0).abs() < 0.1, "Rotor norm squared: {norm_sq}");
         }
     }
 
     #[test]
     fn test_quickcheck_arbitrary() {
+        // quickcheck hands properties owned values; by-value is the calling
+        // convention the macro type-checks against.
+        #[allow(clippy::needless_pass_by_value)]
         fn prop_magnitude_positive(v: ArbitraryVector) -> bool {
             v.0.magnitude() >= 0.0
         }

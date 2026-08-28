@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "cliffy-alive",
     "cliffy-core",
     "cliffy-gpu",
     "cliffy-loadtest",
@@ -12,7 +13,7 @@ resolver = "2"
 [workspace.dependencies]
 # Amari geometric algebra
 # For local development: path = "../../math/amari/amari-core"
-amari-core = { version = "0.19.0", features = ["serialize"] }
+amari-core = { version = "0.23.0", features = ["serialize"] }
 
 # Core dependencies
 serde = { version = "1.0", features = ["derive"] }
@@ -23,7 +24,71 @@ js-sys = "0.3"
 web-sys = "0.3"
 
 # Async (optional, for future use)
-tokio = { version = "1.48", features = ["sync"] }
+tokio = { version = "1.52", features = ["sync"] }
+
+[workspace.lints.clippy]
+# 2026-toolkit "teeth" (No Boilerplate): deny panics and sloppy patterns.
+pedantic = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
+
+# Panic-family denials — library code returns Result, never panics.
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+panic_in_result_fn = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+indexing_slicing = "deny"
+string_slice = "deny"
+unchecked_time_subtraction = "deny"
+exit = "deny"
+
+# Curated numeric-library allowances (GA code legitimately casts and
+# slices-by-blade-index; these would drown signal without adding safety
+# the type system already provides via amari):
+as_conversions = "allow"
+cast_precision_loss = "allow"
+cast_possible_truncation = "allow"
+cast_sign_loss = "allow"
+cast_possible_wrap = "allow"
+
+# Nursery: micro-optimizing lock-guard lifetimes in 3-line getters adds
+# drop() ceremony with no measurable effect; guards live nanoseconds.
+significant_drop_tightening = "allow"
+
+# Pedantic: GA blade components legitimately differ by one character
+# (biv_xy / biv_xz / biv_yz, e12 / e13 / e23).
+similar_names = "allow"
+
+# Nursery: rewriting Option if-let/else into map_or(_else) closures obscures
+# mutation-heavy arms for zero behavioral gain.
+option_if_let_else = "allow"
+
+# Fires on custom Multivector operator calls — the domain language of a GA
+# library (the type-scoped clippy.toml allow-list does not match
+# reference-wrapped foreign generics). The genuine integer-overflow sites it
+# surfaced (ID counters, topo degrees, node counts) were fixed with
+# saturating arithmetic before this allow was granted.
+arithmetic_side_effects = "allow"
+
+# simd.rs blade products are hand-tuned with rounding pinned by tests;
+# mul_add/FMA is a codegen concern, not a source rewrite.
+suboptimal_flops = "allow"
+
+# GPU batch APIs and consensus trait impls are async-by-design ahead of
+# real device dispatch (unused_async covers free fns; the trait-impl variant
+# is a separate lint).
+unused_async = "allow"
+unused_async_trait_impl = "allow"
+
+# Nursery; const-ification churns across rustc versions without behavior
+# change. Applied manually where meaningful (e.g. `const fn new`).
+missing_const_for_fn = "allow"
+
+# Pedantic; wasm DOM string building is append-heavy by nature — write!
+# to String would thread infallible fmt::Results through every append.
+format_push_string = "allow"
 
 [profile.release]
 opt-level = "z"          # Optimize for size (WASM)

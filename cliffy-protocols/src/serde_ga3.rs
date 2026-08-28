@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Serde serialization helpers for GA3 multivectors
 //!
 //! Since amari-core's Multivector doesn't implement Serialize/Deserialize,
@@ -6,7 +9,11 @@
 use cliffy_core::GA3;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-/// Serialize a GA3 as a Vec<f64> of coefficients
+/// Serialize a `GA3` as a `Vec<f64>` of coefficients
+///
+/// # Errors
+///
+/// Propagates the underlying serializer's error.
 pub fn serialize<S>(mv: &GA3, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -14,7 +21,11 @@ where
     mv.as_slice().serialize(serializer)
 }
 
-/// Deserialize a GA3 from a Vec<f64> of coefficients
+/// Deserialize a `GA3` from a `Vec<f64>` of coefficients
+///
+/// # Errors
+///
+/// Propagates the underlying deserializer's error.
 pub fn deserialize<'de, D>(deserializer: D) -> Result<GA3, D::Error>
 where
     D: Deserializer<'de>,
@@ -23,10 +34,13 @@ where
     Ok(GA3::from_slice(&coeffs))
 }
 
-/// Module for serializing Option<GA3>
+/// Module for serializing `Option<GA3>`
 pub mod option {
-    use super::*;
+    use super::{Deserialize, Deserializer, Serializer, GA3};
 
+    /// # Errors
+    ///
+    /// Propagates the underlying serializer's error.
     pub fn serialize<S>(mv: &Option<GA3>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -37,6 +51,9 @@ pub mod option {
         }
     }
 
+    /// # Errors
+    ///
+    /// Propagates the underlying deserializer's error.
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<GA3>, D::Error>
     where
         D: Deserializer<'de>,

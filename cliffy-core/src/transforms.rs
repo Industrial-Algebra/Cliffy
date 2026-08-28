@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Geometric transformations for state manipulation
 //!
 //! This module provides explicit geometric transformation types:
@@ -27,11 +30,13 @@ pub struct Rotor {
 
 impl Rotor {
     /// Create a rotor from a multivector (assumes it's already a valid rotor)
-    pub fn from_multivector(mv: GA3) -> Self {
+    #[must_use]
+    pub const fn from_multivector(mv: GA3) -> Self {
         Self { inner: mv }
     }
 
     /// Create the identity rotor (no rotation)
+    #[must_use]
     pub fn identity() -> Self {
         Self {
             inner: GA3::scalar(1.0),
@@ -41,6 +46,7 @@ impl Rotor {
     /// Create a rotor for rotation by angle (in radians) in the XY plane
     ///
     /// This is equivalent to rotation around the Z axis.
+    #[must_use]
     pub fn xy(angle: f64) -> Self {
         Self::from_bivector_angle(angle, 1.0, 0.0, 0.0)
     }
@@ -48,6 +54,7 @@ impl Rotor {
     /// Create a rotor for rotation by angle (in radians) in the XZ plane
     ///
     /// This is equivalent to rotation around the Y axis.
+    #[must_use]
     pub fn xz(angle: f64) -> Self {
         Self::from_bivector_angle(angle, 0.0, 1.0, 0.0)
     }
@@ -55,6 +62,7 @@ impl Rotor {
     /// Create a rotor for rotation by angle (in radians) in the YZ plane
     ///
     /// This is equivalent to rotation around the X axis.
+    #[must_use]
     pub fn yz(angle: f64) -> Self {
         Self::from_bivector_angle(angle, 0.0, 0.0, 1.0)
     }
@@ -63,6 +71,8 @@ impl Rotor {
     ///
     /// The bivector (xy, xz, yz) defines the rotation plane.
     /// Components are normalized internally.
+    #[must_use]
+    #[allow(clippy::arithmetic_side_effects)] // GA domain arithmetic: custom Multivector operators, pure and panic-free
     pub fn from_bivector_angle(angle: f64, xy: f64, xz: f64, yz: f64) -> Self {
         let half_angle = angle / 2.0;
 
@@ -91,6 +101,7 @@ impl Rotor {
     /// Create a rotor for rotation around an axis vector by an angle
     ///
     /// The axis does not need to be normalized.
+    #[must_use]
     pub fn from_axis_angle(axis_x: f64, axis_y: f64, axis_z: f64, angle: f64) -> Self {
         // The bivector for rotation around axis (x,y,z) is proportional to
         // x*(e2^e3) + y*(e3^e1) + z*(e1^e2)
@@ -100,13 +111,16 @@ impl Rotor {
     }
 
     /// Get the internal multivector
-    pub fn as_multivector(&self) -> &GA3 {
+    #[must_use]
+    pub const fn as_multivector(&self) -> &GA3 {
         &self.inner
     }
 
     /// Apply this rotor to transform a multivector (sandwich product)
     ///
     /// Returns R * v * R†
+    #[allow(clippy::arithmetic_side_effects)] // GA domain arithmetic: custom Multivector operators, pure and panic-free
+    #[must_use]
     pub fn transform(&self, v: &GA3) -> GA3 {
         let rev = self.inner.reverse();
         self.inner.geometric_product(v).geometric_product(&rev)
@@ -115,29 +129,32 @@ impl Rotor {
     /// Compose two rotors: self followed by other
     ///
     /// The result applies self first, then other.
-    pub fn then(&self, other: &Rotor) -> Rotor {
-        Rotor {
+    #[must_use]
+    pub fn then(&self, other: &Self) -> Self {
+        Self {
             inner: other.inner.geometric_product(&self.inner),
         }
     }
 
     /// Get the inverse rotor (reverse rotation)
-    pub fn inverse(&self) -> Rotor {
+    #[must_use]
+    pub fn inverse(&self) -> Self {
         // For unit rotors, inverse = reverse
-        Rotor {
+        Self {
             inner: self.inner.reverse(),
         }
     }
 
     /// Normalize the rotor to unit magnitude
-    pub fn normalize(&self) -> Rotor {
-        match self.inner.normalize() {
-            Some(normalized) => Rotor { inner: normalized },
-            None => Self::identity(),
-        }
+    #[must_use]
+    pub fn normalize(&self) -> Self {
+        self.inner
+            .normalize()
+            .map_or_else(Self::identity, |normalized| Self { inner: normalized })
     }
 
     /// Get the rotation angle (in radians)
+    #[must_use]
     pub fn angle(&self) -> f64 {
         // For a rotor R = cos(θ/2) + sin(θ/2)*B
         // The scalar part is cos(θ/2)
@@ -149,12 +166,13 @@ impl Rotor {
     ///
     /// This enables interop with amari-core's typed rotor operations
     /// (slerp, compose, logarithm, power, etc.)
+    #[must_use]
     pub fn to_amari_rotor(&self) -> AmariRotor<3, 0, 0> {
         // Extract and normalize the bivector plane
         let e12 = self.inner.get(3);
         let e13 = self.inner.get(5);
         let e23 = self.inner.get(6);
-        let biv_mag = (e12 * e12 + e13 * e13 + e23 * e23).sqrt();
+        let biv_mag = e23.mul_add(e23, e13.mul_add(e13, e12 * e12)).sqrt();
 
         if biv_mag < 1e-10 {
             // Identity or near-identity rotor
@@ -169,6 +187,7 @@ impl Rotor {
     }
 
     /// Create from an amari-core `Rotor<3,0,0>`
+    #[must_use]
     pub fn from_amari_rotor(rotor: &AmariRotor<3, 0, 0>) -> Self {
         Self {
             inner: rotor.as_multivector().clone(),
@@ -178,7 +197,8 @@ impl Rotor {
     /// Spherical linear interpolation between identity and this rotor
     ///
     /// t=0 gives identity, t=1 gives self
-    pub fn slerp(&self, t: f64) -> Rotor {
+    #[must_use]
+    pub fn slerp(&self, t: f64) -> Self {
         let angle = self.angle();
         let new_angle = angle * t;
 
@@ -187,7 +207,9 @@ impl Rotor {
         let biv_xy = -self.inner.get(3); // e12
         let biv_xz = -self.inner.get(5); // e13
         let biv_yz = -self.inner.get(6); // e23
-        let biv_mag = (biv_xy * biv_xy + biv_xz * biv_xz + biv_yz * biv_yz).sqrt();
+        let biv_mag = biv_yz
+            .mul_add(biv_yz, biv_xz.mul_add(biv_xz, biv_xy * biv_xy))
+            .sqrt();
 
         if biv_mag < 1e-10 {
             // No rotation - return identity
@@ -203,7 +225,8 @@ impl Rotor {
     }
 
     /// Spherical linear interpolation between two rotors
-    pub fn slerp_to(&self, other: &Rotor, t: f64) -> Rotor {
+    #[must_use]
+    pub fn slerp_to(&self, other: &Self, t: f64) -> Self {
         // Compute relative rotation: other = relative * self
         // So relative = other * self.inverse()
         let relative = other.then(&self.inverse());
@@ -227,11 +250,13 @@ pub struct Versor {
 
 impl Versor {
     /// Create a versor from a multivector
-    pub fn from_multivector(mv: GA3, is_even: bool) -> Self {
+    #[must_use]
+    pub const fn from_multivector(mv: GA3, is_even: bool) -> Self {
         Self { inner: mv, is_even }
     }
 
     /// Create the identity versor
+    #[must_use]
     pub fn identity() -> Self {
         Self {
             inner: GA3::scalar(1.0),
@@ -242,6 +267,7 @@ impl Versor {
     /// Create a reflection through a plane with normal vector (x, y, z)
     ///
     /// Reflects points through the plane passing through origin with the given normal.
+    #[must_use]
     pub fn reflection(normal_x: f64, normal_y: f64, normal_z: f64) -> Self {
         // A reflection is represented by the unit vector normal to the plane
         let vec = Vector::<3, 0, 0>::from_components(normal_x, normal_y, normal_z);
@@ -257,6 +283,7 @@ impl Versor {
     }
 
     /// Convert from a Rotor
+    #[must_use]
     pub fn from_rotor(rotor: Rotor) -> Self {
         Self {
             inner: rotor.inner,
@@ -265,7 +292,8 @@ impl Versor {
     }
 
     /// Get the internal multivector
-    pub fn as_multivector(&self) -> &GA3 {
+    #[must_use]
+    pub const fn as_multivector(&self) -> &GA3 {
         &self.inner
     }
 
@@ -273,6 +301,8 @@ impl Versor {
     ///
     /// For even versors: V * v * V†
     /// For odd versors: V * v * V† (with grade involution handling)
+    #[allow(clippy::arithmetic_side_effects)] // GA domain arithmetic: custom Multivector operators, pure and panic-free
+    #[must_use]
     pub fn transform(&self, v: &GA3) -> GA3 {
         let rev = self.inner.reverse();
         if self.is_even {
@@ -286,19 +316,22 @@ impl Versor {
     }
 
     /// Compose two versors
-    pub fn then(&self, other: &Versor) -> Versor {
-        Versor {
+    #[must_use]
+    pub fn then(&self, other: &Self) -> Self {
+        Self {
             inner: other.inner.geometric_product(&self.inner),
             is_even: self.is_even == other.is_even, // Even * Even = Even, Odd * Odd = Even
         }
     }
 
     /// Check if this is an even versor (rotor)
-    pub fn is_rotor(&self) -> bool {
+    #[must_use]
+    pub const fn is_rotor(&self) -> bool {
         self.is_even
     }
 
     /// Try to convert to a Rotor (only succeeds for even versors)
+    #[must_use]
     pub fn to_rotor(&self) -> Option<Rotor> {
         if self.is_even {
             Some(Rotor {
@@ -325,22 +358,26 @@ pub struct Translation {
 
 impl Translation {
     /// Create a new translation
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
+    #[must_use]
+    pub const fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
 
     /// Create a translation along the X axis
-    pub fn x(amount: f64) -> Self {
+    #[must_use]
+    pub const fn x(amount: f64) -> Self {
         Self::new(amount, 0.0, 0.0)
     }
 
     /// Create a translation along the Y axis
-    pub fn y(amount: f64) -> Self {
+    #[must_use]
+    pub const fn y(amount: f64) -> Self {
         Self::new(0.0, amount, 0.0)
     }
 
     /// Create a translation along the Z axis
-    pub fn z(amount: f64) -> Self {
+    #[must_use]
+    pub const fn z(amount: f64) -> Self {
         Self::new(0.0, 0.0, amount)
     }
 
@@ -348,6 +385,8 @@ impl Translation {
     ///
     /// For vectors, this adds the translation. For other grades,
     /// behavior depends on the geometric interpretation.
+    #[allow(clippy::arithmetic_side_effects)] // GA domain arithmetic: custom Multivector operators, pure and panic-free
+    #[must_use]
     pub fn transform(&self, v: &GA3) -> GA3 {
         let trans_vec = Vector::<3, 0, 0>::from_components(self.x, self.y, self.z);
         let trans_mv = GA3::from_vector(&trans_vec);
@@ -355,8 +394,9 @@ impl Translation {
     }
 
     /// Compose two translations
-    pub fn then(&self, other: &Translation) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn then(&self, other: &Self) -> Self {
+        Self {
             x: self.x + other.x,
             y: self.y + other.y,
             z: self.z + other.z,
@@ -364,8 +404,9 @@ impl Translation {
     }
 
     /// Get the inverse translation
-    pub fn inverse(&self) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn inverse(&self) -> Self {
+        Self {
             x: -self.x,
             y: -self.y,
             z: -self.z,
@@ -373,8 +414,9 @@ impl Translation {
     }
 
     /// Linear interpolation of translation
-    pub fn lerp(&self, t: f64) -> Translation {
-        Translation {
+    #[must_use]
+    pub fn lerp(&self, t: f64) -> Self {
+        Self {
             x: self.x * t,
             y: self.y * t,
             z: self.z * t,
@@ -382,11 +424,12 @@ impl Translation {
     }
 
     /// Linear interpolation to another translation
-    pub fn lerp_to(&self, other: &Translation, t: f64) -> Translation {
-        Translation {
-            x: self.x + (other.x - self.x) * t,
-            y: self.y + (other.y - self.y) * t,
-            z: self.z + (other.z - self.z) * t,
+    #[must_use]
+    pub fn lerp_to(&self, other: &Self, t: f64) -> Self {
+        Self {
+            x: (other.x - self.x).mul_add(t, self.x),
+            y: (other.y - self.y).mul_add(t, self.y),
+            z: (other.z - self.z).mul_add(t, self.z),
         }
     }
 }
@@ -402,11 +445,13 @@ pub struct Transform {
 
 impl Transform {
     /// Create a new transform with rotation and translation
-    pub fn new(rotor: Rotor, translation: Translation) -> Self {
+    #[must_use]
+    pub const fn new(rotor: Rotor, translation: Translation) -> Self {
         Self { rotor, translation }
     }
 
     /// Create identity transform
+    #[must_use]
     pub fn identity() -> Self {
         Self {
             rotor: Rotor::identity(),
@@ -415,7 +460,8 @@ impl Transform {
     }
 
     /// Create a pure rotation transform
-    pub fn rotation(rotor: Rotor) -> Self {
+    #[must_use]
+    pub const fn rotation(rotor: Rotor) -> Self {
         Self {
             rotor,
             translation: Translation::new(0.0, 0.0, 0.0),
@@ -423,6 +469,7 @@ impl Transform {
     }
 
     /// Create a pure translation transform
+    #[must_use]
     pub fn translation(translation: Translation) -> Self {
         Self {
             rotor: Rotor::identity(),
@@ -431,13 +478,15 @@ impl Transform {
     }
 
     /// Apply this transform to a multivector
+    #[must_use]
     pub fn transform(&self, v: &GA3) -> GA3 {
         let rotated = self.rotor.transform(v);
         self.translation.transform(&rotated)
     }
 
     /// Compose two transforms: self followed by other
-    pub fn then(&self, other: &Transform) -> Transform {
+    #[must_use]
+    pub fn then(&self, other: &Self) -> Self {
         // First apply self's rotation, then self's translation
         // Then apply other's rotation, then other's translation
         //
@@ -460,14 +509,15 @@ impl Transform {
             rotated_trans.get(4) + other.translation.z,
         );
 
-        Transform {
+        Self {
             rotor: combined_rotor,
             translation: combined_translation,
         }
     }
 
     /// Get the inverse transform
-    pub fn inverse(&self) -> Transform {
+    #[must_use]
+    pub fn inverse(&self) -> Self {
         let inv_rotor = self.rotor.inverse();
         let inv_trans_base = self.translation.inverse();
 
@@ -480,23 +530,25 @@ impl Transform {
         let trans_mv = GA3::from_vector(&trans_vec);
         let rotated = inv_rotor.transform(&trans_mv);
 
-        Transform {
+        Self {
             rotor: inv_rotor,
             translation: Translation::new(rotated.get(1), rotated.get(2), rotated.get(4)),
         }
     }
 
     /// Interpolate between identity and this transform
-    pub fn interpolate(&self, t: f64) -> Transform {
-        Transform {
+    #[must_use]
+    pub fn interpolate(&self, t: f64) -> Self {
+        Self {
             rotor: self.rotor.slerp(t),
             translation: self.translation.lerp(t),
         }
     }
 
     /// Interpolate to another transform
-    pub fn interpolate_to(&self, other: &Transform, t: f64) -> Transform {
-        Transform {
+    #[must_use]
+    pub fn interpolate_to(&self, other: &Self, t: f64) -> Self {
+        Self {
             rotor: self.rotor.slerp_to(&other.rotor, t),
             translation: self.translation.lerp_to(&other.translation, t),
         }
@@ -547,9 +599,7 @@ mod tests {
 
         assert!(
             (original_mag - rotated_mag).abs() < 1e-10,
-            "Magnitude changed: {} -> {}",
-            original_mag,
-            rotated_mag
+            "Magnitude changed: {original_mag} -> {rotated_mag}"
         );
     }
 

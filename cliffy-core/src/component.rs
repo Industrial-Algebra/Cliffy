@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Component model for Algebraic TSX
 //!
 //! Components are geometric morphisms from state to renderable elements.
@@ -72,13 +75,14 @@ pub struct Element {
     /// Props/attributes for this element
     pub props: Props,
     /// Child elements
-    pub children: Vec<Element>,
+    pub children: Vec<Self>,
     /// Unique key for reconciliation (optional)
     pub key: Option<String>,
 }
 
 impl Element {
     /// Create a new element with the given kind.
+    #[must_use]
     pub fn new(kind: ElementKind) -> Self {
         Self {
             kind,
@@ -99,7 +103,8 @@ impl Element {
     }
 
     /// Create a fragment (multiple elements without a wrapper).
-    pub fn fragment(children: Vec<Element>) -> Self {
+    #[must_use]
+    pub fn fragment(children: Vec<Self>) -> Self {
         Self {
             kind: ElementKind::Fragment,
             props: Props::new(),
@@ -109,57 +114,71 @@ impl Element {
     }
 
     /// Create an empty element (renders nothing).
+    #[must_use]
     pub fn empty() -> Self {
         Self::new(ElementKind::Empty)
     }
 
     /// Add a child element.
-    pub fn child(mut self, child: Element) -> Self {
+    #[must_use]
+    pub fn child(mut self, child: Self) -> Self {
         self.children.push(child);
         self
     }
 
     /// Add multiple children.
-    pub fn children(mut self, children: impl IntoIterator<Item = Element>) -> Self {
+    #[must_use]
+    pub fn children(mut self, children: impl IntoIterator<Item = Self>) -> Self {
         self.children.extend(children);
         self
     }
 
     /// Set a prop/attribute.
+    #[must_use]
     pub fn prop(mut self, key: impl Into<String>, value: PropValue) -> Self {
         self.props.set(key, value);
         self
     }
 
     /// Set a string prop.
+    #[must_use]
     pub fn attr(self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.prop(key, PropValue::String(value.into()))
     }
 
     /// Set a numeric prop.
+    #[must_use]
     pub fn num(self, key: impl Into<String>, value: f64) -> Self {
         self.prop(key, PropValue::Number(value))
     }
 
     /// Set a boolean prop.
+    #[must_use]
     pub fn bool(self, key: impl Into<String>, value: bool) -> Self {
         self.prop(key, PropValue::Bool(value))
     }
 
     /// Set the element's key.
+    #[must_use]
     pub fn with_key(mut self, key: impl Into<String>) -> Self {
         self.key = Some(key.into());
         self
     }
 
     /// Check if this is an empty element.
-    pub fn is_empty(&self) -> bool {
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
         matches!(self.kind, ElementKind::Empty)
     }
 
     /// Count total nodes in this element tree.
+    #[must_use]
     pub fn node_count(&self) -> usize {
-        1 + self.children.iter().map(|c| c.node_count()).sum::<usize>()
+        self.children
+            .iter()
+            .map(Self::node_count)
+            .sum::<usize>()
+            .saturating_add(1)
     }
 }
 
@@ -212,6 +231,7 @@ pub struct Props {
 
 impl Props {
     /// Create empty props.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -222,11 +242,13 @@ impl Props {
     }
 
     /// Get a prop value.
+    #[must_use]
     pub fn get(&self, key: &str) -> Option<&PropValue> {
         self.values.get(key)
     }
 
     /// Check if a prop exists.
+    #[must_use]
     pub fn has(&self, key: &str) -> bool {
         self.values.contains_key(key)
     }
@@ -242,7 +264,7 @@ impl Props {
     }
 
     /// Merge with another props, other takes precedence.
-    pub fn merge(&mut self, other: Props) {
+    pub fn merge(&mut self, other: Self) {
         for (k, v) in other.values {
             self.values.insert(k, v);
         }
@@ -259,34 +281,37 @@ pub enum PropValue {
     /// Boolean value
     Bool(bool),
     /// Array of values
-    Array(Vec<PropValue>),
+    Array(Vec<Self>),
     /// Nested object
-    Object(HashMap<String, PropValue>),
+    Object(HashMap<String, Self>),
     /// Null/undefined
     Null,
 }
 
 impl PropValue {
     /// Get as string, if it is one.
+    #[must_use]
     pub fn as_str(&self) -> Option<&str> {
         match self {
-            PropValue::String(s) => Some(s),
+            Self::String(s) => Some(s),
             _ => None,
         }
     }
 
     /// Get as f64, if it is a number.
-    pub fn as_f64(&self) -> Option<f64> {
+    #[must_use]
+    pub const fn as_f64(&self) -> Option<f64> {
         match self {
-            PropValue::Number(n) => Some(*n),
+            Self::Number(n) => Some(*n),
             _ => None,
         }
     }
 
     /// Get as bool, if it is one.
-    pub fn as_bool(&self) -> Option<bool> {
+    #[must_use]
+    pub const fn as_bool(&self) -> Option<bool> {
         match self {
-            PropValue::Bool(b) => Some(*b),
+            Self::Bool(b) => Some(*b),
             _ => None,
         }
     }
@@ -294,31 +319,31 @@ impl PropValue {
 
 impl From<&str> for PropValue {
     fn from(s: &str) -> Self {
-        PropValue::String(s.to_string())
+        Self::String(s.to_string())
     }
 }
 
 impl From<String> for PropValue {
     fn from(s: String) -> Self {
-        PropValue::String(s)
+        Self::String(s)
     }
 }
 
 impl From<f64> for PropValue {
     fn from(n: f64) -> Self {
-        PropValue::Number(n)
+        Self::Number(n)
     }
 }
 
 impl From<i32> for PropValue {
     fn from(n: i32) -> Self {
-        PropValue::Number(n as f64)
+        Self::Number(f64::from(n))
     }
 }
 
 impl From<bool> for PropValue {
     fn from(b: bool) -> Self {
-        PropValue::Bool(b)
+        Self::Bool(b)
     }
 }
 
@@ -355,7 +380,7 @@ where
     B: Component,
 {
     /// Create a new composed component with shared state.
-    pub fn new(a: A, b: B) -> Self {
+    pub const fn new(a: A, b: B) -> Self {
         Self {
             a,
             b,
@@ -364,7 +389,7 @@ where
     }
 
     /// Create with specified state split.
-    pub fn with_split(a: A, b: B, split: StateSplit) -> Self {
+    pub const fn with_split(a: A, b: B, split: StateSplit) -> Self {
         Self { a, b, split }
     }
 }
@@ -381,22 +406,33 @@ where
                 // A gets grades 0,1 (scalar + vector)
                 // B gets grades 2,3 (bivector + pseudoscalar)
                 let coeffs = state.as_slice();
-                let a_coeffs = vec![
-                    coeffs[0], coeffs[1], coeffs[2], coeffs[3], 0.0, 0.0, 0.0, 0.0,
-                ];
-                let b_coeffs = vec![
-                    0.0, 0.0, 0.0, 0.0, coeffs[4], coeffs[5], coeffs[6], coeffs[7],
-                ];
+                let a_coeffs: Vec<f64> = coeffs
+                    .iter()
+                    .take(4)
+                    .copied()
+                    .chain([0.0, 0.0, 0.0, 0.0])
+                    .collect();
+                let b_coeffs: Vec<f64> = [0.0, 0.0, 0.0, 0.0]
+                    .into_iter()
+                    .chain(coeffs.iter().skip(4).copied())
+                    .collect();
                 (GA3::from_slice(&a_coeffs), GA3::from_slice(&b_coeffs))
             }
             StateSplit::ByCoefficient => {
                 let coeffs = state.as_slice();
-                let a_coeffs = vec![
-                    coeffs[0], coeffs[1], coeffs[2], coeffs[3], 0.0, 0.0, 0.0, 0.0,
-                ];
-                let b_coeffs = vec![
-                    coeffs[4], coeffs[5], coeffs[6], coeffs[7], 0.0, 0.0, 0.0, 0.0,
-                ];
+                let a_coeffs: Vec<f64> = coeffs
+                    .iter()
+                    .take(4)
+                    .copied()
+                    .chain([0.0, 0.0, 0.0, 0.0])
+                    .collect();
+                let b_coeffs: Vec<f64> = coeffs
+                    .iter()
+                    .skip(4)
+                    .take(4)
+                    .copied()
+                    .chain([0.0, 0.0, 0.0, 0.0])
+                    .collect();
                 (GA3::from_slice(&a_coeffs), GA3::from_slice(&b_coeffs))
             }
         };
@@ -418,23 +454,20 @@ where
                 // Combine: A in first 4, B in last 4
                 let a_coeffs = a_init.as_slice();
                 let b_coeffs = b_init.as_slice();
-                GA3::from_slice(&[
-                    a_coeffs[0],
-                    a_coeffs[1],
-                    a_coeffs[2],
-                    a_coeffs[3],
-                    b_coeffs[0],
-                    b_coeffs[1],
-                    b_coeffs[2],
-                    b_coeffs[3],
-                ])
+                let combined: Vec<f64> = a_coeffs
+                    .iter()
+                    .take(4)
+                    .copied()
+                    .chain(b_coeffs.iter().take(4).copied())
+                    .collect();
+                GA3::from_slice(&combined)
             }
         }
     }
 }
 
 /// Compose two components with shared state.
-pub fn compose<A, B>(a: A, b: B) -> ComposedComponent<A, B>
+pub const fn compose<A, B>(a: A, b: B) -> ComposedComponent<A, B>
 where
     A: Component,
     B: Component,
@@ -464,7 +497,7 @@ where
     }
 
     /// Create with initial state.
-    pub fn with_initial(render_fn: F, initial: GA3) -> Self {
+    pub const fn with_initial(render_fn: F, initial: GA3) -> Self {
         Self { render_fn, initial }
     }
 }
@@ -550,7 +583,7 @@ mod tests {
     fn test_fn_component() {
         let counter = component(|state: &GA3| {
             let count = state.get(0) as i32;
-            Element::text(format!("Count: {}", count))
+            Element::text(format!("Count: {count}"))
         });
 
         let elem = counter.render(&GA3::scalar(5.0));

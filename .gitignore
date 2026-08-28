@@ -34,3 +34,5 @@ coverage/
 *.tmp
 *.temp
 .cache/
+.pi/
+.direnv/

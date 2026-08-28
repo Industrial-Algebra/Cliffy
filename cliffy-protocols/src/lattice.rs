@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Industrial Algebra
+// SPDX-License-Identifier: Apache-2.0
+
 //! Lattice-based conflict resolution using geometric algebra
 //!
 //! This module provides the `GeometricLattice` trait for join-semilattice operations
@@ -29,6 +32,8 @@
 //! assert!(joined.dominates(&state_b));
 //! ```
 
+#[allow(deprecated)]
+// imports the deprecated geometric_mean for the GA3Lattice tie-break; dies with Phase 1
 use crate::geometric_mean;
 use cliffy_core::GA3;
 
@@ -42,6 +47,7 @@ pub trait GeometricLattice: Clone {
     /// Lattice join (least upper bound) - always converges, no coordination needed.
     ///
     /// The join operation must be idempotent, commutative, and associative.
+    #[must_use]
     fn join(&self, other: &Self) -> Self;
 
     /// Check if this state dominates (is greater than or equal to) another.
@@ -68,29 +74,43 @@ pub trait GeometricLattice: Clone {
     fn meet(&self, other: &Self) -> Option<Self>;
 }
 
-/// A wrapper around GA3 that implements GeometricLattice.
+/// A lattice over raw `GA3` multivectors using a magnitude-dominance join
+/// (dominance by magnitude; the exp-based geometric mean as tie-break).
 ///
-/// This provides lattice operations for multivectors where:
-/// - Join uses geometric mean for equal-magnitude states
-/// - Dominance is based on magnitude ordering
-/// - Divergence is the geometric distance
+/// # Deprecated — the join is not a join-semilattice
+///
+/// The magnitude-dominance rule with the exp-based tie-break violates the
+/// hull property: `join(+1, -1)` returns `cosh(1) ≈ 1.543`, outside the
+/// hull of its arguments, and the tie-break mean is non-associative — so
+/// this cannot form a join-semilattice and cannot back strong eventual
+/// consistency. See `docs/plans/2026-08-26-geometric-crdt-salvage.md`.
+/// Use `ComponentLattice` (componentwise max/min) for per-grade state —
+/// the boring, correct floor.
 #[derive(Debug, Clone, PartialEq)]
+#[deprecated(
+    since = "0.3.2",
+    note = "magnitude-dominance join violates the join-semilattice hull property; use ComponentLattice — see docs/plans/2026-08-26-geometric-crdt-salvage.md"
+)]
 pub struct GA3Lattice {
     inner: GA3,
 }
 
+#[allow(deprecated)] // inherent constructors reference the deprecated Self; dies with Phase 1
 impl GA3Lattice {
     /// Create a new lattice element from a multivector.
-    pub fn new(mv: GA3) -> Self {
+    #[must_use]
+    pub const fn new(mv: GA3) -> Self {
         Self { inner: mv }
     }
 
     /// Create a lattice element from a scalar.
+    #[must_use]
     pub fn from_scalar(value: f64) -> Self {
         Self::new(GA3::scalar(value))
     }
 
     /// Create a lattice element from vector components.
+    #[must_use]
     pub fn from_vector(x: f64, y: f64, z: f64) -> Self {
         use amari_core::Vector;
         let v = Vector::<3, 0, 0>::from_components(x, y, z);
@@ -98,31 +118,41 @@ impl GA3Lattice {
     }
 
     /// Create the zero element (bottom of the lattice).
+    #[must_use]
     pub fn zero() -> Self {
         Self::new(GA3::zero())
     }
 
     /// Get the underlying multivector.
-    pub fn as_multivector(&self) -> &GA3 {
+    #[must_use]
+    pub const fn as_multivector(&self) -> &GA3 {
         &self.inner
     }
 
     /// Consume and return the underlying multivector.
+    #[must_use]
     pub fn into_multivector(self) -> GA3 {
         self.inner
     }
 
     /// Get the magnitude of this lattice element.
+    #[must_use]
     pub fn magnitude(&self) -> f64 {
         self.inner.magnitude()
     }
 
     /// Get a coefficient at the given index.
+    #[must_use]
     pub fn get(&self, index: usize) -> f64 {
         self.inner.get(index)
     }
 }
 
+/// # Deprecated
+///
+/// See the struct-level deprecation: the magnitude-dominance rule with the
+/// exp-based tie-break is not a join-semilattice (`join(+1,-1) = cosh(1)`).
+#[allow(deprecated)] // all trait methods construct/read the deprecated Self; dies with Phase 1
 impl GeometricLattice for GA3Lattice {
     fn join(&self, other: &Self) -> Self {
         // Check for structural equality first (idempotence optimization)
@@ -181,21 +211,25 @@ pub struct ComponentLattice {
 
 impl ComponentLattice {
     /// Create a new component lattice element.
-    pub fn new(mv: GA3) -> Self {
+    #[must_use]
+    pub const fn new(mv: GA3) -> Self {
         Self { inner: mv }
     }
 
     /// Create from a scalar value.
+    #[must_use]
     pub fn from_scalar(value: f64) -> Self {
         Self::new(GA3::scalar(value))
     }
 
     /// Get the underlying multivector.
-    pub fn as_multivector(&self) -> &GA3 {
+    #[must_use]
+    pub const fn as_multivector(&self) -> &GA3 {
         &self.inner
     }
 
     /// Consume and return the underlying multivector.
+    #[must_use]
     pub fn into_multivector(self) -> GA3 {
         self.inner
     }
@@ -220,7 +254,7 @@ impl GeometricLattice for ComponentLattice {
         // L-infinity norm (max component difference)
         (0..8)
             .map(|i| (self.inner.get(i) - other.inner.get(i)).abs())
-            .fold(0.0_f64, |acc, d| acc.max(d))
+            .fold(0.0_f64, f64::max)
     }
 
     fn meet(&self, other: &Self) -> Option<Self> {
@@ -235,6 +269,10 @@ impl GeometricLattice for ComponentLattice {
 
 #[cfg(test)]
 mod tests {
+    #![allow(deprecated)]
+    // GA3Lattice::join tests pin the deprecated magnitude-dominance behavior
+    // until Phase 1 of the salvage plan; ComponentLattice tests below are the
+    // sound floor and unaffected.
     use super::*;
 
     #[test]

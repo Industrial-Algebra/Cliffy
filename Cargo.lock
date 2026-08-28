@@ -22,9 +22,9 @@ dependencies = [
 
 [[package]]
 name = "amari-core"
-version = "0.23.0"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4604466370c01bb3453e1fa51a67477727770fbb77898c9dc04b7c974a7e0bbf"
+checksum = "cbb4299011e5fe3bcb68756dae1b09abd5233710756a9130b6aaebafb7ae68b5"
 dependencies = [
  "approx",
  "bytemuck",

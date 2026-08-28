@@ -9,7 +9,8 @@
  * - Conditional CSS classes
  */
 
-import init, { behavior, combine } from '@industrialalgebra/cliffy-core';
+import init, {
+  Behavior, behavior, combine } from '@industrialalgebra/cliffy-core';
 import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 async function main() {

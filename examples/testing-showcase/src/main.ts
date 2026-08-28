@@ -15,7 +15,7 @@ import init, {
   behavior,
   GeometricState,
   Rotor,
-} from '@cliffy-ga/core';
+} from '@industrialalgebra/cliffy-core';
 
 // =============================================================================
 // Types
@@ -146,23 +146,17 @@ fn hash_collision_is_rare(
       id: 'impossible-divergence',
       name: 'Impossible: CRDT Divergence',
       type: 'probabilistic',
-      description: 'CRDTs must never diverge after merging the same operations. This is an impossible event that should never occur.',
+      description: 'CRDTs must never diverge after merging the same observations. This is an impossible event that should never occur.',
       code: `#[invariant_impossible]
 fn crdt_diverges_after_sync(
-    a: GeometricCRDT,
-    b: GeometricCRDT,
-    ops: Vec<Operation>
+    a: ObservationSet,
+    b: ObservationSet,
 ) -> bool {
-    // Apply same ops to both
-    for op in &ops {
-        a.apply(op);
-        b.apply(op);
-    }
-    // Merge bidirectionally
+    // Union merge bidirectionally
     a.merge(&b);
     b.merge(&a);
-    // Should never diverge
-    a.state() != b.state()
+    // Should never diverge — union is a true join-semilattice
+    a != b
 }`,
       status: 'pending',
       duration: 0,

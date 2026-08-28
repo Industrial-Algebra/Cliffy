@@ -109,7 +109,7 @@ Component libraries are publishable packages containing reusable Cliffy componen
 
 - ESM output with preserved module structure
 - TypeScript declarations generated
-- `@cliffy-ga/core` as peer dependency
+- `@industrialalgebra/cliffy-core` as peer dependency
 - Package exports configured for npm publishing
 
 ```bash
@@ -128,7 +128,7 @@ npm publish  # when ready
 | Entry point | `src/main.ts` | `src/index.ts` |
 | Build mode | Standard Vite | `build.lib` mode |
 | TypeScript | Standard | Declarations enabled |
-| Dependencies | `@cliffy-ga/core` in deps | `@cliffy-ga/core` as peer dep |
+| Dependencies | `@industrialalgebra/cliffy-core` in deps | `@industrialalgebra/cliffy-core` as peer dep |
 | package.json | `private: true` | `exports` map configured |
 
 ## Generated Project Structure
@@ -167,7 +167,7 @@ Components are functions that use Cliffy's FRP primitives:
 
 ```typescript
 // src/components/Toggle.ts
-import type { Behavior } from '@cliffy-ga/core';
+import type { Behavior } from '@industrialalgebra/cliffy-core';
 
 export interface ToggleState {
   value: Behavior<boolean>;
@@ -218,14 +218,14 @@ This generates:
 
 ### Using Your Library
 
-Consumers install your library alongside `@cliffy-ga/core`:
+Consumers install your library alongside `@industrialalgebra/cliffy-core`:
 
 ```bash
-npm install my-components @cliffy-ga/core
+npm install my-components @industrialalgebra/cliffy-core
 ```
 
 ```typescript
-import { Behavior } from '@cliffy-ga/core';
+import { Behavior } from '@industrialalgebra/cliffy-core';
 import { createToggle } from 'my-components';
 
 const darkMode = createToggle(Behavior, false);
@@ -264,7 +264,7 @@ npx ./tools/create-cliffy test-project
 
 ## Troubleshooting
 
-### "Cannot find module '@cliffy-ga/core'"
+### "Cannot find module '@industrialalgebra/cliffy-core'"
 
 Make sure you've installed dependencies:
 
@@ -297,7 +297,7 @@ Check your `tsconfig.json` has the correct settings:
 ## Related
 
 - [Cliffy Documentation](https://cliffy.dev)
-- [@cliffy-ga/core](https://www.npmjs.com/package/@cliffy-ga/core) - Core FRP primitives
+- [@industrialalgebra/cliffy-core](https://www.npmjs.com/package/@industrialalgebra/cliffy-core) - Core FRP primitives
 - [Cliffy GitHub](https://github.com/Industrial-Algebra/cliffy)
 
 ## License

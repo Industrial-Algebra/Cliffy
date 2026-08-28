@@ -15,7 +15,7 @@ const wasmPath = join(__dirname, '../../cliffy-wasm/pkg/cliffy_wasm_bg.wasm');
 const wasmBuffer = readFileSync(wasmPath);
 
 // Import and initialize WASM
-import { initSync, init } from '@cliffy-ga/core';
+import { initSync, init } from '@industrialalgebra/cliffy-core';
 
 // Initialize with the WASM buffer (using object format to avoid deprecation warning)
 initSync({ module: wasmBuffer });

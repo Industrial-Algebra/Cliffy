@@ -27,8 +27,8 @@ Available templates:
 The fastest way to build reactive UIs is with the `html` tagged template:
 
 ```typescript
-import { behavior } from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+import { behavior } from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 // Create reactive state
 const count = behavior(0);
@@ -82,7 +82,7 @@ Cliffy uses **Functional Reactive Programming (FRP)** with two fundamental primi
 A `Behavior` represents a value that changes over time. Think of it as a cell in a spreadsheet that can update.
 
 ```typescript
-import { Behavior } from '@cliffy-ga/core';
+import { Behavior } from '@industrialalgebra/cliffy-core';
 
 // Create a behavior with initial value
 const count = new Behavior(0);
@@ -104,7 +104,7 @@ console.log(count.sample());  // 100
 An `Event` represents discrete happenings like clicks or key presses.
 
 ```typescript
-import { Event } from '@cliffy-ga/core';
+import { Event } from '@industrialalgebra/cliffy-core';
 
 // Create an event stream
 const clicks = new Event();
@@ -157,7 +157,7 @@ console.log(doubled.sample());  // 20 - Automatically updated!
 Combine multiple behaviors into one:
 
 ```typescript
-import { Behavior, combine } from '@cliffy-ga/core';
+import { Behavior, combine } from '@industrialalgebra/cliffy-core';
 
 const width = new Behavior(10);
 const height = new Behavior(20);
@@ -174,7 +174,7 @@ console.log(area.sample());  // 300 - Automatically recalculated!
 Here's a complete counter example:
 
 ```typescript
-import { Behavior, Event } from '@cliffy-ga/core';
+import { Behavior, Event } from '@industrialalgebra/cliffy-core';
 
 // State
 const count = new Behavior(0);
@@ -213,7 +213,7 @@ Cliffy provides combinators for common patterns:
 ### `when` - Conditional Values
 
 ```typescript
-import { Behavior, when } from '@cliffy-ga/core';
+import { Behavior, when } from '@industrialalgebra/cliffy-core';
 
 const showMessage = new Behavior(true);
 const message = when(showMessage, () => "Hello!");
@@ -227,7 +227,7 @@ console.log(message.sample());  // null
 ### `ifElse` - Conditional Selection
 
 ```typescript
-import { Behavior, ifElse } from '@cliffy-ga/core';
+import { Behavior, ifElse } from '@industrialalgebra/cliffy-core';
 
 const isDarkMode = new Behavior(false);
 const theme = ifElse(isDarkMode, () => "dark", () => "light");
@@ -241,7 +241,7 @@ console.log(theme.sample());  // "dark"
 ### `fold` - Accumulate Events
 
 ```typescript
-import { Event } from '@cliffy-ga/core';
+import { Event } from '@industrialalgebra/cliffy-core';
 
 const clicks = new Event<void>();
 const clickCount = clicks.fold(0, (n, _) => n + 1);
@@ -298,7 +298,7 @@ keys.emit('key');      // Logs: "Input: key"
 For animations, physics, and explicit geometric control, use `GeometricState`:
 
 ```typescript
-import { GeometricState, Rotor, Translation } from '@cliffy-ga/core';
+import { GeometricState, Rotor, Translation } from '@industrialalgebra/cliffy-core';
 
 // Create state from a 3D position
 const pos = GeometricState.fromVector(1, 0, 0);
@@ -323,7 +323,7 @@ For efficient DOM updates without virtual DOM, use `DOMProjection`. Projections 
 ### Projection Types
 
 ```typescript
-import { Behavior, DOMProjection } from '@cliffy-ga/core';
+import { Behavior, DOMProjection } from '@industrialalgebra/cliffy-core';
 
 const count = new Behavior(0);
 const isActive = new Behavior(false);
@@ -356,7 +356,7 @@ count.subscribe(n => dataProj.update(String(n)));
 When updating multiple DOM properties, use `ProjectionScheduler` to batch updates to the next animation frame:
 
 ```typescript
-import { Behavior, DOMProjection, ProjectionScheduler } from '@cliffy-ga/core';
+import { Behavior, DOMProjection, ProjectionScheduler } from '@industrialalgebra/cliffy-core';
 
 const scheduler = new ProjectionScheduler();
 const state = new Behavior({ count: 0, label: 'Items' });
@@ -379,7 +379,7 @@ state.subscribe(({ count, label }) => {
 For multiple projections on one element, use the builder pattern:
 
 ```typescript
-import { Behavior, ElementProjections } from '@cliffy-ga/core';
+import { Behavior, ElementProjections } from '@industrialalgebra/cliffy-core';
 
 const todo = new Behavior({ text: 'Buy milk', done: false });
 const li = document.createElement('li');
@@ -400,7 +400,7 @@ Components in Cliffy are factory functions that return an object with Behaviors,
 ### Simple Component: Counter
 
 ```typescript
-import { Behavior, Event, DOMProjection, ProjectionScheduler } from '@cliffy-ga/core';
+import { Behavior, Event, DOMProjection, ProjectionScheduler } from '@industrialalgebra/cliffy-core';
 
 function createCounter(initialValue = 0) {
     // Internal state
@@ -489,7 +489,7 @@ counter.increment.emit();  // Count: 11
 ### Component with Props: Toggle
 
 ```typescript
-import { Behavior, Event, DOMProjection } from '@cliffy-ga/core';
+import { Behavior, Event, DOMProjection } from '@industrialalgebra/cliffy-core';
 
 interface ToggleProps {
     label: string;
@@ -547,7 +547,7 @@ darkMode.mount(document.getElementById('settings')!);
 ### Parent-Child Communication
 
 ```typescript
-import { Behavior, Event, combine } from '@cliffy-ga/core';
+import { Behavior, Event, combine } from '@industrialalgebra/cliffy-core';
 
 function createTemperatureConverter() {
     const celsius = new Behavior(20);
@@ -593,7 +593,7 @@ function createTemperatureConverter() {
 ### Component Composition: Form
 
 ```typescript
-import { Behavior, Event, combine } from '@cliffy-ga/core';
+import { Behavior, Event, combine } from '@industrialalgebra/cliffy-core';
 
 interface FormFieldProps {
     name: string;
@@ -722,7 +722,7 @@ form.submit.subscribe(() => {
 ### Dynamic Component Lists
 
 ```typescript
-import { Behavior, Event } from '@cliffy-ga/core';
+import { Behavior, Event } from '@industrialalgebra/cliffy-core';
 
 interface TodoItem {
     id: number;

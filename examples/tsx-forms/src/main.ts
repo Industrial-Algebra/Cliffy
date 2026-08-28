@@ -10,8 +10,8 @@
  * - Conditional UI based on validation state
  */
 
-import init, { behavior, combine } from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+import init, { behavior, combine } from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 // Helper to combine 3-4 behaviors (replaces wedge)
 function combine3<A, B, C, R>(

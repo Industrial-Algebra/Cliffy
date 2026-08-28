@@ -9,8 +9,8 @@
  * - Event handlers for CRUD operations
  */
 
-import init, { behavior, combine } from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+import init, { behavior, combine } from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 // Todo item type
 interface Todo {

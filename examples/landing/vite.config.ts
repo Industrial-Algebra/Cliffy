@@ -17,12 +17,12 @@ export default defineConfig({
   },
 
   optimizeDeps: {
-    exclude: ['@cliffy-ga/core'],
+    exclude: ['@industrialalgebra/cliffy-core'],
   },
 
   resolve: isCI ? {} : {
     alias: {
-      '@cliffy-ga/core': resolve(__dirname, '../../cliffy-wasm/pkg'),
+      '@industrialalgebra/cliffy-core': resolve(__dirname, '../../cliffy-wasm/pkg'),
     },
   },
 

@@ -9,8 +9,8 @@ Cliffy provides two layers:
 2. **Rendering** — Algebraic TSX for declarative UI
 
 ```typescript
-import init, { behavior, event, combine, wedge } from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+import init, { behavior, event, combine, wedge } from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 await init(); // Initialize WASM module
 
@@ -128,8 +128,8 @@ Cliffy provides two approaches to reactive UI rendering.
 ### TypeScript: html Tagged Template
 
 ```typescript
-import { behavior } from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+import { behavior } from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 const count = behavior(0);
 
@@ -222,7 +222,7 @@ counter = do
 For lower-level control, use `DOMProjection` directly. See [DOM Projection Guide](./dom-projection-guide.md).
 
 ```typescript
-import { behavior, DOMProjection } from '@cliffy-ga/core';
+import { behavior, DOMProjection } from '@industrialalgebra/cliffy-core';
 
 const count = behavior(0);
 const display = document.getElementById('display')!;
@@ -315,7 +315,7 @@ const clickCount = clicks.fold(0, (n, _) => n + 1);
 ### Rendering (TypeScript)
 
 ```typescript
-import { html, mount } from '@cliffy-ga/core/html';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 const app = html`
   <div>

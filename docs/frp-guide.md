@@ -21,7 +21,7 @@ Cliffy has just two core types:
 A `Behavior<T>` represents a value that exists at every point in time. Think of it as a cell in a spreadsheet—it always has a current value, and when dependencies change, it updates automatically.
 
 ```typescript
-import { behavior } from '@cliffy-ga/core';
+import { behavior } from '@industrialalgebra/cliffy-core';
 
 // Create a behavior with initial value
 const count = behavior(0);
@@ -49,7 +49,7 @@ count.subscribe(n => {
 An `Event<T>` represents things that happen at specific moments—clicks, key presses, network responses. Unlike Behaviors, Events don't have a "current value."
 
 ```typescript
-import { event } from '@cliffy-ga/core';
+import { event } from '@industrialalgebra/cliffy-core';
 
 // Create an event stream
 const clicks = event<MouseEvent>();
@@ -282,7 +282,7 @@ const clickCount = clicks.fold(0, (count, _) => count + 1);
 ## Complete Example: Todo List
 
 ```typescript
-import { behavior, event, combine } from '@cliffy-ga/core';
+import { behavior, event, combine } from '@industrialalgebra/cliffy-core';
 
 interface Todo {
     id: number;

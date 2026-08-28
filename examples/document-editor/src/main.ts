@@ -11,11 +11,9 @@
 
 import init, {
   behavior,
-  GeometricCRDT,
   VectorClock,
-  OperationType,
   generateNodeId,
-} from '@cliffy-ga/core';
+} from '@industrialalgebra/cliffy-core';
 
 // =============================================================================
 // Types
@@ -44,7 +42,8 @@ interface DocumentState {
   users: Map<string, User>;
   localUserId: string;
   operations: Operation[];
-  crdt: GeometricCRDT;
+  crdt: ObservationSet;
+  crdtSeq: number;
   version: number;
 }
 
@@ -57,7 +56,8 @@ const state: DocumentState = {
   users: new Map(),
   localUserId: '',
   operations: [],
-  crdt: null as unknown as GeometricCRDT,
+  crdt: null as unknown as ObservationSet,
+  crdtSeq: 0,
   version: 1,
 };
 
@@ -134,13 +134,9 @@ function applyInsert(position: number, char: string, userId: string): void {
     state.operations.pop();
   }
 
-  // Record in CRDT (using position as x, char code as y)
-  state.crdt.addOperation(
-    OperationType.Insert,
-    position,
-    char.charCodeAt(0),
-    0
-  );
+  // Record the edit as a participant-scoped observation (+char code = insert)
+  state.crdt.observeScalar(state.localUserId, state.crdtSeq, char.charCodeAt(0));
+  state.crdtSeq += 1;
 
   contentBehavior.set(state.content);
 }
@@ -174,13 +170,9 @@ function applyDelete(position: number, userId: string): void {
     state.operations.pop();
   }
 
-  // Record in CRDT
-  state.crdt.addOperation(
-    OperationType.Delete,
-    position,
-    deletedChar.charCodeAt(0),
-    0
-  );
+  // Record the edit as a participant-scoped observation (−char code = delete)
+  state.crdt.observeScalar(state.localUserId, state.crdtSeq, -deletedChar.charCodeAt(0));
+  state.crdtSeq += 1;
 
   contentBehavior.set(state.content);
 }
@@ -268,8 +260,7 @@ function renderApp(): HTMLElement {
   syncBtn.onclick = () => {
     // Simulate a sync operation
     console.log('CRDT sync triggered');
-    console.log('Local state:', state.crdt.getState());
-    console.log('Operations:', state.crdt.operationCount);
+    console.log('Observation set:', state.crdt.len(), 'recorded edits');
   };
   toolbar.appendChild(syncBtn);
 
@@ -351,12 +342,8 @@ function renderApp(): HTMLElement {
       state.operations.unshift(op);
       if (state.operations.length > 20) state.operations.pop();
 
-      state.crdt.addOperation(
-        OperationType.Insert,
-        insertPos,
-        insertedChar.charCodeAt(0),
-        0
-      );
+      state.crdt.observeScalar(state.localUserId, state.crdtSeq, insertedChar.charCodeAt(0));
+      state.crdtSeq += 1;
 
       localUser.cursorPosition = target.selectionStart;
     } else if (newContent.length < oldContent.length) {
@@ -378,12 +365,8 @@ function renderApp(): HTMLElement {
       state.operations.unshift(op);
       if (state.operations.length > 20) state.operations.pop();
 
-      state.crdt.addOperation(
-        OperationType.Delete,
-        deletePos,
-        deletedChar?.charCodeAt(0) || 0,
-        0
-      );
+      state.crdt.observeScalar(state.localUserId, state.crdtSeq, -(deletedChar?.charCodeAt(0) || 0));
+      state.crdtSeq += 1;
 
       localUser.cursorPosition = target.selectionStart;
     }
@@ -515,7 +498,7 @@ function renderApp(): HTMLElement {
   addStat(String(state.content.length), 'Characters');
   addStat(String(state.content.split('\n').length), 'Lines');
   addStat(String(state.version), 'Version');
-  addStat(String(state.crdt?.operationCount || 0), 'CRDT Ops');
+  addStat(String(state.crdt?.len() || 0), 'Observed Edits');
 
   statsPanel.appendChild(statsGrid);
   sidebar.appendChild(statsPanel);
@@ -555,7 +538,7 @@ function renderApp(): HTMLElement {
   conceptBox.appendChild(createElement('h3', {}, ['CRDT Text Editing']));
   const conceptP = createElement('p', {});
   conceptP.textContent =
-    'Each character edit is stored as a GeometricCRDT operation with position and character data. ' +
+    'Each edit is recorded as a participant-scoped observation in an ObservationSet — union-merged, never annihilated. ' +
     'Multiple users can edit concurrently - the CRDT ensures all replicas converge to the same state ' +
     'using geometric merge operations. Vector clocks track causal ordering.';
   conceptBox.appendChild(conceptP);
@@ -611,7 +594,8 @@ async function main() {
   initializeUsers();
 
   // Initialize CRDT with the local user ID
-  state.crdt = new GeometricCRDT(state.localUserId);
+  state.crdt = new ObservationSet();
+  state.crdtSeq = 0;
 
   contentBehavior = behavior(state.content);
   cursorBehavior = behavior(0);
@@ -622,7 +606,7 @@ async function main() {
   }
 
   console.log('Cliffy Document Editor initialized');
-  console.log('Using GeometricCRDT for conflict-free text editing');
+  console.log('Using ObservationSet for conflict-free edit logging');
   console.log('Vector clocks ensure causal ordering of operations');
 
   requestAnimationFrame(mainLoop);

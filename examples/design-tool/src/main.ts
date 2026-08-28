@@ -16,8 +16,8 @@ import init, {
   Rotor,
   Translation,
   Transform,
-} from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+} from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 // ============================================================================
 // Types

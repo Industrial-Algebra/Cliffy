@@ -16,12 +16,12 @@ export default defineConfig({
   base,
   resolve: useNpmPackage ? {} : {
     alias: {
-      '@cliffy-ga/core': resolve(__dirname, '../../cliffy-wasm/pkg'),
+      '@industrialalgebra/cliffy-core': resolve(__dirname, '../../cliffy-wasm/pkg'),
     },
   },
   // Don't pre-bundle WASM packages - they need import.meta.url to work correctly
   optimizeDeps: {
-    exclude: ['@cliffy-ga/core'],
+    exclude: ['@industrialalgebra/cliffy-core'],
   },
   server: {
     port: 3010,

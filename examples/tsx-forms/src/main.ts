@@ -10,26 +10,27 @@
  * - Conditional UI based on validation state
  */
 
-import init, { behavior, combine } from '@industrialalgebra/cliffy-core';
+import init, {
+  Behavior, behavior, combine } from '@industrialalgebra/cliffy-core';
 import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 // Helper to combine 3-4 behaviors (replaces wedge)
 function combine3<A, B, C, R>(
-  a: ReturnType<typeof behavior<A>>,
-  b: ReturnType<typeof behavior<B>>,
-  c: ReturnType<typeof behavior<C>>,
+  a: Behavior,
+  b: Behavior,
+  c: Behavior,
   fn: (a: A, b: B, c: C) => R
-): ReturnType<typeof behavior<R>> {
+): Behavior {
   return combine(combine(a, b, (x: A, y: B) => [x, y] as [A, B]), c, (pair: [A, B], z: C) => fn(pair[0], pair[1], z));
 }
 
 function combine4<A, B, C, D, R>(
-  a: ReturnType<typeof behavior<A>>,
-  b: ReturnType<typeof behavior<B>>,
-  c: ReturnType<typeof behavior<C>>,
-  d: ReturnType<typeof behavior<D>>,
+  a: Behavior,
+  b: Behavior,
+  c: Behavior,
+  d: Behavior,
   fn: (a: A, b: B, c: C, d: D) => R
-): ReturnType<typeof behavior<R>> {
+): Behavior {
   return combine(
     combine(a, b, (x: A, y: B) => [x, y] as [A, B]),
     combine(c, d, (x: C, y: D) => [x, y] as [C, D]),
@@ -45,9 +46,9 @@ interface ValidationResult {
 
 // Form field with validation
 interface FormField<T> {
-  value: ReturnType<typeof behavior<T>>;
-  touched: ReturnType<typeof behavior<boolean>>;
-  validation: ReturnType<typeof behavior<ValidationResult>>;
+  value: Behavior;
+  touched: Behavior;
+  validation: Behavior;
 }
 
 // Validators
@@ -120,7 +121,7 @@ async function main() {
   const bioTouched = behavior(false);
 
   const submitted = behavior(false);
-  const submitStatus = behavior<'idle' | 'success' | 'error'>('idle');
+  const submitStatus = behavior('idle');
 
   // Validation rules
   const nameValidation = combine(name, nameTouched, (value: string, touched: boolean) => {
@@ -181,19 +182,19 @@ async function main() {
   );
 
   // Input class based on validation state
-  const inputClass = (validation: ReturnType<typeof behavior<ValidationResult>>, touched: ReturnType<typeof behavior<boolean>>) =>
+  const inputClass = (validation: Behavior, touched: Behavior) =>
     combine(validation, touched, (v: ValidationResult, t: boolean) => {
       if (!t) return '';
       return v.valid ? 'valid' : 'invalid';
     });
 
   // Event handlers
-  const createInputHandler = (field: ReturnType<typeof behavior<string>>) => (e: Event) => {
+  const createInputHandler = (field: Behavior) => (e: Event) => {
     const target = e.target as HTMLInputElement;
     field.set(target.value);
   };
 
-  const createBlurHandler = (touched: ReturnType<typeof behavior<boolean>>) => () => {
+  const createBlurHandler = (touched: Behavior) => () => {
     touched.set(true);
   };
 

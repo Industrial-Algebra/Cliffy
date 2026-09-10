@@ -11,7 +11,6 @@
 
 import init, {
   behavior,
-  event,
   Rotor,
   Transform,
   Translation,
@@ -188,12 +187,12 @@ async function main() {
   // State
   // ==========================================================================
 
-  const capabilities = behavior<Capabilities | null>(null);
+  const capabilities = behavior(null);
   const isRunning = behavior(false);
-  const results = behavior<BenchmarkResult[]>([]);
-  const logs = behavior<{ level: LogLevel; message: string; time: string }[]>([]);
+  const results = behavior([]);
+  const logs = behavior([]);
   const iterations = behavior(10000);
-  const selectedBenchmark = behavior<string>('all');
+  const selectedBenchmark = behavior('all');
 
   // ==========================================================================
   // Logging

@@ -52,30 +52,30 @@ async function main() {
   // State Behaviors
   // ==========================================================================
 
-  const shapes = behavior<Shape[]>([]);
-  const selectedId = behavior<string | null>(null);
-  const currentTool = behavior<Tool>('select');
+  const shapes = behavior([]);
+  const selectedId = behavior(null);
+  const currentTool = behavior('select');
 
   // History for undo/redo
-  const history = behavior<HistoryEntry[]>([{ shapes: [], selectedId: null }]);
+  const history = behavior([{ shapes: [], selectedId: null }]);
   const historyIndex = behavior(0);
 
   // Derived: selected shape
-  const selectedShape = combine(shapes, selectedId, (allShapes, id) => {
-    return id ? allShapes.find(s => s.id === id) || null : null;
+  const selectedShape = combine(shapes, selectedId, (allShapes: Shape[], id: string | null) => {
+    return id ? allShapes.find((s: Shape) => s.id === id) || null : null;
   });
 
   // Derived: can undo/redo
-  const canUndo = historyIndex.map(idx => idx > 0);
-  const canRedo = combine(history, historyIndex, (h, idx) => idx < h.length - 1);
+  const canUndo = historyIndex.map((idx: number) => idx > 0);
+  const canRedo = combine(history, historyIndex, (h: Shape[][], idx: number) => idx < h.length - 1);
 
   // ==========================================================================
   // Events
   // ==========================================================================
 
-  const canvasClick = event<{ x: number; y: number; target: HTMLElement }>();
-  const canvasDrag = event<{ startX: number; startY: number; x: number; y: number }>();
-  const canvasDragEnd = event<void>();
+  const canvasClick = event();
+  const canvasDrag = event();
+  const canvasDragEnd = event();
 
   // Drag state
   let isDragging = false;
@@ -185,32 +185,18 @@ async function main() {
     const radians = (shape.rotation * Math.PI) / 180;
     const rotor = Rotor.xy(radians);
     const translation = new Translation(shape.x, shape.y, 0);
-    const transform = Transform.fromRotorAndTranslation(rotor, translation);
+    const _transform = Transform.fromRotorAndTranslation(rotor, translation);
+    void _transform; // retained: documents the GA intent; CSS path below
 
     // For CSS, we need translate then rotate
     return `translate(${shape.x}px, ${shape.y}px) rotate(${shape.rotation}deg)`;
-  }
-
-  function rotateShape(shape: Shape, deltaAngle: number): Shape {
-    // Use rotor composition for rotation
-    const currentRadians = (shape.rotation * Math.PI) / 180;
-    const deltaRadians = (deltaAngle * Math.PI) / 180;
-
-    const currentRotor = Rotor.xy(currentRadians);
-    const deltaRotor = Rotor.xy(deltaRadians);
-
-    // Compose rotors
-    const newRotor = deltaRotor.compose(currentRotor);
-    const newAngle = (newRotor.angle() * 180) / Math.PI;
-
-    return { ...shape, rotation: newAngle };
   }
 
   // ==========================================================================
   // Event Handlers
   // ==========================================================================
 
-  canvasClick.subscribe(({ x, y, target }) => {
+  canvasClick.subscribe(({ x, y, target }: { x: number; y: number; target: Element }) => {
     const tool = currentTool.sample() as Tool;
 
     if (tool === 'select') {
@@ -232,7 +218,7 @@ async function main() {
     }
   });
 
-  canvasDrag.subscribe(({ startX, startY, x, y }) => {
+  canvasDrag.subscribe(({ startX, startY, x, y }: { startX: number; startY: number; x: number; y: number }) => {
     const tool = currentTool.sample() as Tool;
     const id = selectedId.sample() as string | null;
 
@@ -293,11 +279,11 @@ async function main() {
     });
 
     canvas.addEventListener('mouseup', () => {
-      canvasDragEnd.emit();
+      canvasDragEnd.emit(undefined);
     });
 
     canvas.addEventListener('mouseleave', () => {
-      canvasDragEnd.emit();
+      canvasDragEnd.emit(undefined);
     });
   }
 

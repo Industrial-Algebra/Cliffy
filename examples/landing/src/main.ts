@@ -6,11 +6,11 @@ async function main() {
   await init();
 
   // State
-  const filter = behavior<string>('all');
-  const searchQuery = behavior<string>('');
+  const filter = behavior('all');
+  const searchQuery = behavior('');
 
   // Derived: filtered examples
-  const filteredExamples = combine(filter, searchQuery, (cat, query): Example[] => {
+  const filteredExamples = combine(filter, searchQuery, (cat: string, query: string): Example[] => {
     return examples.filter(ex => {
       const matchesCategory = cat === 'all' || ex.category === cat;
       const matchesSearch = query === '' ||
@@ -22,8 +22,8 @@ async function main() {
   });
 
   // Category buttons
-  const categoryButtons = categories.map(cat => {
-    const isActive = filter.map(f => f === cat.id ? 'active' : '');
+  const categoryButtons = categories.map((cat: { id: string; name: string }) => {
+    const isActive = filter.map((f: string) => f === cat.id ? 'active' : '');
     return html`
       <button
         class=${isActive}

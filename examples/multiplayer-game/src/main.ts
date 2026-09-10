@@ -10,6 +10,7 @@
  */
 
 import init, {
+  Behavior,
   behavior,
   GeometricState,
   Rotor,
@@ -59,7 +60,7 @@ const state: GameState = {
 };
 
 // FRP Behaviors for reactive updates (initialized after WASM init)
-let fpsCounter: ReturnType<typeof behavior<number>>;
+let fpsCounter: Behavior;
 let frameCount = 0;
 let lastFpsUpdate = Date.now();
 

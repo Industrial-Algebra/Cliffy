@@ -43,13 +43,14 @@
     "preview": "npx serve dist -l 3000",
     "preview:build": "npm run build:preview && npm run preview",
     "test:examples": "playwright test",
-    "clean": "rm -rf node_modules */node_modules */dist dist"
+    "clean": "rm -rf node_modules */node_modules */dist dist",
+    "typecheck": "npm run typecheck -ws --if-present"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
     "@types/node": "^26.2.0",
     "concurrently": "^10.0.5",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.2.2"
   }
 }

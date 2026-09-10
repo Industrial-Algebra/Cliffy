@@ -15,7 +15,7 @@ parking_lot = "0.12"
 amari-core = { workspace = true }
 
 # Probabilistic contracts
-amari-flynn = "0.23.0"
+amari-flynn = "0.24.1"
 
 # Property-based testing
 quickcheck = "1.0"

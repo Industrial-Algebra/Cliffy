@@ -17,7 +17,7 @@ bytemuck = { version = "1.25.2", features = ["derive"] }
 pollster = "1.0.1"
 thiserror = "2.0.19"
 log = "0.4.33"
-wide = "1.5"
+wide = "1.7"
 
 # WASM dependencies (optional)
 wasm-bindgen = { workspace = true, optional = true }

@@ -6,6 +6,8 @@ All notable changes to Cliffy are documented here. Format follows
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-09-10
+
 ### Removed (breaking — the Phase 1 cutover)
 
 - `cliffy_protocols::GeometricCRDT`, `GeometricOperation`, `OperationType`,

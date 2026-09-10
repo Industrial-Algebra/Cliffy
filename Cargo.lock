@@ -22,9 +22,9 @@ dependencies = [
 
 [[package]]
 name = "amari-core"
-version = "0.23.0"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4604466370c01bb3453e1fa51a67477727770fbb77898c9dc04b7c974a7e0bbf"
+checksum = "cbb4299011e5fe3bcb68756dae1b09abd5233710756a9130b6aaebafb7ae68b5"
 dependencies = [
  "approx",
  "bytemuck",
@@ -36,9 +36,9 @@ dependencies = [
 
 [[package]]
 name = "amari-flynn"
-version = "0.23.0"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f88be0432a258a4198ebaf382c3295d3303c2f823176ea0d9e5b534e4e159d79"
+checksum = "b876c80e0f59882c2023223fc9f6e955640cfef38c4f6252b810d1190e3511e7"
 dependencies = [
  "amari-flynn-macros",
  "rand",
@@ -47,9 +47,9 @@ dependencies = [
 
 [[package]]
 name = "amari-flynn-macros"
-version = "0.23.0"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06e03bbe82507ade43f9d75442b922e1dc571b7c1588f8ec761f399f1c4ba4cf"
+checksum = "2cf51ad6af8902e80f887869fa84a39a10672eeff3025c13bbf00f2cf8263823"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1181,9 +1181,9 @@ checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
 
 [[package]]
 name = "safe_arch"
-version = "1.0.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f7caad094bd561859bcd467734a720c3c1f5d1f338995351fefe2190c45efed"
+checksum = "42c6efa15875e6ecb39ca61fb0b0c1a40b84fac5a5ffe71eef7d1000c8eb3f5f"
 dependencies = [
  "bytemuck",
 ]
@@ -1241,9 +1241,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.150"
+version = "1.0.151"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8014e44b4736ed0538adeecded0fce2a272f22dc9578a7eb6b2d9993c74cfb9"
+checksum = "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
 dependencies = [
  "itoa",
  "memchr",
@@ -1745,9 +1745,9 @@ dependencies = [
 
 [[package]]
 name = "wide"
-version = "1.5.0"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dfdfe6a32973f2d1b268b8895845a8a96cac2f0191e72c27cc929036060dbf89"
+checksum = "8cf05ca94c9fba0c51316899caa1d1e74a064fc310a5efa7375e614343d415be"
 dependencies = [
  "bytemuck",
  "safe_arch",

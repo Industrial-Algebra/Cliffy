@@ -4,7 +4,7 @@
  */
 
 import type { Plugin } from 'vite';
-import { transformAlgebraicTSX } from './transformer';
+import { transformAlgebraicTSX } from './transformer.js';
 
 export interface AlgebraicTSXOptions {
   /**
@@ -154,4 +154,4 @@ function shouldTransform(
 
 // Export transformer for external use (AlgebraicTSXOptions is exported
 // at its declaration above).
-export { transformAlgebraicTSX } from './transformer';
+export { transformAlgebraicTSX } from './transformer.js';

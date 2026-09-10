@@ -32,10 +32,10 @@
     "@babel/parser": "^8.0.0",
     "@babel/traverse": "^8.0.0",
     "@babel/types": "^8.0.0",
-    "magic-string": "^0.30.0"
+    "magic-string": "^1.2.3"
   },
   "devDependencies": {
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.5.0",
     "typescript": "^7.0.2",
     "vite": "^8.0.16"
   },

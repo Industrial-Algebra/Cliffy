@@ -30,8 +30,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Industrial-Algebra/cliffy.git",
-    "directory": "tools/create-cliffy"
+    "url": "https://github.com/Industrial-Algebra/Cliffy"
   },
   "homepage": "https://github.com/Industrial-Algebra/cliffy#readme",
   "bugs": {

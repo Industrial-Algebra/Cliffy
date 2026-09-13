@@ -106,19 +106,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-
-      - name: Install, build, and test
-        working-directory: cliffy-tsukoshi
-        run: |
-          npm ci
-          npm run build
-          npm test
-
-      - name: Check if version exists on npm
+      - name: Check if version exists on npm (skip fast)
         id: check
         working-directory: cliffy-tsukoshi
         run: |
@@ -131,6 +119,39 @@ jobs:
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Setup Node.js
+        if: steps.check.outputs.exists == 'false'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      # tsukoshi's tests import @industrialalgebra/cliffy-core via a
+      # file:../cliffy-wasm/pkg dep — the pkg is gitignored, so it must
+      # be built on this runner first (the core publish job is a
+      # separate runner; nothing is shared).
+      - name: Install Rust toolchain
+        if: steps.check.outputs.exists == 'false'
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-08-14
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        if: steps.check.outputs.exists == 'false'
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM package (test dependency)
+        if: steps.check.outputs.exists == 'false'
+        run: npm run build
+
+      - name: Install, build, and test
+        if: steps.check.outputs.exists == 'false'
+        working-directory: cliffy-tsukoshi
+        run: |
+          npm ci
+          npm run build
+          npm test
 
       - name: Publish to npm
         if: steps.check.outputs.exists == 'false'

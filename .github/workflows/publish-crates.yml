@@ -56,12 +56,14 @@ jobs:
               echo "cliffy-gpu=$([[ '$CRATE' == 'cliffy-gpu' ]] && echo true || echo false)" >> $GITHUB_OUTPUT
             fi
           else
-            # Check for changes in each crate directory
-            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
-            echo "cliffy-core=$(echo "$CHANGED_FILES" | grep -q '^cliffy-core/' && echo true || echo false)" >> $GITHUB_OUTPUT
-            echo "cliffy-test=$(echo "$CHANGED_FILES" | grep -q '^cliffy-test/' && echo true || echo false)" >> $GITHUB_OUTPUT
-            echo "cliffy-protocols=$(echo "$CHANGED_FILES" | grep -q '^cliffy-protocols/' && echo true || echo false)" >> $GITHUB_OUTPUT
-            echo "cliffy-gpu=$(echo "$CHANGED_FILES" | grep -q '^cliffy-gpu/' && echo true || echo false)" >> $GITHUB_OUTPUT
+            # Tag push: a version tag IS a release — publish all four.
+            # (Diffing HEAD~1..HEAD only sees the tag's merge commit,
+            # which may touch no crate directories — this misfired on
+            # v0.4.0 and silently skipped everything.)
+            echo "cliffy-core=true" >> $GITHUB_OUTPUT
+            echo "cliffy-test=true" >> $GITHUB_OUTPUT
+            echo "cliffy-protocols=true" >> $GITHUB_OUTPUT
+            echo "cliffy-gpu=true" >> $GITHUB_OUTPUT
           fi
 
   publish-cliffy-core:

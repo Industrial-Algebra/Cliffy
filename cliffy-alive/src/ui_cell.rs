@@ -4,7 +4,7 @@
 //! a geometric state using Amari's multivectors and participates in the cellular
 //! automaton that drives UI evolution and behavior.
 
-use cliffy_core::{scalar_traits::Float, ReactiveMultivector, GA3};
+use cliffy_core::{Component, Element, GeometricState, GA3};
 // use amari_automata::{AutomatonCell, CellularRule};
 use rand;
 use serde::{Deserialize, Serialize};
@@ -151,7 +151,7 @@ pub struct UICell {
 
     /// Geometric state using Amari multivectors (8D: x,y,w,h,z,opacity,rotation,scale)
     #[serde(skip, default = "default_geometric_state")]
-    geometric_state: ReactiveMultivector<GA3>,
+    geometric_state: GeometricState,
 
     /// Current energy level
     energy: UIEnergy,
@@ -165,8 +165,8 @@ pub struct UICell {
     /// Fitness value for evolution
     fitness: f64,
 
-    /// Cell vitals tracking
-    vitals: CellVitals,
+    /// Cell interaction state tracking
+    interaction_state: CellInteractionState,
 
     /// Interaction history for fitness calculation
     interaction_history: HashMap<String, f64>,
@@ -229,14 +229,20 @@ impl Force2D {
     }
 }
 
-/// Cell vitals for health tracking
+/// Cell interaction state for stress and interaction tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CellVitals {
+pub struct CellInteractionState {
     pub stress_level: f64,
     pub interaction_count: u32,
 }
 
-impl CellVitals {
+impl Default for CellInteractionState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl CellInteractionState {
     pub fn new() -> Self {
         Self {
             stress_level: 0.0,
@@ -258,6 +264,12 @@ pub struct CellGenome {
     pub traits: HashMap<String, f64>,
     /// Affinity genes that determine relationships with other cell types
     pub affinities: HashMap<UICellType, f64>,
+}
+
+impl Default for CellGenome {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl CellGenome {
@@ -297,7 +309,7 @@ impl CellGenome {
         use rand::Rng;
         let mut rng = rand::thread_rng();
 
-        for (_, value) in self.genes.iter_mut() {
+        for value in self.genes.values_mut() {
             if rng.gen::<f64>() < rate {
                 let delta = rng.gen_range(-0.1..=0.1);
                 *value = (*value + delta).clamp(0.0, 1.0);
@@ -361,7 +373,7 @@ impl CellGenome {
 
     /// Check if has genes from another genome
     pub fn has_genes_from(&self, other: &CellGenome) -> bool {
-        for (key, _) in &other.genes {
+        for key in other.genes.keys() {
             if self.genes.contains_key(key) {
                 return true;
             }
@@ -436,8 +448,8 @@ impl Default for BehaviorProperties {
 }
 
 /// Default geometric state for deserialization
-fn default_geometric_state() -> ReactiveMultivector<GA3> {
-    ReactiveMultivector::new(GA3::scalar(0.0))
+fn default_geometric_state() -> GeometricState {
+    GeometricState::from_scalar(0.0)
 }
 
 impl UICell {
@@ -449,7 +461,7 @@ impl UICell {
     /// Create a new UI cell at a specific position
     pub fn new_at_position(cell_type: UICellType, position: GA3) -> Self {
         let id = Uuid::new_v4();
-        let geometric_state = ReactiveMultivector::new(position);
+        let geometric_state = GeometricState::new(position);
         let energy = cell_type.base_energy_cost() * 10.0; // Start with 10x base cost
 
         let mut visual_props = VisualProperties::default();
@@ -490,7 +502,7 @@ impl UICell {
             age: 0.0,
             dna: CellGenome::new(),
             fitness: 0.0,
-            vitals: CellVitals::new(),
+            interaction_state: CellInteractionState::new(),
             interaction_history: HashMap::new(),
             connections: HashMap::new(),
             visual_properties: visual_props,
@@ -630,43 +642,110 @@ impl UICell {
     // === Methods for test support ===
 
     /// Get the cell's 8D geometric nucleus state
-    pub fn nucleus(&self) -> &ReactiveMultivector<GA3> {
+    pub fn nucleus(&self) -> &GeometricState {
         &self.geometric_state
     }
 
     /// Get 2D position (x, y)
     pub fn position(&self) -> Position2D {
-        let state = self.geometric_state.sample();
+        let state = self.geometric_state.multivector();
         Position2D {
-            x: state.scalar_part(),       // Dimension 0
-            y: state.vector_component(0), // Dimension 1 (e1)
+            x: state.scalar_part(),       // [0] scalar
+            y: state.vector_component(0), // [1] e1
         }
     }
 
     /// Get size (width, height)
     pub fn size(&self) -> Size2D {
-        let state = self.geometric_state.sample();
+        let state = self.geometric_state.multivector();
         Size2D {
-            width: state.vector_component(1).abs().max(10.0), // Dimension 2 (e2), minimum size
-            height: state.vector_component(2).abs().max(10.0), // Dimension 3 (e3), minimum size
+            width: state.vector_component(1).abs().max(10.0), // [2] e2, minimum size
+            height: state.vector_component(2).abs().max(10.0), // [4] e3, minimum size
         }
     }
 
     /// Get opacity (0.0 to 1.0)
     pub fn opacity(&self) -> f64 {
-        let state = self.geometric_state.sample();
-        ((state.get(3) + 1.0) / 2.0).clamp(0.0, 1.0) // Dimension 5 (e12 bivector), normalized to 0-1
+        let state = self.geometric_state.multivector();
+        ((state.get(3) + 1.0) / 2.0).clamp(0.0, 1.0) // [3] e12 bivector, normalized to 0-1
+    }
+
+    /// Get z-index from geometric state
+    pub fn z_index(&self) -> i32 {
+        let state = self.geometric_state.multivector();
+        state.get(5) as i32 // [5] e13 bivector
+    }
+
+    /// Get rotation angle in degrees
+    pub fn rotation(&self) -> f64 {
+        let state = self.geometric_state.multivector();
+        state.get(7) * 180.0 // [7] e123 pseudoscalar, radians to degrees
     }
 
     /// Get scale factor
     pub fn scale(&self) -> f64 {
-        let state = self.geometric_state.sample();
-        state.get(6).abs().max(0.1) // Dimension 7 (e23 bivector), minimum scale
+        let state = self.geometric_state.multivector();
+        state.get(6).abs().max(0.1) // [6] e23 bivector, minimum scale
+    }
+
+    /// Project 8D geometric state to a CSS style string
+    ///
+    /// Maps GA3 coefficients to CSS properties:
+    /// - `[0]` scalar → x position (px)
+    /// - `[1]` e1 → y position (px)
+    /// - `[2]` e2 → width (px)
+    /// - `[4]` e3 → height (px)
+    /// - `[3]` e12 → opacity (normalized 0-1)
+    /// - `[5]` e13 → z-index
+    /// - `[6]` e23 → scale
+    /// - `[7]` e123 → rotation (degrees)
+    pub fn to_css_string(&self, state: &GA3) -> String {
+        let x = state.scalar_part();
+        let y = state.vector_component(0);
+        let width = state.vector_component(1).abs().max(10.0);
+        let height = state.vector_component(2).abs().max(10.0);
+        let opacity = ((state.get(3) + 1.0) / 2.0).clamp(0.0, 1.0);
+        let z_index = state.get(5) as i32;
+        let scale = state.get(6).abs().max(0.1);
+        let rotation = state.get(7) * 180.0;
+
+        let color = &self.visual_properties.color;
+        let r = (color[0] * 255.0) as u8;
+        let g = (color[1] * 255.0) as u8;
+        let b = (color[2] * 255.0) as u8;
+
+        format!(
+            "position:absolute;\
+             left:{x:.1}px;\
+             top:{y:.1}px;\
+             width:{width:.1}px;\
+             height:{height:.1}px;\
+             opacity:{opacity:.3};\
+             z-index:{z_index};\
+             transform:rotate({rotation:.1}deg) scale({scale:.3});\
+             background:rgb({r},{g},{b});\
+             border:{bw:.1}px solid rgb({br},{bg},{bb})",
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            opacity = opacity,
+            z_index = z_index,
+            rotation = rotation,
+            scale = scale,
+            r = r,
+            g = g,
+            b = b,
+            bw = self.visual_properties.border_width,
+            br = (self.visual_properties.border_color[0] * 255.0) as u8,
+            bg = (self.visual_properties.border_color[1] * 255.0) as u8,
+            bb = (self.visual_properties.border_color[2] * 255.0) as u8,
+        )
     }
 
     /// Set position
     pub fn set_position(&mut self, x: f64, y: f64) {
-        let mut current = self.geometric_state.sample();
+        let mut current = self.geometric_state.multivector();
         current.set_scalar(x);
         current.set_vector_component(0, y); // e1
         self.geometric_state.set(current);
@@ -715,14 +794,14 @@ impl UICell {
     /// Receive click interaction
     pub fn receive_click(&mut self) {
         self.energy += 15.0;
-        self.vitals.interaction_count += 1;
+        self.interaction_state.interaction_count += 1;
         self.interaction_history.insert("click".to_string(), 1.0);
     }
 
     /// Receive hover interaction
     pub fn receive_hover(&mut self) {
         self.energy += 5.0;
-        self.vitals.interaction_count += 1;
+        self.interaction_state.interaction_count += 1;
         self.interaction_history.insert("hover".to_string(), 0.5);
     }
 
@@ -735,7 +814,7 @@ impl UICell {
 
     /// Check if cell should die
     pub fn should_die(&self) -> bool {
-        self.energy < 1.0 || self.vitals.stress_level > 0.9
+        self.energy < 1.0 || self.interaction_state.stress_level > 0.9
     }
 
     /// Check if cell is focused
@@ -750,7 +829,7 @@ impl UICell {
 
     /// Apply geometric mutation
     pub fn apply_geometric_mutation(&mut self, strength: f64) {
-        let mut current = self.geometric_state.sample();
+        let mut current = self.geometric_state.multivector();
         let random_dx = (rand::random::<f64>() - 0.5) * strength * 20.0;
         let random_dy = (rand::random::<f64>() - 0.5) * strength * 20.0;
 
@@ -762,12 +841,13 @@ impl UICell {
 
     /// Apply stress to the cell
     pub fn apply_stress(&mut self, stress_amount: f64) {
-        self.vitals.stress_level = (self.vitals.stress_level + stress_amount).min(1.0);
+        self.interaction_state.stress_level =
+            (self.interaction_state.stress_level + stress_amount).min(1.0);
     }
 
-    /// Get cell vitals
-    pub fn get_vitals(&self) -> &CellVitals {
-        &self.vitals
+    /// Get cell interaction state
+    pub fn get_interaction_state(&self) -> &CellInteractionState {
+        &self.interaction_state
     }
 
     /// Get cell genome
@@ -819,7 +899,7 @@ impl UICell {
     pub fn express_genes(&mut self) {
         // Update opacity based on brightness gene
         if let Some(brightness) = self.dna.traits.get("display_brightness") {
-            let mut current = self.geometric_state.sample();
+            let mut current = self.geometric_state.multivector();
             current.set(3, brightness * 2.0 - 1.0); // e12 bivector component, convert 0-1 to -1-1
             self.geometric_state.set(current);
         }
@@ -885,7 +965,7 @@ pub enum InteractionType {
 }
 
 impl LivingComponent for UICell {
-    fn geometric_state(&self) -> &ReactiveMultivector<GA3> {
+    fn geometric_state(&self) -> &GeometricState {
         &self.geometric_state
     }
 
@@ -915,11 +995,9 @@ impl LivingComponent for UICell {
                     self.state = CellState::Dead;
                 }
             }
-            CellState::Reproducing => {
+            CellState::Reproducing if self.age % 10.0 < dt => {
                 // Reproduction takes time and energy
-                if self.age % 10.0 < dt {
-                    self.state = CellState::Alive;
-                }
+                self.state = CellState::Alive;
             }
             _ => {}
         }
@@ -941,6 +1019,23 @@ impl LivingComponent for UICell {
 
     fn age(&self) -> UITime {
         self.age
+    }
+}
+
+impl Component for UICell {
+    fn render(&self, state: &GA3) -> Element {
+        Element::tag("div")
+            .attr("class", format!("alive-cell alive-{:?}", self.cell_type))
+            .with_key(self.id.to_string())
+            .attr("style", self.to_css_string(state))
+    }
+
+    fn initial_state(&self) -> GA3 {
+        self.geometric_state.multivector()
+    }
+
+    fn type_name(&self) -> &'static str {
+        "UICell"
     }
 }
 
@@ -1011,12 +1106,59 @@ mod tests {
         assert!(offspring_value == 0.8 || offspring_value == 0.2);
 
         // Test mutation
-        let original_value = genome1.get_gene("growth_rate");
+        let _original_value = genome1.get_gene("growth_rate");
         genome1.mutate(1.0); // 100% mutation rate
         let mutated_value = genome1.get_gene("growth_rate");
 
         // Value might have changed due to mutation
-        assert!(mutated_value >= 0.0 && mutated_value <= 1.0);
+        assert!((0.0..=1.0).contains(&mutated_value));
+    }
+
+    #[test]
+    fn test_component_render() {
+        use cliffy_core::{Component, ElementKind};
+
+        let cell = UICell::new_at_position(UICellType::ButtonCore, GA3::scalar(5.0));
+        let state = cell.initial_state();
+        let element = cell.render(&state);
+
+        // Should produce a div with class and style
+        assert!(matches!(&element.kind, ElementKind::Tag(t) if t == "div"));
+        assert!(element.props.has("class"));
+        assert!(element.props.has("style"));
+        assert!(element.key.is_some());
+
+        // Class should include cell type
+        let class = element.props.get("class").unwrap().as_str().unwrap();
+        assert!(class.contains("alive-cell"));
+        assert!(class.contains("ButtonCore"));
+    }
+
+    #[test]
+    fn test_css_projection() {
+        let cell = UICell::new_at_position(UICellType::ButtonCore, GA3::scalar(0.0));
+
+        // Build a state with known coefficients
+        let coeffs = vec![
+            100.0, // [0] x
+            200.0, // [1] y
+            50.0,  // [2] width
+            0.5,   // [3] opacity (raw, maps to (0.5+1)/2 = 0.75)
+            30.0,  // [4] height
+            5.0,   // [5] z-index
+            1.0,   // [6] scale
+            0.0,   // [7] rotation
+        ];
+        let state = GA3::from_coefficients(coeffs);
+        let css = cell.to_css_string(&state);
+
+        assert!(css.contains("left:100.0px"));
+        assert!(css.contains("top:200.0px"));
+        assert!(css.contains("width:50.0px"));
+        assert!(css.contains("height:30.0px"));
+        assert!(css.contains("opacity:0.750"));
+        assert!(css.contains("z-index:5"));
+        assert!(css.contains("scale(1.000)"));
     }
 
     #[test]

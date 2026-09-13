@@ -1,0 +1,149 @@
+name: Publish npm
+
+# Publishes the two public npm packages via OIDC trusted publishing —
+# NO long-lived npm token. The npm CLI detects the GitHub OIDC
+# environment (id-token: write) and authenticates directly; provenance
+# attestations are signed automatically.
+#
+# npm-side precondition (operator, one time, per package):
+#   npmjs.com → package → Settings → Publishing access →
+#   Trusted publishers → GitHub Actions:
+#     org:      Industrial-Algebra
+#     repo:     Cliffy
+#     workflow: publish-npm.yml
+#   For a brand-new package that has never been published, npm may
+#   require a one-time token bootstrap publish first; trusted
+#   publishing takes over from the second publish onward. See
+#   https://docs.npmjs.com/trusted-publishers
+#
+# Provenance requires each package.json `repository.url` to EXACTLY
+# match the OIDC repo claim (https://github.com/Industrial-Algebra/Cliffy)
+# — the lesson of Amari #238/#239. The wasm pkg's field flows from
+# cliffy-wasm/Cargo.toml; do not let them drift.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no actual publish)'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish-npm-core:
+    name: Publish @industrialalgebra/cliffy-core (WASM)
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required for npm trusted publishing (OIDC)
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-08-14
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Assert npm CLI supports trusted publishing
+        run: |
+          NPM_VERSION=$(npm --version)
+          echo "npm $NPM_VERSION"
+          npm install -g npm@latest >/dev/null 2>&1 || true
+          echo "npm $(npm --version) (after latest)"
+
+      - name: Build WASM package
+        run: npm run build
+
+      - name: Check if version exists on npm
+        id: check
+        run: |
+          cd cliffy-wasm/pkg
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if npm view "$NAME@$VERSION" version 2>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to npm
+        if: steps.check.outputs.exists == 'false'
+        working-directory: cliffy-wasm/pkg
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            npm publish --ignore-scripts --access public --dry-run
+          else
+            npm publish --ignore-scripts --access public
+          fi
+
+      - name: Skip (version already published)
+        if: steps.check.outputs.exists == 'true'
+        run: echo "${{ steps.check.outputs.name }}@${{ steps.check.outputs.version }} already on npm — skipping"
+
+  publish-npm-tsukoshi:
+    name: Publish @industrialalgebra/cliffy-tsukoshi
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required for npm trusted publishing (OIDC)
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install, build, and test
+        working-directory: cliffy-tsukoshi
+        run: |
+          npm ci
+          npm run build
+          npm test
+
+      - name: Check if version exists on npm
+        id: check
+        working-directory: cliffy-tsukoshi
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if npm view "$NAME@$VERSION" version 2>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to npm
+        if: steps.check.outputs.exists == 'false'
+        working-directory: cliffy-tsukoshi
+        # dist/ was built explicitly above; --ignore-scripts keeps the
+        # publish step from re-running prepublishOnly.
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            npm publish --ignore-scripts --access public --dry-run
+          else
+            npm publish --ignore-scripts --access public
+          fi
+
+      - name: Skip (version already published)
+        if: steps.check.outputs.exists == 'true'
+        run: echo "${{ steps.check.outputs.name }}@${{ steps.check.outputs.version }} already on npm — skipping"

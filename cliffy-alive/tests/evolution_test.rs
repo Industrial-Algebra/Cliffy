@@ -1,5 +1,5 @@
-use cliffy_alive::evolution::{EvolutionEngine, EvolutionStrategy, MutationType};
-use cliffy_alive::ui_cell::{CellGenome, UICell, UICellType};
+use cliffy_alive::evolution::{EvolutionEngine, MutationType};
+use cliffy_alive::ui_cell::{CellGenome, UICellType};
 use std::collections::HashMap;
 
 #[test]
@@ -61,7 +61,7 @@ fn test_genome_crossover() {
 
     // Offspring should have valid gene values
     let efficiency = offspring.get_gene("energy_efficiency");
-    assert!(efficiency >= 0.0 && efficiency <= 1.0);
+    assert!((0.0..=1.0).contains(&efficiency));
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn test_mutation_types() {
 
 #[test]
 fn test_genome_similarity() {
-    let mut genome1 = CellGenome::new();
+    let genome1 = CellGenome::new();
     let mut genome2 = CellGenome::new();
 
     // Identical genomes should have high similarity
@@ -96,7 +96,7 @@ fn test_genome_similarity() {
 
     // Similarity should still be reasonable
     let similarity2 = genome1.similarity_to(&genome2);
-    assert!(similarity2 >= 0.0 && similarity2 <= 1.0);
+    assert!((0.0..=1.0).contains(&similarity2));
 }
 
 #[test]

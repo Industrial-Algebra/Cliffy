@@ -5,15 +5,18 @@
 //! geometric fields that grow, adapt, and respond to user interaction through
 //! biological-inspired mechanisms.
 
+pub mod automata_bridge;
 pub mod evolution;
+pub mod frp_bridge;
 pub mod metabolism;
 pub mod nervous_system;
 pub mod physics;
 pub mod renderer;
 pub mod ui_cell;
 pub mod ui_organism;
+pub mod wasm_bindings;
 
-use cliffy_core::{ReactiveMultivector, GA3};
+use cliffy_core::GeometricState;
 // use amari_automata::{AutomatonField, AutomatonCell, CellularRule};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -39,7 +42,7 @@ pub type UICoordinates = (usize, usize);
 /// Core trait for all living UI components
 pub trait LivingComponent: Send + Sync {
     /// Get the current geometric state of this component
-    fn geometric_state(&self) -> &ReactiveMultivector<GA3>;
+    fn geometric_state(&self) -> &GeometricState;
 
     /// Get the current energy level
     fn energy_level(&self) -> UIEnergy;
@@ -107,9 +110,16 @@ impl Default for AliveConfig {
 /// Main entry point for creating living UIs
 pub struct AliveUI {
     organism: UIOrganismField,
+    #[allow(dead_code)]
     config: AliveConfig,
     time: UITime,
     renderer: Box<dyn UIRenderer>,
+}
+
+impl Default for AliveUI {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AliveUI {
@@ -140,10 +150,15 @@ impl AliveUI {
         }
     }
 
-    /// Set a custom renderer
+    /// Set a custom renderer (builder pattern)
     pub fn with_renderer(mut self, renderer: Box<dyn UIRenderer>) -> Self {
         self.renderer = renderer;
         self
+    }
+
+    /// Set the renderer on an existing AliveUI
+    pub fn set_renderer(&mut self, renderer: Box<dyn UIRenderer>) {
+        self.renderer = renderer;
     }
 
     /// Plant a seed UI cell at specific coordinates
@@ -259,7 +274,7 @@ pub fn create_living_ui() -> AliveUI {
 }
 
 /// Convenience function to create a living button that grows and adapts
-pub fn create_living_button(text: &str) -> AliveUI {
+pub fn create_living_button(_text: &str) -> AliveUI {
     let mut ui = AliveUI::new();
 
     // Plant seeds in a button-like pattern
@@ -342,6 +357,3 @@ mod tests {
         assert!(form_stats.total_cells > 0);
     }
 }
-
-/// Alias for AliveUI to match test expectations
-pub type LivingUI = AliveUI;

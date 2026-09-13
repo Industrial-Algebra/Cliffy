@@ -3,7 +3,7 @@
 //! This module implements physical simulation using Amari's geometric algebra
 //! to create natural movement, forces, and interactions for living UI elements.
 
-use cliffy_core::{scalar_traits::Float, Multivector, ReactiveMultivector, GA3};
+use cliffy_core::{GeometricState, Multivector, GA3};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -14,8 +14,8 @@ use crate::{
 };
 
 /// Default reactive GA3 for deserialization
-fn default_reactive_ga3() -> ReactiveMultivector<GA3> {
-    ReactiveMultivector::new(GA3::zero())
+fn default_reactive_ga3() -> GeometricState {
+    GeometricState::new(GA3::zero())
 }
 
 /// Physical forces that can act on UI cells
@@ -74,7 +74,7 @@ impl ForceType {
 pub struct CellPhysics {
     /// Current position in 3D space
     #[serde(skip, default = "default_reactive_ga3")]
-    pub position: ReactiveMultivector<GA3>,
+    pub position: GeometricState,
 
     /// Current velocity
     #[serde(skip, default = "GA3::zero")]
@@ -114,7 +114,7 @@ pub struct CellPhysics {
 impl CellPhysics {
     /// Create new physics properties for a cell
     pub fn new(position: GA3, cell_type: UICellType) -> Self {
-        let reactive_position = ReactiveMultivector::new(position);
+        let reactive_position = GeometricState::new(position);
 
         // Set mass based on cell type
         let mass = match cell_type {
@@ -162,7 +162,7 @@ impl CellPhysics {
         }
 
         // Velocity Verlet integration
-        let old_position = self.position.sample();
+        let old_position = self.position.multivector();
         let old_velocity = self.velocity.clone();
 
         // Update position: x = x + v*dt + 0.5*a*dt²
@@ -212,7 +212,7 @@ impl CellPhysics {
 
     /// Get the current position as a 3D vector
     pub fn position_vector(&self) -> GA3 {
-        self.position.sample()
+        self.position.multivector()
     }
 
     /// Set position directly (for teleportation, initial placement, etc.)
@@ -253,7 +253,7 @@ impl Force {
         Self {
             force_type,
             strength,
-            direction: direction.normalize().unwrap_or_else(|| Multivector::zero()),
+            direction: direction.normalize().unwrap_or_else(Multivector::zero),
             range: force_type.range(),
             is_active: true,
         }
@@ -305,7 +305,7 @@ impl Force {
 
     fn calculate_thermal(&self, _position: &GA3, _physics: &CellPhysics) -> GA3 {
         // Random thermal motion
-        use cliffy_core::Vector;
+        use amari_core::Vector;
         use rand::Rng;
         let mut rng = rand::thread_rng();
 
@@ -412,7 +412,7 @@ impl SpatialGrid {
 
     fn insert(&mut self, id: Uuid, position: &GA3) {
         let grid_pos = self.world_to_grid(position);
-        self.grid.entry(grid_pos).or_insert_with(Vec::new).push(id);
+        self.grid.entry(grid_pos).or_default().push(id);
     }
 
     fn get_neighbors(&self, position: &GA3, radius: f64) -> Vec<Uuid> {
@@ -453,13 +453,13 @@ impl PhysicsEngine {
     }
 
     /// Create a physics engine with default configuration
-    pub fn default() -> Self {
+    pub fn with_default_config() -> Self {
         Self::new(PhysicsConfig::default())
     }
 
     /// Add a cell to the physics simulation
     pub fn add_cell(&mut self, cell: &UICell) {
-        let position = cell.nucleus().sample();
+        let position = cell.nucleus().multivector();
         let physics = CellPhysics::new(position, cell.cell_type());
         self.cell_physics.insert(cell.id(), physics);
     }
@@ -532,7 +532,7 @@ impl PhysicsEngine {
     }
 
     /// Calculate and apply forces to all cells
-    fn calculate_forces(&mut self, dt: UITime) {
+    fn calculate_forces(&mut self, _dt: UITime) {
         let cell_positions: HashMap<Uuid, GA3> = self
             .cell_physics
             .iter()
@@ -573,7 +573,7 @@ impl PhysicsEngine {
     }
 
     /// Apply spring forces for connected cells
-    fn apply_connection_forces(&mut self, dt: UITime) {
+    fn apply_connection_forces(&mut self, _dt: UITime) {
         // This would iterate through cell connections and apply spring forces
         // For now, we'll implement a simplified version
 
@@ -599,7 +599,7 @@ impl PhysicsEngine {
                                 self.config.connection_spring_strength * (3.0 - distance) / 3.0;
                             let spring_force = distance_vector
                                 .normalize()
-                                .unwrap_or_else(|| Multivector::zero())
+                                .unwrap_or_else(Multivector::zero)
                                 * spring_constant;
 
                             physics.apply_force(spring_force);
@@ -671,7 +671,7 @@ impl PhysicsEngine {
         // Collision normal
         let normal = (pos_b - pos_a)
             .normalize()
-            .unwrap_or_else(|| Multivector::zero());
+            .unwrap_or_else(Multivector::zero);
 
         // Separate objects
         let overlap = collision_distance - distance;
@@ -720,7 +720,7 @@ impl PhysicsEngine {
                 physics.velocity = physics
                     .velocity
                     .normalize()
-                    .unwrap_or_else(|| Multivector::zero())
+                    .unwrap_or_else(Multivector::zero)
                     * self.config.max_velocity;
             }
 
@@ -730,7 +730,7 @@ impl PhysicsEngine {
                 physics.acceleration = physics
                     .acceleration
                     .normalize()
-                    .unwrap_or_else(|| Multivector::zero())
+                    .unwrap_or_else(Multivector::zero)
                     * self.config.max_acceleration;
             }
         }
@@ -777,7 +777,13 @@ impl PhysicsEngine {
 mod tests {
     use super::*;
     use crate::ui_cell::{UICell, UICellType};
-    use cliffy_core::ga_helpers::vector3;
+    use amari_core::Vector;
+
+    /// Helper function to create a 3D vector as a GA3 multivector
+    fn vector3(x: f64, y: f64, z: f64) -> GA3 {
+        let v = Vector::<3, 0, 0>::from_components(x, y, z);
+        GA3::from_vector(&v)
+    }
 
     #[test]
     fn test_cell_physics_creation() {
@@ -801,7 +807,7 @@ mod tests {
 
     #[test]
     fn test_physics_engine() {
-        let mut engine = PhysicsEngine::default();
+        let mut engine = PhysicsEngine::with_default_config();
         let position = vector3(0.0, 0.0, 0.0);
         let cell = UICell::new_at_position(UICellType::ButtonCore, position);
 

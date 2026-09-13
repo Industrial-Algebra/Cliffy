@@ -1,6 +1,4 @@
 use cliffy_alive::ui_cell::{CellGenome, UICell, UICellType};
-use cliffy_core::GA3;
-use uuid::Uuid;
 
 #[test]
 fn test_ui_cell_has_geometric_state() {
@@ -8,8 +6,8 @@ fn test_ui_cell_has_geometric_state() {
     let cell = UICell::new(UICellType::ButtonCore);
 
     let state = cell.nucleus();
-    // ReactiveMultivector wraps a GA3 (3D Clifford algebra)
-    assert!(state.sample().magnitude() >= 0.0);
+    // GeometricState wraps a GA3 (3D Clifford algebra)
+    assert!(state.multivector().magnitude() >= 0.0);
 
     // Can extract visual properties
     let position = cell.position(); // x, y from geometric state
@@ -18,7 +16,7 @@ fn test_ui_cell_has_geometric_state() {
 
     assert!(position.x >= 0.0);
     assert!(size.width > 0.0);
-    assert!(opacity >= 0.0 && opacity <= 1.0);
+    assert!((0.0..=1.0).contains(&opacity));
 }
 
 #[test]
@@ -63,7 +61,7 @@ fn test_cell_energy_and_lifecycle() {
     cell.set_energy(100.0);
 
     // Cells lose energy over time
-    cell.metabolize(1.0); // 1 second
+    let _ = cell.metabolize(1.0); // 1 second
     assert!(cell.energy() < 100.0);
 
     // Cells gain energy from user interaction
@@ -95,19 +93,19 @@ fn test_cell_geometric_transformations() {
 fn test_cell_vitals_tracking() {
     let mut cell = UICell::new(UICellType::ButtonCore);
 
-    // Initial vitals should be healthy
-    let vitals = cell.get_vitals();
-    assert!(vitals.is_healthy());
-    assert_eq!(vitals.stress_level, 0.0);
+    // Initial interaction state should be healthy
+    let state = cell.get_interaction_state();
+    assert!(state.is_healthy());
+    assert_eq!(state.stress_level, 0.0);
 
     // Stress the cell
     for _ in 0..10 {
         cell.apply_stress(0.1);
     }
 
-    let stressed_vitals = cell.get_vitals();
-    assert!(stressed_vitals.stress_level > 0.5);
-    assert!(!stressed_vitals.is_healthy());
+    let stressed_state = cell.get_interaction_state();
+    assert!(stressed_state.stress_level > 0.5);
+    assert!(!stressed_state.is_healthy());
 }
 
 #[test]

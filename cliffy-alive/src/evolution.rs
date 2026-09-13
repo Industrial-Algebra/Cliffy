@@ -218,7 +218,7 @@ impl EvolutionEngine {
         // Calculate fitness for each cell based on survival metrics
         let mut fitness_scores = HashMap::new();
 
-        for ((x, y), cell) in organism.iter_cells() {
+        for ((_x, _y), cell) in organism.iter_cells() {
             let fitness = self.calculate_natural_fitness(cell);
             fitness_scores.insert(cell.id(), fitness);
         }
@@ -237,7 +237,7 @@ impl EvolutionEngine {
         // Calculate fitness based on proximity to target traits
         let mut fitness_scores = HashMap::new();
 
-        for ((x, y), cell) in organism.iter_cells() {
+        for ((_x, _y), cell) in organism.iter_cells() {
             let fitness = self.calculate_trait_fitness(cell, target_traits);
             fitness_scores.insert(cell.id(), fitness);
         }
@@ -259,7 +259,7 @@ impl EvolutionEngine {
         // Calculate fitness based on user interaction success
         let mut fitness_scores = HashMap::new();
 
-        for ((x, y), cell) in organism.iter_cells() {
+        for ((_x, _y), cell) in organism.iter_cells() {
             let fitness = self.calculate_interaction_fitness(cell, interaction_weights);
             fitness_scores.insert(cell.id(), fitness);
         }
@@ -348,9 +348,9 @@ impl EvolutionEngine {
         dt: UITime,
     ) {
         // Reward high-fitness cells with energy
-        for ((x, y), cell) in organism.iter_cells() {
+        for ((_x, _y), cell) in organism.iter_cells() {
             if let Some(&fitness) = fitness_scores.get(&cell.id()) {
-                let energy_reward = fitness * self.selection_strength * dt * 5.0;
+                let _energy_reward = fitness * self.selection_strength * dt * 5.0;
                 // Note: Would need mutable access to organism to apply reward
                 // This would be implemented in the organism's step function
             }
@@ -361,14 +361,14 @@ impl EvolutionEngine {
     fn apply_directed_mutations(
         &mut self,
         organism: &mut UIOrganismField,
-        target_traits: &HashMap<String, f64>,
+        _target_traits: &HashMap<String, f64>,
         dt: UITime,
     ) {
         let mut rng = thread_rng();
 
         // Note: This would require mutable access to cells
         // In practice, this would be applied during cell reproduction
-        for ((x, y), cell) in organism.iter_cells() {
+        for ((_x, _y), _cell) in organism.iter_cells() {
             if rng.gen::<f64>() < self.mutation_rate * dt {
                 // Apply directed mutation toward targets
                 // This would modify the cell's genome
@@ -377,7 +377,7 @@ impl EvolutionEngine {
     }
 
     /// Apply learning from interaction patterns
-    fn apply_interaction_learning(&mut self, organism: &mut UIOrganismField, dt: UITime) {
+    fn apply_interaction_learning(&mut self, organism: &mut UIOrganismField, _dt: UITime) {
         // Analyze recent interactions to identify successful patterns
         let recent_interactions: Vec<_> = self
             .interaction_history
@@ -413,7 +413,7 @@ impl EvolutionEngine {
 
     /// Mutate a cell's genome
     pub fn mutate_genome(&self, genome: &mut CellGenome) {
-        let rng = thread_rng();
+        let _rng = thread_rng();
 
         // Determine mutation type
         let mutation_type = self.select_mutation_type();
@@ -548,7 +548,7 @@ impl EvolutionEngine {
         let mut trait_counts: HashMap<String, usize> = HashMap::new();
 
         // Calculate metrics from all cells
-        for ((x, y), cell) in organism.iter_cells() {
+        for ((_x, _y), cell) in organism.iter_cells() {
             let fitness = self.calculate_natural_fitness(cell);
             total_fitness += fitness;
             cell_count += 1;
@@ -673,7 +673,7 @@ mod tests {
         let cell = UICell::new_at_position(UICellType::ButtonCore, position);
 
         let fitness = engine.calculate_natural_fitness(&cell);
-        assert!(fitness >= 0.0 && fitness <= 1.0);
+        assert!((0.0..=1.0).contains(&fitness));
     }
 
     #[test]
@@ -699,13 +699,13 @@ mod tests {
         let engine = EvolutionEngine::natural_selection();
         let mut genome = CellGenome::new();
 
-        let original_value = genome.get_gene("growth_rate");
+        let _original_value = genome.get_gene("growth_rate");
         engine.mutate_genome(&mut genome);
 
         // Mutation might or might not change this specific gene
         // Just verify the genome is still valid
         let new_value = genome.get_gene("growth_rate");
-        assert!(new_value >= 0.0 && new_value <= 1.0);
+        assert!((0.0..=1.0).contains(&new_value));
     }
 
     #[test]
@@ -719,6 +719,6 @@ mod tests {
         target_traits.insert("cooperation".to_string(), 0.6);
 
         let fitness = engine.calculate_trait_fitness(&cell, &target_traits);
-        assert!(fitness >= 0.0 && fitness <= 1.0);
+        assert!((0.0..=1.0).contains(&fitness));
     }
 }

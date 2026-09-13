@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "cliffy-alive",
     "cliffy-core",
     "cliffy-gpu",
     "cliffy-loadtest",

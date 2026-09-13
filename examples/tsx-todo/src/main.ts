@@ -9,8 +9,9 @@
  * - Event handlers for CRUD operations
  */
 
-import init, { behavior, combine } from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+import init, {
+  Behavior, behavior, combine } from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 // Todo item type
 interface Todo {
@@ -28,8 +29,8 @@ async function main() {
 
   // Application state
   let nextId = 1;
-  const todos = behavior<Todo[]>([]);
-  const filter = behavior<Filter>('all');
+  const todos = behavior([]);
+  const filter = behavior('all');
   const inputText = behavior('');
 
   // Derived state - automatically updates when dependencies change

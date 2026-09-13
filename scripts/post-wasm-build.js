@@ -39,7 +39,7 @@ try {
     const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'));
 
     // Set the npm package name (different from crate name)
-    pkgJson.name = '@cliffy-ga/core';
+    pkgJson.name = '@industrialalgebra/cliffy-core';
 
     // Add html.ts to files array
     if (!pkgJson.files.includes('html.ts')) {

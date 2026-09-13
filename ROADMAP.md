@@ -160,6 +160,10 @@ Public API commitment with semver guarantees.
 Post-1.0 work focused on ecosystem growth and integration.
 
 - **Industrial Algebra MCP integration** — Expose Cliffy state management through MCP for AI-assisted collaborative development
+- **GPU note**: heavy geometric compute stays in-browser via wgpu/WebGPU
+  (`cliffy-gpu`); a native GPU offload (Borsalino) was considered in the
+  salvage plan and dropped — Cliffy's deployment target is the browser.
+
 - **Additional framework adapters** — Svelte, Solid.js adapters alongside existing React/Leptos/Yew support
 - **cliffy-alive stabilization** — Graduate from experimental to optional stable crate (see [Experimental](#experimental-cliffy-alive) below)
 - **Community examples and templates** — Expanded `create-cliffy` templates, community-contributed examples

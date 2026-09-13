@@ -1,6 +1,6 @@
 [package]
 name = "cliffy-test"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2021"
 description = "Algebraic testing framework for Cliffy - tests as geometric invariants"
 license = "Apache-2.0"
@@ -15,7 +15,7 @@ parking_lot = "0.12"
 amari-core = { workspace = true }
 
 # Probabilistic contracts
-amari-flynn = "0.23.0"
+amari-flynn = "0.24.1"
 
 # Property-based testing
 quickcheck = "1.0"
@@ -25,7 +25,7 @@ quickcheck_macros = "1.0"
 rayon = "1.12"
 
 # Random sampling
-rand = "0.10"
+rand = "0.10.2"
 
 # Serialization for test results
 serde = { workspace = true }

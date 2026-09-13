@@ -7,8 +7,8 @@ Algebraic TSX is Cliffy's tagged template literal API for building reactive DOM 
 Unlike frameworks that use virtual DOM diffing, Algebraic TSX creates real DOM elements with direct bindings to your reactive state. When a Behavior changes, only the specific text nodes or attributes that depend on it are updated, with no reconciliation step.
 
 ```typescript
-import { behavior } from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+import { behavior } from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 const count = behavior(0);
 
@@ -24,11 +24,11 @@ mount(app, '#app');
 
 ## Installation
 
-Import the `html` template tag and `mount` function from `@cliffy-ga/core/html`:
+Import the `html` template tag and `mount` function from `@industrialalgebra/cliffy-core/html`:
 
 ```typescript
-import init, { behavior, combine } from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+import init, { behavior, combine } from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 async function main() {
   // Initialize WASM module first
@@ -560,8 +560,8 @@ const app = html`
 Here is a complete counter application demonstrating the key concepts:
 
 ```typescript
-import init, { behavior, combine } from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+import init, { behavior, combine } from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 
 async function main() {
   await init();

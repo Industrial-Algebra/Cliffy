@@ -4,7 +4,19 @@ Work items organized by target release. See [ROADMAP.md](./ROADMAP.md) for full 
 
 ---
 
-## v0.4.0 — Typed Algebra
+## v0.4.0 — Salvage Phase 1 (DONE — #312 + cutover) + Typed Algebra
+
+### Salvage Phase 1 — the sound floor ✅ (2026-08-27)
+
+- [x] `ObservationSet` G-Set CRDT — merge = union; participant-scoped keys
+- [x] Markley rotor consensus projection (deterministic Jacobi eigensolve)
+- [x] Componentwise scalar/vector means (the boring floor)
+- [x] Value-oracle probe suite — the February question answered by tests
+- [x] Property tests for the set laws (commutative, associative, idempotent)
+- [x] Deprecated machinery deleted (GeometricCRDT, GA3Lattice, consensus module)
+- [x] WASM cutover: ObservationSet bindings; examples migrated
+- [x] npm org migration: @industrialalgebra/cliffy-core + cliffy-tsukoshi
+      (@cliffy-ga retired for 0.4.0+; Schubert pattern)
 
 ### cliffy-core: Typed Rotor API
 

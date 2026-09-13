@@ -1,6 +1,6 @@
 {
   "name": "create-cliffy",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Create a new Cliffy project - apps or component libraries",
   "type": "module",
   "bin": {
@@ -39,13 +39,13 @@
   },
   "dependencies": {
     "commander": "^15.0.0",
-    "prompts": "^2.4.2",
-    "picocolors": "^1.0.0"
+    "picocolors": "^1.0.0",
+    "prompts": "^2.4.2"
   },
   "devDependencies": {
-    "@types/node": "^25.0.0",
+    "@types/node": "^26.5.0",
     "@types/prompts": "^2.4.8",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=20.0.0"

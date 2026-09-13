@@ -19,12 +19,12 @@
 //! # Example
 //!
 //! ```rust
-//! use cliffy_protocols::lattice::{GeometricLattice, GA3Lattice};
+//! use cliffy_protocols::lattice::{ComponentLattice, GeometricLattice};
 //! use cliffy_core::GA3;
 //!
 //! // Create two conflicting states
-//! let state_a = GA3Lattice::from_scalar(1.0);
-//! let state_b = GA3Lattice::from_scalar(2.0);
+//! let state_a = ComponentLattice::from_scalar(1.0);
+//! let state_b = ComponentLattice::from_scalar(2.0);
 //!
 //! // Join always produces a consistent result
 //! let joined = state_a.join(&state_b);
@@ -32,9 +32,6 @@
 //! assert!(joined.dominates(&state_b));
 //! ```
 
-#[allow(deprecated)]
-// imports the deprecated geometric_mean for the GA3Lattice tie-break; dies with Phase 1
-use crate::geometric_mean;
 use cliffy_core::GA3;
 
 /// A join-semilattice with geometric algebra operations.
@@ -74,135 +71,7 @@ pub trait GeometricLattice: Clone {
     fn meet(&self, other: &Self) -> Option<Self>;
 }
 
-/// A lattice over raw `GA3` multivectors using a magnitude-dominance join
-/// (dominance by magnitude; the exp-based geometric mean as tie-break).
-///
-/// # Deprecated — the join is not a join-semilattice
-///
-/// The magnitude-dominance rule with the exp-based tie-break violates the
-/// hull property: `join(+1, -1)` returns `cosh(1) ≈ 1.543`, outside the
-/// hull of its arguments, and the tie-break mean is non-associative — so
-/// this cannot form a join-semilattice and cannot back strong eventual
-/// consistency. See `docs/plans/2026-08-26-geometric-crdt-salvage.md`.
-/// Use `ComponentLattice` (componentwise max/min) for per-grade state —
-/// the boring, correct floor.
-#[derive(Debug, Clone, PartialEq)]
-#[deprecated(
-    since = "0.3.2",
-    note = "magnitude-dominance join violates the join-semilattice hull property; use ComponentLattice — see docs/plans/2026-08-26-geometric-crdt-salvage.md"
-)]
-pub struct GA3Lattice {
-    inner: GA3,
-}
-
-#[allow(deprecated)] // inherent constructors reference the deprecated Self; dies with Phase 1
-impl GA3Lattice {
-    /// Create a new lattice element from a multivector.
-    #[must_use]
-    pub const fn new(mv: GA3) -> Self {
-        Self { inner: mv }
-    }
-
-    /// Create a lattice element from a scalar.
-    #[must_use]
-    pub fn from_scalar(value: f64) -> Self {
-        Self::new(GA3::scalar(value))
-    }
-
-    /// Create a lattice element from vector components.
-    #[must_use]
-    pub fn from_vector(x: f64, y: f64, z: f64) -> Self {
-        use amari_core::Vector;
-        let v = Vector::<3, 0, 0>::from_components(x, y, z);
-        Self::new(GA3::from_vector(&v))
-    }
-
-    /// Create the zero element (bottom of the lattice).
-    #[must_use]
-    pub fn zero() -> Self {
-        Self::new(GA3::zero())
-    }
-
-    /// Get the underlying multivector.
-    #[must_use]
-    pub const fn as_multivector(&self) -> &GA3 {
-        &self.inner
-    }
-
-    /// Consume and return the underlying multivector.
-    #[must_use]
-    pub fn into_multivector(self) -> GA3 {
-        self.inner
-    }
-
-    /// Get the magnitude of this lattice element.
-    #[must_use]
-    pub fn magnitude(&self) -> f64 {
-        self.inner.magnitude()
-    }
-
-    /// Get a coefficient at the given index.
-    #[must_use]
-    pub fn get(&self, index: usize) -> f64 {
-        self.inner.get(index)
-    }
-}
-
-/// # Deprecated
-///
-/// See the struct-level deprecation: the magnitude-dominance rule with the
-/// exp-based tie-break is not a join-semilattice (`join(+1,-1) = cosh(1)`).
-#[allow(deprecated)] // all trait methods construct/read the deprecated Self; dies with Phase 1
-impl GeometricLattice for GA3Lattice {
-    fn join(&self, other: &Self) -> Self {
-        // Check for structural equality first (idempotence optimization)
-        if self.divergence(other) < 1e-10 {
-            return self.clone();
-        }
-
-        let self_mag = self.inner.magnitude();
-        let other_mag = other.inner.magnitude();
-
-        // Dominance by magnitude
-        if self_mag > other_mag + 1e-10 {
-            self.clone()
-        } else if other_mag > self_mag + 1e-10 {
-            other.clone()
-        } else {
-            // Equal magnitudes but different states - use geometric mean
-            Self::new(geometric_mean(&[self.inner.clone(), other.inner.clone()]))
-        }
-    }
-
-    fn dominates(&self, other: &Self) -> bool {
-        // A dominates B if magnitude(A) >= magnitude(B)
-        // This creates a total order for non-zero states
-        self.inner.magnitude() >= other.inner.magnitude() - 1e-10
-    }
-
-    fn divergence(&self, other: &Self) -> f64 {
-        (&self.inner - &other.inner).magnitude()
-    }
-
-    fn meet(&self, other: &Self) -> Option<Self> {
-        let self_mag = self.inner.magnitude();
-        let other_mag = other.inner.magnitude();
-
-        // Meet is the element with smaller magnitude
-        if self_mag < other_mag + 1e-10 {
-            Some(self.clone())
-        } else if other_mag < self_mag + 1e-10 {
-            Some(other.clone())
-        } else {
-            // Equal magnitudes - meet exists and equals both
-            Some(self.clone())
-        }
-    }
-}
-
-/// Component-wise lattice operations for multivectors.
-///
-/// Unlike `GA3Lattice` which uses magnitude ordering, this provides
+/// The componentwise lattice floor: a genuine join-semilattice providing
 /// coefficient-by-coefficient join/meet operations.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ComponentLattice {
@@ -269,59 +138,7 @@ impl GeometricLattice for ComponentLattice {
 
 #[cfg(test)]
 mod tests {
-    #![allow(deprecated)]
-    // GA3Lattice::join tests pin the deprecated magnitude-dominance behavior
-    // until Phase 1 of the salvage plan; ComponentLattice tests below are the
-    // sound floor and unaffected.
     use super::*;
-
-    #[test]
-    fn test_ga3_lattice_idempotent() {
-        let a = GA3Lattice::from_scalar(5.0);
-        let joined = a.join(&a);
-        assert!(a.lattice_eq(&joined));
-    }
-
-    #[test]
-    fn test_ga3_lattice_commutative() {
-        let a = GA3Lattice::from_scalar(3.0);
-        let b = GA3Lattice::from_scalar(7.0);
-
-        let ab = a.join(&b);
-        let ba = b.join(&a);
-
-        assert!(ab.lattice_eq(&ba));
-    }
-
-    #[test]
-    fn test_ga3_lattice_associative() {
-        let a = GA3Lattice::from_scalar(2.0);
-        let b = GA3Lattice::from_scalar(5.0);
-        let c = GA3Lattice::from_scalar(3.0);
-
-        let ab_c = a.join(&b).join(&c);
-        let a_bc = a.join(&b.join(&c));
-
-        assert!(ab_c.lattice_eq(&a_bc));
-    }
-
-    #[test]
-    fn test_ga3_lattice_dominance() {
-        let small = GA3Lattice::from_scalar(2.0);
-        let large = GA3Lattice::from_scalar(5.0);
-
-        assert!(large.dominates(&small));
-        assert!(!small.dominates(&large));
-    }
-
-    #[test]
-    fn test_ga3_lattice_divergence() {
-        let a = GA3Lattice::from_scalar(3.0);
-        let b = GA3Lattice::from_scalar(7.0);
-
-        let div = a.divergence(&b);
-        assert!((div - 4.0).abs() < 1e-10);
-    }
 
     #[test]
     fn test_component_lattice_idempotent() {
@@ -380,11 +197,11 @@ mod tests {
     #[test]
     fn test_lattice_convergence() {
         // Simulate distributed updates converging
-        let initial = GA3Lattice::from_scalar(1.0);
+        let initial = ComponentLattice::from_scalar(1.0);
 
         // Two nodes make concurrent updates
-        let node1_update = GA3Lattice::from_scalar(5.0);
-        let node2_update = GA3Lattice::from_scalar(3.0);
+        let node1_update = ComponentLattice::from_scalar(5.0);
+        let node2_update = ComponentLattice::from_scalar(3.0);
 
         // Both nodes join with initial
         let node1_state = initial.join(&node1_update);

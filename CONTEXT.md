@@ -30,7 +30,7 @@ Added WASM bindings in `cliffy-wasm/src/protocols.rs`:
 
 Usage in JavaScript:
 ```javascript
-import { GeometricCRDT, VectorClock, generateNodeId } from '@cliffy-ga/core';
+import { GeometricCRDT, VectorClock, generateNodeId } from '@industrialalgebra/cliffy-core';
 
 const nodeId = generateNodeId();
 const crdt = new GeometricCRDT(nodeId, 0.0);
@@ -60,8 +60,8 @@ console.log(crdt.state()); // 5.0
 - Eliminated `combine3`/`combine4` in favor of GA-inspired `wedge`/`Blade` API
 - Added `.project()` and `.select()` methods to Behavior
 - Added `.blend()` method to Rotor, Translation, Transform, GeometricState
-- Created npm package README for `@cliffy-ga/core`
-- Published through `@cliffy-ga/core@0.1.2`
+- Created npm package README for `@industrialalgebra/cliffy-core`
+- Published through `@industrialalgebra/cliffy-core@0.1.2`
 - Completed examples: tsx-counter, tsx-todo, tsx-forms, purescript-counter, purescript-todo
 
 ## Current Branch
@@ -70,13 +70,13 @@ console.log(crdt.state()); // 5.0
 
 ## Package Versions
 
-- `@cliffy-ga/core`: 0.1.2 (published to npm)
+- `@industrialalgebra/cliffy-core`: 0.1.2 (published to npm)
 
 ## Key API Reference
 
 ```typescript
 // Combining behaviors (GA-inspired)
-import { wedge, behavior } from '@cliffy-ga/core';
+import { wedge, behavior } from '@industrialalgebra/cliffy-core';
 const combined = wedge(a, b, c, d).map((a, b, c, d) => ...);
 
 // Conditional projection

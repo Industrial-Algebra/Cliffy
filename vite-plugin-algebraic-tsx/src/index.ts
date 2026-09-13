@@ -4,7 +4,7 @@
  */
 
 import type { Plugin } from 'vite';
-import { transformAlgebraicTSX } from './transformer';
+import { transformAlgebraicTSX } from './transformer.js';
 
 export interface AlgebraicTSXOptions {
   /**
@@ -122,7 +122,7 @@ export default function algebraicTSX(options: AlgebraicTSXOptions = {}): Plugin 
           };
         }
       } catch (error) {
-        this.error(`[Algebraic TSX] Transform failed for ${id}: ${error}`, { id });
+        this.error(`[Algebraic TSX] Transform failed for ${id}: ${error}`);
       }
 
       return null;
@@ -152,6 +152,6 @@ function shouldTransform(
   return extensions.some(ext => id.endsWith(ext));
 }
 
-// Export types and transformer for external use
-export type { AlgebraicTSXOptions };
-export { transformAlgebraicTSX } from './transformer';
+// Export transformer for external use (AlgebraicTSXOptions is exported
+// at its declaration above).
+export { transformAlgebraicTSX } from './transformer.js';

@@ -217,7 +217,7 @@ Off PR 1's branch. One atomic cutover — wasm/examples break if split.
 ## Post-phase (not this plan)
 
 1. `ia-version-bump` → **0.4.0** (breaking removals justify the minor in 0.x), then gitflow release when the operator wants to ship.
-2. Phase 2 proposals (cross-repo, propose-don't-depend): Knopper U2 encoding contract alignment, Schubert-gated observations (GrantRef gets real semantics), Borsalino offload.
+2. Phase 2 proposals (cross-repo, propose-don't-depend): Knopper U2 encoding contract alignment, Schubert-gated observations (GrantRef gets real semantics). ~~Borsalino offload~~ — **corrected (operator, 2026-08-27): dropped.** Borsalino is a to-the-metal GPU compute library; Cliffy targets web browsers, where the GPU path is wgpu/WebGPU via `cliffy-gpu`. Large-set merge-math, if ever needed in-browser, goes through WebGPU compute — not a native offload.
 3. Derived M cache only if profiling demands it (bench first).
 
 ## Non-goals (explicit)

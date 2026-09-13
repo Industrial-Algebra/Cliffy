@@ -1,6 +1,6 @@
 [package]
 name = "cliffy-protocols"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2021"
 description = "Distributed consensus protocols using geometric algebra"
 license = "Apache-2.0"
@@ -10,16 +10,16 @@ keywords = ["distributed", "crdt", "consensus", "geometric-algebra", "sync"]
 categories = ["algorithms", "data-structures", "concurrency"]
 
 [dependencies]
-cliffy-core = { version = "0.3.1", path = "../cliffy-core" }
+cliffy-core = { version = "0.4.0", path = "../cliffy-core" }
 amari-core = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
-uuid = { version = "1.23.3", features = ["v4", "serde"] }
+uuid = { version = "1.24.0", features = ["v4", "serde"] }
 
 [dev-dependencies]
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
-serde_json = "1.0"
+serde_json = "1.0.151"
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 
 [lints]

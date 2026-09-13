@@ -1,6 +1,6 @@
 [package]
 name = "cliffy-loadtest"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2021"
 description = "Scale testing framework for Cliffy - simulates 100-10,000+ concurrent users"
 license = "Apache-2.0"
@@ -11,9 +11,9 @@ categories = ["development-tools::testing", "simulation"]
 
 [dependencies]
 # Core Cliffy crates
-cliffy-core = { version = "0.3.1", path = "../cliffy-core" }
-cliffy-protocols = { version = "0.3.1", path = "../cliffy-protocols" }
-cliffy-test = { version = "0.3.1", path = "../cliffy-test" }
+cliffy-core = { version = "0.4.0", path = "../cliffy-core" }
+cliffy-protocols = { version = "0.4.0", path = "../cliffy-protocols" }
+cliffy-test = { version = "0.4.0", path = "../cliffy-test" }
 
 # Geometric algebra
 amari-core = { workspace = true }
@@ -25,17 +25,17 @@ rayon = "1.12"
 tokio = { version = "1.52", features = ["rt", "rt-multi-thread", "time", "sync", "macros"] }
 
 # Random number generation
-rand = "0.10"
+rand = "0.10.2"
 
 # Unique IDs
-uuid = { version = "1.23.3", features = ["v4"] }
+uuid = { version = "1.24.0", features = ["v4"] }
 
 # Time measurement
 instant = "0.1"
 
 # Serialization for reports
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde_json = "1.0.151"
 
 [dev-dependencies]
 tokio-test = "0.4"

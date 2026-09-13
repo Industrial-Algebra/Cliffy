@@ -1,16 +1,16 @@
-import init, { behavior, combine } from '@cliffy-ga/core';
-import { html, mount } from '@cliffy-ga/core/html';
+import init, { behavior, combine } from '@industrialalgebra/cliffy-core';
+import { html, mount } from '@industrialalgebra/cliffy-core/html';
 import { examples, categories, type Example } from './examples';
 
 async function main() {
   await init();
 
   // State
-  const filter = behavior<string>('all');
-  const searchQuery = behavior<string>('');
+  const filter = behavior('all');
+  const searchQuery = behavior('');
 
   // Derived: filtered examples
-  const filteredExamples = combine(filter, searchQuery, (cat, query): Example[] => {
+  const filteredExamples = combine(filter, searchQuery, (cat: string, query: string): Example[] => {
     return examples.filter(ex => {
       const matchesCategory = cat === 'all' || ex.category === cat;
       const matchesSearch = query === '' ||
@@ -22,8 +22,8 @@ async function main() {
   });
 
   // Category buttons
-  const categoryButtons = categories.map(cat => {
-    const isActive = filter.map(f => f === cat.id ? 'active' : '');
+  const categoryButtons = categories.map((cat: { id: string; name: string }) => {
+    const isActive = filter.map((f: string) => f === cat.id ? 'active' : '');
     return html`
       <button
         class=${isActive}
@@ -70,8 +70,8 @@ async function main() {
           <a href="https://github.com/Industrial-Algebra/Cliffy" class="primary" target="_blank">
             GitHub
           </a>
-          <a href="https://www.npmjs.com/package/@cliffy-ga/core" class="secondary" target="_blank">
-            npm: @cliffy-ga/core
+          <a href="https://www.npmjs.com/package/@industrialalgebra/cliffy-core" class="secondary" target="_blank">
+            npm: @industrialalgebra/cliffy-core
           </a>
         </div>
       </header>
@@ -94,7 +94,7 @@ async function main() {
         <p>Built with Cliffy v0.1.2 - Classical FRP without the complexity</p>
         <div class="links">
           <a href="https://github.com/Industrial-Algebra/Cliffy" target="_blank">GitHub</a>
-          <a href="https://www.npmjs.com/package/@cliffy-ga/core" target="_blank">npm</a>
+          <a href="https://www.npmjs.com/package/@industrialalgebra/cliffy-core" target="_blank">npm</a>
           <a href="https://github.com/Industrial-Algebra/Cliffy/blob/main/docs/getting-started.md" target="_blank">Docs</a>
         </div>
       </footer>

@@ -10,7 +10,7 @@ export default defineConfig({
   base,
   resolve: isCI ? {} : {
     alias: {
-      '@cliffy-ga/core': resolve(__dirname, '../../cliffy-wasm/pkg'),
+      '@industrialalgebra/cliffy-core': resolve(__dirname, '../../cliffy-wasm/pkg'),
     },
   },
   server: {

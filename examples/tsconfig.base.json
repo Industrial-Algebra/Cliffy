@@ -17,8 +17,8 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@cliffy-ga/core": ["../cliffy-wasm/pkg"],
-      "@cliffy-ga/core/*": ["../cliffy-wasm/pkg/*"],
+      "@industrialalgebra/cliffy-core": ["../cliffy-wasm/pkg"],
+      "@industrialalgebra/cliffy-core/*": ["../cliffy-wasm/pkg/*"],
       "@cliffy/shared": ["./shared/src"],
       "@cliffy/shared/*": ["./shared/src/*"]
     }

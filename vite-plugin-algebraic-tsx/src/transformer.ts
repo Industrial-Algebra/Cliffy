@@ -50,15 +50,12 @@ export function transformAlgebraicTSX(
         'typescript',
         'jsx',
         'decorators-legacy',
-        'classProperties',
-        'objectRestSpread',
-        'asyncGenerators',
+        // babel 8: classProperties/objectRestSpread/asyncGenerators/
+        // dynamicImport/nullishCoalescingOperator/optionalChaining/
+        // exportNamespaceFrom are standard and enabled by default —
+        // removed. functionBind/exportDefaultFrom remain proposals.
         'functionBind',
-        'exportDefaultFrom',
-        'exportNamespaceFrom',
-        'dynamicImport',
-        'nullishCoalescingOperator',
-        'optionalChaining'
+        'exportDefaultFrom'
       ]
     });
 

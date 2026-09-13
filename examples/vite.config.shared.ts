@@ -44,7 +44,7 @@ export function createExampleConfig(
       rollupOptions: {
         output: {
           manualChunks: {
-            cliffy: ['@cliffy-ga/core'],
+            cliffy: ['@industrialalgebra/cliffy-core'],
             shared: ['@cliffy/shared'],
           },
         },
@@ -53,13 +53,13 @@ export function createExampleConfig(
 
     optimizeDeps: {
       // Exclude WASM package from optimization (it's pre-built)
-      exclude: ['@cliffy-ga/core'],
+      exclude: ['@industrialalgebra/cliffy-core'],
     },
 
     resolve: {
       alias: {
         // Point to WASM package
-        '@cliffy-ga/core': resolve(dirname, '../../cliffy-wasm/pkg'),
+        '@industrialalgebra/cliffy-core': resolve(dirname, '../../cliffy-wasm/pkg'),
         // Point to shared utilities
         '@cliffy/shared': resolve(dirname, '../shared/src'),
         // Custom aliases

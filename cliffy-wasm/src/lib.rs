@@ -19,20 +19,25 @@
 //! count.update(n => n + 1);  // Logs: Count: 1
 //! ```
 //!
-//! # Distributed State (CRDT)
+//! # Distributed State (Phase 1 sound floor)
 //!
-//! **Deprecated:** `GeometricCRDT`'s merge is unsound (annihilation to
-//! zero — see `docs/plans/2026-08-26-geometric-crdt-salvage.md`). Shown for
-//! reference only; the successor `ObservationSet` lands in v0.4.0.
-//! `VectorClock` and `generateNodeId` remain sound.
 //! ```javascript
-//! import { GeometricCRDT, VectorClock, generateNodeId } from '@cliffy-ga/core';
+//! import { ObservationSet, generateNodeId } from '@industrialalgebra/cliffy-core';
 //!
 //! const nodeId = generateNodeId();
-//! const crdt = new GeometricCRDT(nodeId, 0.0);
+//! const set = new ObservationSet();
+//! set.observeScalar(nodeId, 0, 5.0);
 //!
-//! crdt.add(5.0);
-//! console.log(crdt.state()); // 5.0
+//! set.merge(peerSet);            // union — nothing annihilates
+//! console.log(set.scalarMean()); // deterministic on every replica
+//! ```
+//! ```javascript
+//! import { ObservationSet, VectorClock, generateNodeId } from '@industrialalgebra/cliffy-core';
+//!
+//! const nodeId = generateNodeId();
+//! const set = new ObservationSet();
+//! set.observeScalar(nodeId, 0, 5.0);
+//! console.log(set.scalarMean()); // 5.0
 //! ```
 
 pub mod dom;
@@ -40,9 +45,7 @@ pub mod protocols;
 pub mod test;
 
 // Re-export protocols types at top level
-pub use protocols::{
-    generate_node_id, GeometricCRDT, GeometricOperation, OperationType, VectorClock,
-};
+pub use protocols::{generate_node_id, ObservationSet, VectorClock};
 
 // Re-export test types at top level
 pub use test::{
@@ -867,7 +870,7 @@ pub fn combine(a: &Behavior, b: &Behavior, f: &Function) -> Result<Behavior, JsV
 
 // For combining 3+ behaviors, use the wedge() function from TypeScript:
 //
-//   import { wedge } from '@cliffy-ga/core';
+//   import { wedge } from '@industrialalgebra/cliffy-core';
 //
 //   // Combine any number of behaviors with wedge().map()
 //   const volume = wedge(width, height, depth).map((w, h, d) => w * h * d);

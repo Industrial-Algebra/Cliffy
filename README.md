@@ -221,8 +221,8 @@ as `ObservationSet.observeRotor` / `rotorConsensus`. See the
 | [geometric-transforms](examples/geometric-transforms) | Rotor rotations visualized | `npm run dev -w geometric-transforms` |
 | [gpu-benchmark](examples/gpu-benchmark) | WebGPU vs CPU performance | `npm run dev -w gpu-benchmark` |
 | [testing-showcase](examples/testing-showcase) | Algebraic testing patterns | `npm run dev -w testing-showcase` |
-| [alive-button](examples/alive-button) | Living UI (experimental, cliffy-alive) | `npm run dev -w alive-button` |
-| [alive-garden](examples/alive-garden) | Cellular automata garden (experimental) | `npm run dev -w alive-garden` |
+| [alive-button](examples/alive-button) | Living UI (experimental, cliffy-alive) | See example README |
+| [alive-garden](examples/alive-garden) | Cellular automata garden (experimental) | See example README |
 | [purescript-counter](examples/purescript-counter) | Counter in PureScript | See example README |
 | [purescript-todo](examples/purescript-todo) | Todo list in PureScript | See example README |
 

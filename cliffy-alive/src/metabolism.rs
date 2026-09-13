@@ -193,7 +193,7 @@ impl MetabolismManager {
     }
 
     /// Create a default metabolism manager
-    pub fn default() -> Self {
+    pub fn with_default_config() -> Self {
         Self::new(MetabolismConfig::default())
     }
 
@@ -474,7 +474,7 @@ mod tests {
 
     #[test]
     fn test_metabolism_manager() {
-        let manager = MetabolismManager::default();
+        let manager = MetabolismManager::with_default_config();
         let position = GA3::scalar(1.0);
         let mut cell = UICell::new_at_position(UICellType::ButtonCore, position);
 
@@ -491,7 +491,7 @@ mod tests {
 
     #[test]
     fn test_cell_vitals() {
-        let manager = MetabolismManager::default();
+        let manager = MetabolismManager::with_default_config();
         let position = GA3::scalar(1.0);
         let mut cell = UICell::new_at_position(UICellType::ButtonCore, position);
 
@@ -508,7 +508,7 @@ mod tests {
 
     #[test]
     fn test_energy_capacity() {
-        let manager = MetabolismManager::default();
+        let manager = MetabolismManager::with_default_config();
 
         let button_capacity = manager.energy_capacity(UICellType::ButtonCore);
         let spacer_capacity = manager.energy_capacity(UICellType::Spacer);
@@ -520,7 +520,7 @@ mod tests {
 
     #[test]
     fn test_reproduction_requirements() {
-        let manager = MetabolismManager::default();
+        let manager = MetabolismManager::with_default_config();
         let position = GA3::scalar(1.0);
         let mut cell = UICell::new_at_position(UICellType::ButtonCore, position);
 

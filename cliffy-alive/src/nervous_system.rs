@@ -3,7 +3,8 @@
 //! This module implements a neural network-like system that allows UI organisms
 //! to sense, process, and respond to user interactions in sophisticated ways.
 
-use cliffy_core::{ga_helpers::vector3, GA3};
+use amari_core::Vector;
+use cliffy_core::GA3;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -12,6 +13,12 @@ use crate::{
     ui_cell::{UICell, UICellType},
     UIEnergy, UITime,
 };
+
+/// Helper to create a GA3 from 3D vector components
+fn vector3(x: f64, y: f64, z: f64) -> GA3 {
+    let v = Vector::<3, 0, 0>::from_components(x, y, z);
+    GA3::from_vector(&v)
+}
 
 /// Types of sensory input the nervous system can detect
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -250,7 +257,7 @@ impl Neuron {
     pub fn update(&mut self, dt: UITime) {
         // Calculate total input
         let mut total_input = 0.0;
-        for (input_id, weight) in &self.inputs {
+        for weight in self.inputs.values() {
             // Would need access to other neurons to get their activation
             // For now, use a simplified calculation
             total_input += weight * 0.5; // Placeholder
@@ -723,10 +730,17 @@ pub struct NervousSystem {
     stimulus_queue: Vec<Stimulus>,
 
     /// System-wide configuration
+    #[allow(dead_code)]
     config: NetworkConfig,
 
     /// Global memory shared across cells
     global_memory: HashMap<String, f64>,
+}
+
+impl Default for NervousSystem {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl NervousSystem {

@@ -1,0 +1,58 @@
+[package]
+name = "cliffy-alive"
+version = "0.1.0"
+edition = "2021"
+description = "Living, self-assembling UIs built on geometric algebra cellular automata"
+license = "MIT"
+repository = "https://github.com/justinelliottcobb/Cliffy"
+keywords = ["living-ui", "cellular-automata", "geometric-algebra", "evolution", "reactive"]
+categories = ["gui", "simulation"]
+
+[dependencies]
+# Geometric algebra
+amari-core = { workspace = true }
+amari-automata = { version = "0.19.0", optional = true }
+
+# Cliffy core
+cliffy-core = { path = "../cliffy-core" }
+
+# WASM bindings
+wasm-bindgen = { workspace = true }
+web-sys = { workspace = true, features = [
+  "Document",
+  "Element",
+  "HtmlElement",
+  "Window",
+  "CssStyleDeclaration",
+  "CanvasRenderingContext2d",
+  "HtmlCanvasElement",
+  "MouseEvent",
+  "KeyboardEvent",
+  "EventTarget",
+  "Event",
+  "console"
+] }
+js-sys = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = "1.0"
+serde-wasm-bindgen = "0.6"
+
+# Unique identifiers
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Logging
+log = "0.4"
+
+# Random number generation
+rand = "0.8"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }
+
+[features]
+default = []
+canvas = []
+webgl = []
+automata = ["amari-automata"]

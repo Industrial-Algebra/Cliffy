@@ -22,27 +22,14 @@ dependencies = [
 
 [[package]]
 name = "amari-automata"
-version = "0.19.1"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a6a25fb938dafa7d992d2029949abdaf2aef0b3c08314cb545617f664de22fa"
+checksum = "0a9e10ff55b220c13211753582423b9b0ba2c859166c3c918397df85fc27e703"
 dependencies = [
- "amari-core 0.19.1",
+ "amari-core",
  "amari-dual",
  "amari-tropical",
  "num-traits",
-]
-
-[[package]]
-name = "amari-core"
-version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cc5ab574ec4cec99399797313991599b14752ed9c1e6e0aa254086aff08fc13"
-dependencies = [
- "approx",
- "bytemuck",
- "dashu-float",
- "num-traits",
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -56,18 +43,18 @@ dependencies = [
  "dashu-float",
  "num-traits",
  "serde",
- "thiserror 2.0.20",
+ "thiserror",
 ]
 
 [[package]]
 name = "amari-dual"
-version = "0.19.1"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6aa59346473cc2f08d2baa0a441311973600ea53b200708b29abd5f80cea7a4"
+checksum = "65256ab71d603a3812e19a719d43fefb997363e09ebf0a147180090e51e5fc2a"
 dependencies = [
- "amari-core 0.19.1",
+ "amari-core",
  "num-traits",
- "thiserror 1.0.69",
+ "thiserror",
 ]
 
 [[package]]
@@ -94,13 +81,13 @@ dependencies = [
 
 [[package]]
 name = "amari-tropical"
-version = "0.19.1"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3a4773420fc8408371142be3c5ed5276c017e21a4e446145c5178fee8f7f207"
+checksum = "0e42e14c8c2686bf7160d4a0433ec0d84c88eb0be5325a1dc0917948c8b6aabd"
 dependencies = [
- "amari-core 0.19.1",
+ "amari-core",
  "num-traits",
- "thiserror 1.0.69",
+ "thiserror",
 ]
 
 [[package]]
@@ -296,7 +283,7 @@ name = "cliffy-alive"
 version = "0.1.0"
 dependencies = [
  "amari-automata",
- "amari-core 0.24.1",
+ "amari-core",
  "cliffy-core",
  "js-sys",
  "log",
@@ -314,7 +301,7 @@ dependencies = [
 name = "cliffy-core"
 version = "0.4.0"
 dependencies = [
- "amari-core 0.24.1",
+ "amari-core",
  "criterion",
  "parking_lot",
  "serde",
@@ -325,14 +312,14 @@ dependencies = [
 name = "cliffy-gpu"
 version = "0.4.0"
 dependencies = [
- "amari-core 0.24.1",
+ "amari-core",
  "bytemuck",
  "cliffy-core",
  "criterion",
  "js-sys",
  "log",
  "pollster",
- "thiserror 2.0.20",
+ "thiserror",
  "tokio",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -345,7 +332,7 @@ dependencies = [
 name = "cliffy-loadtest"
 version = "0.4.0"
 dependencies = [
- "amari-core 0.24.1",
+ "amari-core",
  "cliffy-core",
  "cliffy-protocols",
  "cliffy-test",
@@ -363,7 +350,7 @@ dependencies = [
 name = "cliffy-protocols"
 version = "0.4.0"
 dependencies = [
- "amari-core 0.24.1",
+ "amari-core",
  "cliffy-core",
  "quickcheck",
  "quickcheck_macros",
@@ -377,7 +364,7 @@ dependencies = [
 name = "cliffy-test"
 version = "0.4.0"
 dependencies = [
- "amari-core 0.24.1",
+ "amari-core",
  "amari-flynn",
  "parking_lot",
  "quickcheck",
@@ -903,7 +890,7 @@ dependencies = [
  "num-traits",
  "once_cell",
  "rustc-hash",
- "thiserror 2.0.20",
+ "thiserror",
  "unicode-ident",
 ]
 
@@ -916,7 +903,7 @@ dependencies = [
  "hashbrown 0.17.1",
  "indexmap",
  "rustc-hash",
- "thiserror 2.0.20",
+ "thiserror",
 ]
 
 [[package]]
@@ -1425,31 +1412,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.69"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
-dependencies = [
- "thiserror-impl 1.0.69",
-]
-
-[[package]]
-name = "thiserror"
 version = "2.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec86235f5fcc2a73650310756d2ac5b138a5780bbbdfae3eeccec992c435ba4f"
 dependencies = [
- "thiserror-impl 2.0.20",
-]
-
-[[package]]
-name = "thiserror-impl"
-version = "1.0.69"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
+ "thiserror-impl",
 ]
 
 [[package]]
@@ -1788,7 +1755,7 @@ dependencies = [
  "raw-window-handle",
  "rustc-hash",
  "smallvec",
- "thiserror 2.0.20",
+ "thiserror",
  "wgpu-core-deps-wasm",
  "wgpu-core-deps-windows-linux-android",
  "wgpu-hal",
@@ -1843,7 +1810,7 @@ dependencies = [
  "raw-window-handle",
  "renderdoc-sys",
  "static_assertions",
- "thiserror 2.0.20",
+ "thiserror",
  "wasm-bindgen",
  "wayland-sys",
  "web-sys",

@@ -30,7 +30,7 @@
   "dependencies": {
     "@babel/generator": "^8.0.0",
     "@babel/parser": "^8.0.0",
-    "@babel/traverse": "^8.0.0",
+    "@babel/traverse": "^8.0.5",
     "@babel/types": "^8.0.0",
     "magic-string": "^1.2.3"
   },

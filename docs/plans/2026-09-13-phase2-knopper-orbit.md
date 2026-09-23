@@ -27,7 +27,50 @@ Explicit non-goals (carried from the salvage plan): no binary geometric-mean
 merge (provably non-associative — the G-Set form is the design, not a
 workaround); no geometric consensus for state with no manifold structure.
 
-## 2. Workstream 1 — U2 encoding alignment
+## 2. Workstream 0 — tsukoshi salvage (the forgotten twin)
+
+**Added 2026-09-20** in response to `RABBIT_HOLE_2026-09-20_Cliffy.md`
+(IA-documents): the 0.4.0 salvage audited *modules*, not *products* —
+`cliffy-tsukoshi` 0.4.0 still ships the pre-salvage unsound surface
+(`GeometricCRDT` replay architecture with `nextOpId++` collisions,
+`geometricMean`, `geometricJoin` magnitude dominance, a `consensus`
+module), with no `ObservationSet` alternative in-package, under the new
+org and the README's "No WASM? No problem" parity pitch.
+
+**Operator decision 2026-09-20**: full salvage now, as Phase 2 WS0.
+
+### Tasks
+
+1. **Cross-runtime parity vectors** (the structural fix): a shared JSON
+   vector set — observation sets + bit-exact expected `scalar_mean` /
+   `vector_mean` / `rotor_consensus` outputs — generated once from the
+   Rust implementation, checked in `cliffy-protocols` tests, the wasm
+   bindings tests, and tsukoshi's vitest. The determinism contract
+   ("equal sets ⇒ equal values", fold order IS the contract) becomes a
+   cross-language oracle, answering the report's open question: *can a
+   determinism contract survive a language boundary?*
+2. **Port the floor to TypeScript** (`cliffy-tsukoshi/src/protocols/`):
+   `ObservationSet` (G-Set, `(participant, seq)` keys), `scalarMean`,
+   `vectorMean`, and `rotorConsensus` — the Markley accumulator plus a
+   faithful port of the in-house cyclic Jacobi (fixed sweep order,
+   50-sweep cap, lowest-index tie-break, hemisphere canonicalization
+   against the first usable rotor, sign canonicalization). Bit-parity
+   with the vector suite is the acceptance test.
+3. **Cutover with epitaphs**: delete `GeometricCRDT`, `geometricMean`,
+   `geometricJoin`, and the `consensus` module from tsukoshi (the
+   componentwise `latticeJoin`/`latticeMeet` floor stays — the salvage
+   blessed it). Epitaph notes naming the failure modes, mirroring the
+   Rust cutover; README + package docs stop claiming CRDT parity.
+4. **Version + release**: breaking removal ⇒ tsukoshi semver bump. The
+   ecosystem's shared-version convention makes this a workspace-level
+   decision (see §6, new open question 4).
+
+**DoD**: the same JSON vectors pass in `cargo test`, the wasm test lane,
+and `vitest`; the deleted surface is gone from the package index; the
+report's "two doctrines under one version" criticism is answered by an
+oracle, not a paragraph.
+
+## 3. Workstream 1 — U2 encoding alignment
 
 **Problem.** Today's payloads (`RotorObservation {w,x,y,z}` Hamilton,
 `VectorObservation`) are Cliffy-local conventions, chosen in Phase 1 because
@@ -65,7 +108,7 @@ semantically identical to one written by a Knopper machine.
 contract's own test vectors, decodes and projects through
 `rotor_consensus` to the contract's stated value.
 
-## 3. Workstream 2 — Schubert-gated observations (GrantRef semantics)
+## 4. Workstream 2 — Schubert-gated observations (GrantRef semantics)
 
 **Problem.** `ObservationSet.merge` admits everything. Collaborative
 surfaces need *admission control*: this peer may write observations about
@@ -108,7 +151,7 @@ full-scope grant, exchange observation sets — value oracles assert exactly
 which observations each peer's merged set contains, and that re-merging is
 idempotent under both policies.
 
-## 4. Workstream 3 — GPU-resident projections
+## 5. Workstream 3 — GPU-resident projections
 
 **Problem.** `rotor_consensus`'s Jacobi eigensolve is O(n) in observations
 plus a fixed 4×4 solve — fine at hundreds of observations. The Anima road
@@ -131,7 +174,7 @@ sets) wants orders of magnitude more, in the browser.
 **DoD**: `rotor_consensus` over 10⁵ observations, GPU vs CPU parity
 asserted in CI (SIMD fallback lane), bench numbers in the PR body.
 
-## 5. Sequencing
+## 6. Sequencing
 
 WS1 and WS2 are independent and can run in parallel; both are pure
 `cliffy-protocols` + WASM work. WS3 is independent of both. Suggested
@@ -139,11 +182,14 @@ order within the cycle: WS2 (grant model) → WS1 (encoding) → WS3 (GPU) —
 the grant model is the least externally-blocked (WS1 pins an external
 contract version; WS3 has hardware-variance risk in CI).
 
+WS0 lands first (it is unblocked, internal-only, and closes a published
+soundness gap). Then WS2 → WS1 → WS3 as before.
+
 Each workstream lands as its own PR chain with its own probe/value-oracle
 suite, following the Phase 1 pattern (plan doc → RED probes → GREEN →
 cutover). Version target: **0.5.0**.
 
-## 6. Open questions for the operator
+## 7. Open questions for the operator
 
 1. **Knopper contract version**: is the U2 encoding contract published at a
    pin-able version (IA-documents contract lineage), or is Cliffy WS1 the
@@ -151,5 +197,10 @@ cutover). Version target: **0.5.0**.
 2. **Grant signature scheme**: Schubert-issued grants — plain serde docs
    verified by structure, or signed (ed25519)? Signature adds real
    capability security at the cost of key management in the browser.
-3. **Does 0.5.0 scope = all three workstreams**, or is WS3 (GPU) allowed
+3. **Does 0.5.0 scope = all workstreams**, or is WS3 (GPU) allowed
    to slip to 0.5.x while the consensus semantics stabilize?
+4. **Version coherence for WS0**: tsukoshi's breaking salvage under the
+   shared-version convention — whole workspace to 0.5.0 (Rust crates
+   unchanged but re-published for parity), or tsukoshi-only 0.5.0
+   (explicit divergence, breaking the one-version-everywhere story the
+   rabbit hole criticized)?

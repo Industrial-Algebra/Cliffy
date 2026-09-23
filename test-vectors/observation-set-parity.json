@@ -1,0 +1,1244 @@
+{
+  "cases": [
+    {
+      "expected": {
+        "rotor_consensus": null,
+        "scalar_mean": 7.5,
+        "vector_mean": null
+      },
+      "name": "annihilation_oracle",
+      "observations": [
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Scalar": 10.0
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+          "payload": {
+            "Scalar": 5.0
+          },
+          "seq": 0
+        }
+      ],
+      "permutations": [
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Scalar": 10.0
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Scalar": 5.0
+            },
+            "seq": 0
+          }
+        ],
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Scalar": 10.0
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Scalar": 5.0
+            },
+            "seq": 0
+          }
+        ]
+      ]
+    },
+    {
+      "expected": {
+        "rotor_consensus": null,
+        "scalar_mean": 0.0,
+        "vector_mean": null
+      },
+      "name": "scalar_mixed_magnitudes",
+      "observations": [
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Scalar": 0.1
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Scalar": 0.2
+          },
+          "seq": 1
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+          "payload": {
+            "Scalar": -3.75
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "cccc0000-0000-0000-0000-000000000003",
+          "payload": {
+            "Scalar": 1e+300
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "cccc0000-0000-0000-0000-000000000003",
+          "payload": {
+            "Scalar": -1e+300
+          },
+          "seq": 1
+        }
+      ],
+      "permutations": [
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Scalar": 0.1
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Scalar": 0.2
+            },
+            "seq": 1
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Scalar": -3.75
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "cccc0000-0000-0000-0000-000000000003",
+            "payload": {
+              "Scalar": 1e+300
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "cccc0000-0000-0000-0000-000000000003",
+            "payload": {
+              "Scalar": -1e+300
+            },
+            "seq": 1
+          }
+        ],
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Scalar": 0.1
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Scalar": 0.2
+            },
+            "seq": 1
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Scalar": -3.75
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "cccc0000-0000-0000-0000-000000000003",
+            "payload": {
+              "Scalar": 1e+300
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "cccc0000-0000-0000-0000-000000000003",
+            "payload": {
+              "Scalar": -1e+300
+            },
+            "seq": 1
+          }
+        ]
+      ]
+    },
+    {
+      "expected": {
+        "rotor_consensus": null,
+        "scalar_mean": null,
+        "vector_mean": {
+          "x": 0.08333333333333333,
+          "y": 0.75,
+          "z": 0.041666666666666664
+        }
+      },
+      "name": "vector_componentwise",
+      "observations": [
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Vector": {
+              "x": 1.0,
+              "y": 2.0,
+              "z": 3.0
+            }
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+          "payload": {
+            "Vector": {
+              "x": -1.0,
+              "y": 0.5,
+              "z": -3.0
+            }
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "cccc0000-0000-0000-0000-000000000003",
+          "payload": {
+            "Vector": {
+              "x": 0.25,
+              "y": -0.25,
+              "z": 0.125
+            }
+          },
+          "seq": 0
+        }
+      ],
+      "permutations": [
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Vector": {
+                "x": 1.0,
+                "y": 2.0,
+                "z": 3.0
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Vector": {
+                "x": -1.0,
+                "y": 0.5,
+                "z": -3.0
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "cccc0000-0000-0000-0000-000000000003",
+            "payload": {
+              "Vector": {
+                "x": 0.25,
+                "y": -0.25,
+                "z": 0.125
+              }
+            },
+            "seq": 0
+          }
+        ],
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Vector": {
+                "x": 1.0,
+                "y": 2.0,
+                "z": 3.0
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Vector": {
+                "x": -1.0,
+                "y": 0.5,
+                "z": -3.0
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "cccc0000-0000-0000-0000-000000000003",
+            "payload": {
+              "Vector": {
+                "x": 0.25,
+                "y": -0.25,
+                "z": 0.125
+              }
+            },
+            "seq": 0
+          }
+        ]
+      ]
+    },
+    {
+      "expected": {
+        "rotor_consensus": {
+          "w": 0.6,
+          "x": 0.8,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scalar_mean": null,
+        "vector_mean": null
+      },
+      "name": "rotor_single",
+      "observations": [
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Rotor": {
+              "w": 0.6,
+              "x": 0.8,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "seq": 0
+        }
+      ],
+      "permutations": [
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Rotor": {
+                "w": 0.6,
+                "x": 0.8,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "seq": 0
+          }
+        ]
+      ]
+    },
+    {
+      "expected": {
+        "rotor_consensus": {
+          "w": 0.6,
+          "x": 0.8,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scalar_mean": null,
+        "vector_mean": null
+      },
+      "name": "rotor_double_cover",
+      "observations": [
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Rotor": {
+              "w": 0.6,
+              "x": 0.8,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+          "payload": {
+            "Rotor": {
+              "w": -0.6,
+              "x": -0.8,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "seq": 0
+        }
+      ],
+      "permutations": [
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Rotor": {
+                "w": 0.6,
+                "x": 0.8,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Rotor": {
+                "w": -0.6,
+                "x": -0.8,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "seq": 0
+          }
+        ],
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Rotor": {
+                "w": 0.6,
+                "x": 0.8,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Rotor": {
+                "w": -0.6,
+                "x": -0.8,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "seq": 0
+          }
+        ]
+      ]
+    },
+    {
+      "expected": {
+        "rotor_consensus": {
+          "w": 1.0,
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scalar_mean": null,
+        "vector_mean": null
+      },
+      "name": "rotor_opposed_to_identity",
+      "observations": [
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Rotor": {
+              "w": 0.7071067811865476,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.7071067811865476
+            }
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+          "payload": {
+            "Rotor": {
+              "w": 0.7071067811865476,
+              "x": 0.0,
+              "y": 0.0,
+              "z": -0.7071067811865476
+            }
+          },
+          "seq": 0
+        }
+      ],
+      "permutations": [
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Rotor": {
+                "w": 0.7071067811865476,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.7071067811865476
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Rotor": {
+                "w": 0.7071067811865476,
+                "x": 0.0,
+                "y": 0.0,
+                "z": -0.7071067811865476
+              }
+            },
+            "seq": 0
+          }
+        ],
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Rotor": {
+                "w": 0.7071067811865476,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.7071067811865476
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Rotor": {
+                "w": 0.7071067811865476,
+                "x": 0.0,
+                "y": 0.0,
+                "z": -0.7071067811865476
+              }
+            },
+            "seq": 0
+          }
+        ]
+      ]
+    },
+    {
+      "expected": {
+        "rotor_consensus": {
+          "w": 0.7048927218399342,
+          "x": 0.06712972342305645,
+          "y": 0.32850213125121247,
+          "z": 0.6250649571793674
+        },
+        "scalar_mean": null,
+        "vector_mean": null
+      },
+      "name": "rotor_multi_participant",
+      "observations": [
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Rotor": {
+              "w": 0.9,
+              "x": 0.1,
+              "y": 0.2,
+              "z": 0.3
+            }
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Rotor": {
+              "w": 0.5,
+              "x": 0.5,
+              "y": 0.5,
+              "z": 0.5
+            }
+          },
+          "seq": 1
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+          "payload": {
+            "Rotor": {
+              "w": 0.7071067811865476,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.7071067811865476
+            }
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "cccc0000-0000-0000-0000-000000000003",
+          "payload": {
+            "Rotor": {
+              "w": 0.3,
+              "x": -0.4,
+              "y": 0.5,
+              "z": 0.7
+            }
+          },
+          "seq": 0
+        }
+      ],
+      "permutations": [
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Rotor": {
+                "w": 0.9,
+                "x": 0.1,
+                "y": 0.2,
+                "z": 0.3
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Rotor": {
+                "w": 0.5,
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+              }
+            },
+            "seq": 1
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Rotor": {
+                "w": 0.7071067811865476,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.7071067811865476
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "cccc0000-0000-0000-0000-000000000003",
+            "payload": {
+              "Rotor": {
+                "w": 0.3,
+                "x": -0.4,
+                "y": 0.5,
+                "z": 0.7
+              }
+            },
+            "seq": 0
+          }
+        ],
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Rotor": {
+                "w": 0.9,
+                "x": 0.1,
+                "y": 0.2,
+                "z": 0.3
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Rotor": {
+                "w": 0.5,
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+              }
+            },
+            "seq": 1
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Rotor": {
+                "w": 0.7071067811865476,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.7071067811865476
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "cccc0000-0000-0000-0000-000000000003",
+            "payload": {
+              "Rotor": {
+                "w": 0.3,
+                "x": -0.4,
+                "y": 0.5,
+                "z": 0.7
+              }
+            },
+            "seq": 0
+          }
+        ]
+      ]
+    },
+    {
+      "expected": {
+        "rotor_consensus": {
+          "w": 0.6,
+          "x": 0.8,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scalar_mean": null,
+        "vector_mean": null
+      },
+      "name": "rotor_degenerate_skipped",
+      "observations": [
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Rotor": {
+              "w": 1e-15,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+          "payload": {
+            "Rotor": {
+              "w": 0.6,
+              "x": 0.8,
+              "y": 0.0,
+              "z": 0.0
+            }
+          },
+          "seq": 0
+        }
+      ],
+      "permutations": [
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Rotor": {
+                "w": 1e-15,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Rotor": {
+                "w": 0.6,
+                "x": 0.8,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "seq": 0
+          }
+        ]
+      ]
+    },
+    {
+      "expected": {
+        "rotor_consensus": {
+          "w": 0.9233805168766387,
+          "x": 0.10259783520851541,
+          "y": 0.20519567041703082,
+          "z": 0.3077935056255463
+        },
+        "scalar_mean": 7.5,
+        "vector_mean": {
+          "x": 0.0,
+          "y": 1.0,
+          "z": 2.0
+        }
+      },
+      "name": "mixed_payloads",
+      "observations": [
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Scalar": 5.0
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Vector": {
+              "x": 1.0,
+              "y": 2.0,
+              "z": 3.0
+            }
+          },
+          "seq": 1
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+          "payload": {
+            "Scalar": 10.0
+          },
+          "seq": 2
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+          "payload": {
+            "Rotor": {
+              "w": 0.9,
+              "x": 0.1,
+              "y": 0.2,
+              "z": 0.3
+            }
+          },
+          "seq": 0
+        },
+        {
+          "clock": {
+            "clocks": {}
+          },
+          "grant_ref": null,
+          "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+          "payload": {
+            "Vector": {
+              "x": -1.0,
+              "y": 0.0,
+              "z": 1.0
+            }
+          },
+          "seq": 1
+        }
+      ],
+      "permutations": [
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Scalar": 5.0
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Vector": {
+                "x": 1.0,
+                "y": 2.0,
+                "z": 3.0
+              }
+            },
+            "seq": 1
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Scalar": 10.0
+            },
+            "seq": 2
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Rotor": {
+                "w": 0.9,
+                "x": 0.1,
+                "y": 0.2,
+                "z": 0.3
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Vector": {
+                "x": -1.0,
+                "y": 0.0,
+                "z": 1.0
+              }
+            },
+            "seq": 1
+          }
+        ],
+        [
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Scalar": 5.0
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Vector": {
+                "x": 1.0,
+                "y": 2.0,
+                "z": 3.0
+              }
+            },
+            "seq": 1
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "aaaa0000-0000-0000-0000-000000000001",
+            "payload": {
+              "Scalar": 10.0
+            },
+            "seq": 2
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Rotor": {
+                "w": 0.9,
+                "x": 0.1,
+                "y": 0.2,
+                "z": 0.3
+              }
+            },
+            "seq": 0
+          },
+          {
+            "clock": {
+              "clocks": {}
+            },
+            "grant_ref": null,
+            "participant_id": "bbbb0000-0000-0000-0000-000000000002",
+            "payload": {
+              "Vector": {
+                "x": -1.0,
+                "y": 0.0,
+                "z": 1.0
+              }
+            },
+            "seq": 1
+          }
+        ]
+      ]
+    },
+    {
+      "expected": {
+        "rotor_consensus": null,
+        "scalar_mean": null,
+        "vector_mean": null
+      },
+      "name": "empty",
+      "observations": [],
+      "permutations": []
+    }
+  ],
+  "doctrine": "equal sets => bit-identical projections, in every runtime. Canonical iteration order: (participant UUID bytes, seq). Regenerate: CLIFFY_PARITY_WRITE=1 cargo test -p cliffy-protocols --test parity_vectors",
+  "format": "observation-set-parity/v1"
+}

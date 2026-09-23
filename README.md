@@ -294,7 +294,7 @@ state.subscribe(s => updateUI(s));
 state.blendTo(target, 0.3);
 ```
 
-Zero dependencies, 113 tests. See [cliffy-tsukoshi/README.md](cliffy-tsukoshi/README.md) for full documentation.
+Zero dependencies, 134 tests (incl. cross-runtime parity vectors). See [cliffy-tsukoshi/README.md](cliffy-tsukoshi/README.md) for full documentation.
 
 ## Building from Source
 

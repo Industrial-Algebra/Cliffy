@@ -7,7 +7,7 @@ Minimal geometric state management for JavaScript/TypeScript. Pure TypeScript, z
 - **GeometricState** - Smooth state interpolation via `.blend()`
 - **Rotor** - Rotation representation with SLERP interpolation
 - **Transform** - Combined rotation + translation
-- **Distributed Protocols** - CRDT, vector clocks, sync, consensus
+- **Distributed Protocols** - ObservationSet CRDT (merge = union), deterministic geometric projections, vector clocks, sync
 - **Zero dependencies** - Pure TypeScript math
 - **Universal** - Works in browser, Node.js, React Native, Deno
 
@@ -664,9 +664,9 @@ You don't need to understand GA to use the library - the API is designed around 
 cliffy-tsukoshi includes a complete suite of distributed protocols for building collaborative applications. Import from `cliffy-tsukoshi/protocols` or directly from the main module.
 
 ```typescript
-import { GeometricCRDT, VectorClock, SyncState } from 'cliffy-tsukoshi';
+import { ObservationSet, VectorClock, SyncState } from 'cliffy-tsukoshi';
 // or
-import { GeometricCRDT, VectorClock } from 'cliffy-tsukoshi/protocols';
+import { ObservationSet, VectorClock } from 'cliffy-tsukoshi/protocols';
 ```
 
 ### VectorClock
@@ -694,49 +694,45 @@ clock1.tick('node-1');
 console.log(clock2.happensBefore(clock1)); // true
 ```
 
-### GeometricCRDT
+### ObservationSet (the sound CRDT floor)
 
-Conflict-free replicated data type using geometric algebra for merge operations.
+A grow-only set of attributed observations, keyed `(participant, seq)`.
+**Merge is set union** — associative, commutative, idempotent by
+construction; it cannot annihilate data. Consensus values are
+**deterministic projections** of the set (the merge is boring; the render
+is geometric).
 
 ```typescript
-import { GeometricCRDT, OperationType, scalar } from 'cliffy-tsukoshi';
+import {
+  ObservationSet,
+  scalarObservation,
+  rotorObservation,
+  scalarMean,
+  rotorConsensus,
+} from 'cliffy-tsukoshi';
 
-// Create CRDTs on two different nodes
-const nodeId1 = crypto.randomUUID();
-const nodeId2 = crypto.randomUUID();
+const local = new ObservationSet();
+local.insert(scalarObservation(crypto.randomUUID(), 0, 5));
 
-const crdt1 = new GeometricCRDT(nodeId1, scalar(0));
-const crdt2 = new GeometricCRDT(nodeId2, scalar(0));
+local.merge(remote); // union — convergence is trivial by construction
 
-// Each node makes independent updates
-const op1 = crdt1.createOperation(scalar(5), OperationType.Addition);
-crdt1.applyOperation(op1);
-
-const op2 = crdt2.createOperation(scalar(3), OperationType.Addition);
-crdt2.applyOperation(op2);
-
-// Merge - order doesn't matter, result is always consistent
-const merged1 = crdt1.merge(crdt2);
-const merged2 = crdt2.merge(crdt1);
-
-// Both produce the same state (8.0)
-console.log(merged1.state[0] === merged2.state[0]); // true
+scalarMean(local);    // arithmetic mean, or null (never fabricate)
+rotorConsensus(local); // Markley eigen-mean rotor, bit-identical to the
+                       // Rust/WASM projection (cross-runtime parity vectors
+                       // run in CI)
 ```
+
+> **Removed in the 0.4.x salvage (WS0, 2026-09-20):** `GeometricCRDT`,
+> `geometricMean`, `GA3Lattice`, and `GeometricConsensus` — the pre-salvage
+> surface whose merge could annihilate data and whose join was not a
+> semilattice. See the CHANGELOG for the failure modes.
 
 ### Lattice Operations
 
 Join-semilattice operations for guaranteed convergence.
 
 ```typescript
-import { GA3Lattice, ComponentLattice, latticeJoin, latticeMeet } from 'cliffy-tsukoshi';
-
-// Magnitude-based lattice (larger magnitude wins)
-const stateA = GA3Lattice.fromScalar(3);
-const stateB = GA3Lattice.fromScalar(7);
-
-const joined = stateA.join(stateB);
-console.log(joined.dominates(stateA)); // true
-console.log(joined.dominates(stateB)); // true
+import { ComponentLattice, latticeJoin, latticeMeet } from 'cliffy-tsukoshi';
 
 // Component-wise lattice (max of each coefficient)
 const a = ComponentLattice.fromScalar(5);
@@ -862,116 +858,58 @@ for (const peerId of stalePeers) {
 }
 ```
 
-### Distributed Consensus
-
-Geometric mean consensus for distributed agreement.
-
-```typescript
-import { GeometricConsensus, scalar } from 'cliffy-tsukoshi';
-
-const nodeId = crypto.randomUUID();
-const consensus = new GeometricConsensus(nodeId, scalar(0));
-
-// Subscribe to outgoing messages
-consensus.onMessage((message) => {
-  // Broadcast to all peers
-  broadcastToPeers(JSON.stringify(message));
-});
-
-// Propose a value
-const round = consensus.propose(scalar(42));
-
-// Receive proposals from other nodes
-consensus.receiveProposal('other-node-id', scalar(38), round);
-consensus.receiveProposal('another-node-id', scalar(45), round);
-
-// Compute consensus from all proposals
-const proposals = consensus.getProposals(round);
-const consensusValue = consensus.geometricConsensus(proposals, 0.1);
-console.log('Consensus:', consensusValue[0]); // ~41.67 (geometric mean)
-
-// Vote on the consensus value
-consensus.vote(round, true, consensusValue);
-
-// Try to commit if we have majority
-const committed = consensus.tryCommit(round, 3); // 3 participants
-if (committed) {
-  console.log('Round committed!', committed[0]);
-}
-```
-
 ### Complete Example: Collaborative Counter
 
 ```typescript
 import {
-  GeometricCRDT,
-  OperationType,
+  ObservationSet,
+  scalarObservation,
+  scalarMean,
   SyncState,
-  VectorClock,
   MemoryStore,
-  additiveDelta,
-  scalar,
 } from 'cliffy-tsukoshi';
 
 class CollaborativeCounter {
-  private crdt: GeometricCRDT;
+  private observations = new ObservationSet();
+  private seq = 0;
   private syncState: SyncState;
   private store: MemoryStore;
   private onUpdate: (value: number) => void;
 
-  constructor(nodeId: string, onUpdate: (value: number) => void) {
-    this.crdt = new GeometricCRDT(nodeId, scalar(0));
+  constructor(
+    private nodeId: string,
+    onUpdate: (value: number) => void,
+  ) {
     this.syncState = new SyncState(nodeId);
     this.store = new MemoryStore();
     this.onUpdate = onUpdate;
-
-    // Save initial state
-    this.store.saveSnapshot(this.crdt.state, this.crdt.vectorClock);
   }
 
   increment(amount: number = 1): void {
-    const op = this.crdt.createOperation(scalar(amount), OperationType.Addition);
-    this.crdt.applyOperation(op);
-    this.notifyUpdate();
-
-    // Store the operation
-    const delta = additiveDelta(
-      scalar(amount),
-      new VectorClock(),
-      this.crdt.vectorClock,
-      this.crdt.nodeId
-    );
-    this.store.appendOperation(delta);
-  }
-
-  getValue(): number {
-    return this.crdt.state[0];
-  }
-
-  // Call when receiving state from another peer
-  merge(otherCrdt: GeometricCRDT): void {
-    this.crdt = this.crdt.merge(otherCrdt);
+    // Each increment is an observation; the counter's value is the SUM
+    // projection (or use scalarMean for an average-style dial).
+    this.observations.insert(scalarObservation(this.nodeId, this.seq++, amount));
     this.notifyUpdate();
   }
 
-  // Get state to send to peers
-  getState(): GeometricCRDT {
-    return this.crdt;
+  merge(remote: ObservationSet): void {
+    if (this.observations.merge(remote)) this.notifyUpdate();
+  }
+
+  get value(): number {
+    // Sum projection: total of all observed increments (cannot annihilate —
+    // the set only grows, and every increment survives merge).
+    let total = 0;
+    for (const o of this.observations.entries()) {
+      if ('Scalar' in o.payload) total += o.payload.Scalar;
+    }
+    return total;
   }
 
   private notifyUpdate(): void {
-    this.onUpdate(this.getValue());
+    this.onUpdate(this.value);
   }
 }
-
-// Usage
-const counter = new CollaborativeCounter('node-1', (value) => {
-  console.log('Counter updated:', value);
-});
-
-counter.increment(5);
-counter.increment(3);
-console.log(counter.getValue()); // 8
 ```
 
 ## Protocol Reference
@@ -988,15 +926,16 @@ console.log(counter.getValue()); // 8
 | `clone()` | Copy the clock |
 | `toJSON()` / `fromJSON()` | Serialization |
 
-### GeometricCRDT
+### ObservationSet
 
 | Method | Description |
 |--------|-------------|
-| `createOperation(transform, type)` | Create a new operation |
-| `applyOperation(op)` | Apply an operation |
-| `merge(other)` | Merge with another CRDT |
-| `geometricJoin(other)` | Conflict resolution via magnitude |
-| `toJSON()` / `fromJSON()` | Serialization |
+| `insert(observation)` | Add an observation (last-wins on duplicate key) |
+| `merge(other)` | Union-merge (first-wins on duplicate key) — the entire CRDT |
+| `entries()` | Iterate in canonical (participant, seq) order |
+| `toWire()` / `ObservationSet.fromWire()` | JSON serialization (Rust-compatible format) |
+
+Free-function projections: `scalarMean(set)`, `vectorMean(set)`, `rotorConsensus(set)`.
 
 ### SyncState
 

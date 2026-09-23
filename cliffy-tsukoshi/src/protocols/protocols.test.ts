@@ -17,7 +17,8 @@ import {
 
 // Import the TypeScript protocols
 import { VectorClock } from './vector-clock.js';
-import { GeometricCRDT, OperationType } from './crdt.js';
+import { ObservationSet, scalarObservation, vectorObservation } from './observation.js';
+import { scalarMean, vectorMean, rotorConsensus } from './projection.js';
 import { latticeJoin, latticeMeet } from './lattice.js';
 import {
   DeltaBatch,
@@ -27,7 +28,6 @@ import {
 } from './delta.js';
 import { MemoryStore } from './storage.js';
 import { SyncState, PeerConnectionState } from './sync.js';
-import { GeometricConsensus } from './consensus.js';
 
 // Import GA3 functions from cliffy-tsukoshi
 import {
@@ -117,62 +117,79 @@ describe('VectorClock', () => {
 });
 
 // =============================================================================
-// GeometricCRDT Tests
+// ObservationSet Tests (the sound floor — Phase 2 WS0 port)
 // =============================================================================
 
-describe('GeometricCRDT', () => {
-  it('creates CRDT with initial state', () => {
-    const crdt = new GeometricCRDT('node-1', scalar(10));
-    expect(crdt.state[0]).toBe(10);
-    expect(crdt.nodeId).toBe('node-1');
+describe('ObservationSet', () => {
+  const A = 'aaaaaaaa-0000-0000-0000-000000000001';
+  const B = 'bbbbbbbb-0000-0000-0000-000000000002';
+
+  it('merge is union — absorbs, never annihilates', () => {
+    const a = new ObservationSet();
+    a.insert(scalarObservation(A, 0, 10));
+    const b = new ObservationSet();
+    b.insert(scalarObservation(B, 0, 5));
+    a.merge(b);
+    expect(a.size).toBe(2);
+    // The fossilized failure: replicas at 10 and 5 must NOT merge to 0.
+    expect(scalarMean(a)).toBe(7.5);
   });
 
-  it('addition operations modify state correctly', () => {
-    const crdt = new GeometricCRDT('node-1', scalar(10));
-    const op = crdt.createOperation(scalar(5), OperationType.Addition);
-
-    crdt.applyOperation(op);
-
-    expect(crdt.state[0]).toBeCloseTo(15);
+  it('merge is commutative and associative', () => {
+    const mk = (id: string, seq: number, v: number) => {
+      const s = new ObservationSet();
+      s.insert(scalarObservation(id, seq, v));
+      return s;
+    };
+    const [sa, sb, sc] = [mk(A, 0, 1), mk(B, 0, 2), mk(A, 1, 3)];
+    const ab = new ObservationSet(); ab.merge(sa); ab.merge(sb);
+    const ba = new ObservationSet(); ba.merge(sb); ba.merge(sa);
+    expect(JSON.stringify(ab.toWire())).toBe(JSON.stringify(ba.toWire()));
+    const abC = new ObservationSet(); abC.merge(ab); abC.merge(sc);
+    const bcA = new ObservationSet(); const bc = new ObservationSet(); bc.merge(sb); bc.merge(sc); bcA.merge(sa); bcA.merge(bc);
+    expect(JSON.stringify(abC.toWire())).toBe(JSON.stringify(bcA.toWire()));
   });
 
-  it('operations are idempotent', () => {
-    const crdt = new GeometricCRDT('node-1', scalar(10));
-    const op = crdt.createOperation(scalar(5), OperationType.Addition);
-
-    crdt.applyOperation(op);
-    const state1 = crdt.state[0];
-
-    crdt.applyOperation(op); // Apply same op again
-    const state2 = crdt.state[0];
-
-    expect(state1).toBe(state2);
+  it('merge is idempotent — re-delivery is a no-op', () => {
+    const a = new ObservationSet();
+    a.insert(scalarObservation(A, 0, 42));
+    const before = JSON.stringify(a.toWire());
+    expect(a.merge(a)).toBe(false);
+    expect(JSON.stringify(a.toWire())).toBe(before);
   });
 
-  it('createOperation increments clock', () => {
-    const crdt = new GeometricCRDT('node-1', scalar(0));
-
-    const op1 = crdt.createOperation(scalar(5), OperationType.Addition);
-    const op2 = crdt.createOperation(scalar(3), OperationType.Addition);
-
-    expect(op1.id).toBe(0);
-    expect(op2.id).toBe(1);
-    expect(crdt.vectorClock.get('node-1')).toBe(2);
+  it('insert replaces on duplicate key (last-wins, mirrors BTreeMap::insert)', () => {
+    const a = new ObservationSet();
+    expect(a.insert(scalarObservation(A, 0, 1))).toBe(true);
+    expect(a.insert(scalarObservation(A, 0, 2))).toBe(false);
+    expect(scalarMean(a)).toBe(2);
   });
 
-  it('geometric product operation works', () => {
-    const crdt = new GeometricCRDT('node-1', scalar(2));
-    const op = crdt.createOperation(scalar(3), OperationType.GeometricProduct);
+  it('iteration is canonical — (participant, seq) order, not insertion order', () => {
+    const a = new ObservationSet();
+    a.insert(scalarObservation(B, 0, 1));
+    a.insert(scalarObservation(A, 1, 2));
+    a.insert(scalarObservation(A, 0, 3));
+    const order = [...a.entries()].map((o) => `${o.participant_id}:${o.seq}`);
+    expect(order).toEqual([`${A}:0`, `${A}:1`, `${B}:0`]);
+  });
 
-    crdt.applyOperation(op);
+  it('wire round-trip preserves the set', () => {
+    const a = new ObservationSet();
+    a.insert(scalarObservation(A, 0, 1.5));
+    a.insert(vectorObservation(B, 0, { x: 1, y: 2, z: 3 }));
+    const b = ObservationSet.fromWire(a.toWire());
+    expect(JSON.stringify(b.toWire())).toBe(JSON.stringify(a.toWire()));
+  });
 
-    expect(crdt.state[0]).toBeCloseTo(6);
+  it('empty set projects to null — never fabricate', () => {
+    const a = new ObservationSet();
+    expect(scalarMean(a)).toBeNull();
+    expect(vectorMean(a)).toBeNull();
+    expect(rotorConsensus(a)).toBeNull();
   });
 });
 
-// =============================================================================
-// Lattice Tests
-// =============================================================================
 
 describe('Lattice Operations', () => {
   it('latticeJoin computes component-wise maximum', () => {
@@ -457,104 +474,6 @@ describe('Sync Protocol', () => {
 // Consensus Tests
 // =============================================================================
 
-describe('Consensus', () => {
-  it('consensus returns zero for empty proposals', () => {
-    const consensus = new GeometricConsensus('node-1', scalar(0));
-    const result = consensus.geometricConsensus([], 0.1);
-
-    expect(equals(result, zero())).toBe(true);
-  });
-
-  it('propose increments round', () => {
-    const consensus = new GeometricConsensus('node-1', scalar(0));
-
-    const round1 = consensus.propose(scalar(10));
-    const round2 = consensus.propose(scalar(20));
-
-    expect(round1).toBe(0);
-    expect(round2).toBe(1);
-  });
-
-  it('voting and commit workflow', () => {
-    const consensus = new GeometricConsensus('node-1', scalar(0));
-
-    // Receive proposals
-    consensus.receiveProposal('node-2', scalar(10), 0);
-    consensus.receiveProposal('node-3', scalar(12), 0);
-    consensus.receiveProposal('node-4', scalar(14), 0);
-
-    // Vote
-    consensus.vote(0, true, scalar(12));
-    consensus.receiveVote('node-2', 0, true);
-    consensus.receiveVote('node-3', 0, true);
-
-    // Try to commit (3 out of 4 voted yes)
-    const committed = consensus.tryCommit(0, 4);
-    expect(committed).not.toBeNull();
-    expect(consensus.isCommitted(0)).toBe(true);
-  });
-
-  it('commit requires majority', () => {
-    const consensus = new GeometricConsensus('node-1', scalar(0));
-
-    consensus.receiveProposal('node-2', scalar(10), 0);
-    consensus.vote(0, true, scalar(10));
-
-    // Only 1 yes vote out of 4 participants - no majority
-    const committed = consensus.tryCommit(0, 4);
-    expect(committed).toBeNull();
-    expect(consensus.isCommitted(0)).toBe(false);
-  });
-
-  it('getCommittedValue returns committed state', () => {
-    const consensus = new GeometricConsensus('node-1', scalar(0));
-
-    consensus.receiveProposal('node-2', scalar(10), 0);
-    consensus.vote(0, true, scalar(10));
-    consensus.receiveVote('node-2', 0, true);
-    consensus.receiveVote('node-3', 0, true);
-
-    consensus.tryCommit(0, 3);
-
-    const value = consensus.getCommittedValue(0);
-    expect(value).not.toBeNull();
-  });
-
-  it('message handlers receive broadcasts', () => {
-    const consensus = new GeometricConsensus('node-1', scalar(0));
-    const messages: any[] = [];
-
-    consensus.onMessage((msg) => {
-      messages.push(msg);
-    });
-
-    consensus.propose(scalar(10));
-
-    expect(messages.length).toBe(1);
-    expect(messages[0].messageType.type).toBe('Propose');
-  });
-
-  it('CRDT state updates after commit', () => {
-    const consensus = new GeometricConsensus('node-1', scalar(0));
-
-    consensus.receiveProposal('node-2', scalar(10), 0);
-    consensus.vote(0, true, scalar(10));
-    consensus.receiveVote('node-2', 0, true);
-    consensus.receiveVote('node-3', 0, true);
-
-    const initialState = consensus.getCurrentState();
-    consensus.tryCommit(0, 3);
-    const finalState = consensus.getCurrentState();
-
-    // State should have changed after commit
-    expect(magnitude(sub(finalState, initialState))).toBeGreaterThan(0);
-  });
-});
-
-// =============================================================================
-// Invariant Tests using cliffy-test WASM bindings
-// =============================================================================
-
 describe('Algebraic Invariants (cliffy-test)', () => {
   it('IMPOSSIBLE: Vector clock happensBefore is transitive', () => {
     const report = testImpossible(
@@ -631,25 +550,21 @@ describe('Algebraic Invariants (cliffy-test)', () => {
     expect(report.failures).toBe(0);
   });
 
-  it('IMPOSSIBLE: CRDT operations are idempotent', () => {
+  it('IMPOSSIBLE: ObservationSet merge is idempotent', () => {
     const report = testImpossible(
-      'CRDT operation idempotence',
+      'ObservationSet merge idempotence',
       () => {
-        const crdt = new GeometricCRDT('test', scalar(0));
-        const op = crdt.createOperation(
-          scalar(Math.random() * 10),
-          OperationType.Addition
-        );
-
-        crdt.applyOperation(op);
-        const state1 = crdt.state[0];
-
-        crdt.applyOperation(op); // Apply same op again
-        const state2 = crdt.state[0];
-
-        return state1 === state2;
+        const id = 'aaaaaaaa-0000-0000-0000-00000000000' + Math.floor(Math.random() * 10);
+        const seq = Math.floor(Math.random() * 100);
+        const value = Math.random() * 10;
+        const a = new ObservationSet();
+        a.insert(scalarObservation(id, seq, value));
+        const before = a.toWire();
+        a.merge(a);
+        a.merge(a);
+        return JSON.stringify(a.toWire()) === JSON.stringify(before);
       },
-      50
+      100
     );
 
     expect(report.verified).toBe(true);

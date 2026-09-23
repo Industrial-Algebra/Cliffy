@@ -1,16 +1,24 @@
 /**
  * Distributed protocols for cliffy-tsukoshi.
  *
- * This module provides CRDT, consensus, and synchronization implementations
- * using Clifford algebra for coordination-free distributed systems.
+ * The sound floor: `ObservationSet` (a grow-only set CRDT — merge is union)
+ * plus deterministic geometric projections (`scalarMean`, `vectorMean`,
+ * `rotorConsensus` — the Markley eigen-mean via an in-house Jacobi port).
+ * Vector clocks, delta sync, storage, and P2P sync plumbing unchanged.
+ *
+ * REMOVED (Phase 2 WS0, 2026-09-20 — the cutover that reached the twin):
+ * `GeometricCRDT`, `geometricMean`, `GA3Lattice`, `GeometricConsensus` —
+ * the pre-salvage surface whose merge annihilated data, minted colliding
+ * op ids, and joined by magnitude dominance (not a semilattice). The Rust
+ * side deleted its twin in 0.4.0; see CHANGELOG for the failure modes.
  *
  * @example
  * ```typescript
  * import {
- *   GeometricCRDT,
- *   VectorClock,
- *   SyncState,
- *   GeometricConsensus,
+ *   ObservationSet,
+ *   scalarObservation,
+ *   scalarMean,
+ *   rotorConsensus,
  * } from 'cliffy-tsukoshi/protocols';
  * ```
  *
@@ -20,18 +28,31 @@
 // Vector Clock - causal ordering
 export { VectorClock } from './vector-clock.js';
 
-// CRDT - conflict-free replicated data types
+// The sound CRDT floor + deterministic projections (Phase 1, ported WS0)
 export {
-  GeometricCRDT,
-  GeometricOperation,
-  OperationType,
-  geometricMean,
-} from './crdt.js';
+  ObservationSet,
+  scalarObservation,
+  vectorObservation,
+  rotorObservation,
+} from './observation.js';
+export type {
+  Observation,
+  ObservationKey,
+  ObservationPayload,
+  RotorObservation,
+  VectorObservation,
+} from './observation.js';
+export {
+  scalarMean,
+  vectorMean,
+  rotorConsensus,
+  rotorConsensusWithWeights,
+} from './projection.js';
+export { jacobiEigen4, dominantEigenvalueIndex } from './eigen.js';
 
-// Lattice - conflict resolution
+// Lattice - the blessed componentwise floor
 export {
   GeometricLattice,
-  GA3Lattice,
   ComponentLattice,
   latticeJoin,
   latticeMeet,
@@ -80,10 +101,3 @@ export {
   createPeerState,
 } from './sync.js';
 
-// Consensus - distributed agreement
-export {
-  ConsensusMessage,
-  MessageType,
-  ConsensusMessageHandler,
-  GeometricConsensus,
-} from './consensus.js';

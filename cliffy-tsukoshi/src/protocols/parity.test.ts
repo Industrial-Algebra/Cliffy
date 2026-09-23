@@ -70,9 +70,7 @@ describe('cross-runtime parity (Rust-generated vectors)', () => {
   for (const c of suite.cases) {
     it(`${c.name}: canonical set projects bit-identically`, () => {
       const set = fromWire(c.observations);
-      assertExactTuple(scalarMean(set), c.expected.scalar_mean !== null ? { v: c.expected.scalar_mean } : null, ['v'], `${c.name}/scalar_mean`);
-      // scalarMean returns number | null — unwrap through the tuple helper's
-      // single-key path instead of the inline wrap above.
+      expect(scalarMean(set), `${c.name}/scalar_mean`).toBe(c.expected.scalar_mean);
       assertExactTuple(vectorMean(set), c.expected.vector_mean, ['x', 'y', 'z'], `${c.name}/vector_mean`);
       assertExactTuple(rotorConsensus(set), c.expected.rotor_consensus, ['w', 'x', 'y', 'z'], `${c.name}/rotor_consensus`);
     });

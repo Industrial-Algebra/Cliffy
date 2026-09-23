@@ -11,9 +11,9 @@
 //! - cliffy-tsukoshi's vitest (bit-exact parity of the TS port)
 //!
 //! Regenerate after intentional behavior changes:
-//!   CLIFFY_PARITY_WRITE=1 cargo test -p cliffy-protocols --test parity_vectors
+//!   `CLIFFY_PARITY_WRITE=1 cargo test -p cliffy-protocols --test parity_vectors`
 //!
-//! f64 encoding: serde_json's shortest-round-trip decimal. Both Rust and
+//! f64 encoding: `serde_json`'s shortest-round-trip decimal. Both Rust and
 //! JS parse it correctly-rounded, so JSON numbers reproduce the exact f64
 //! bit pattern on both sides — the tests assert exact equality, which IS
 //! the point (agreement is not convergence; approximation is not parity).
@@ -21,6 +21,10 @@
 #![allow(clippy::float_cmp)]
 // Parity tests assert exact bit equality between runtimes; tolerance-based
 // comparison would defeat the entire purpose.
+#![allow(clippy::expect_used)]
+// Test-only serialization infallibility: serde_json::to_value on our own
+// types cannot fail; the workspace panic-denial lints target production
+// code paths, and the probe suites carry the same allow.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -52,7 +56,11 @@ struct Expected {
     rotor_consensus: Option<RotorObservation>,
 }
 
-fn project(name: &'static str, set: &ObservationSet, permutations: Vec<ObservationSet>) -> ParityCase {
+fn project(
+    name: &'static str,
+    set: &ObservationSet,
+    permutations: &[ObservationSet],
+) -> ParityCase {
     // The drift guard's secondary assertion: every permutation projects
     // bit-identically in Rust before we ever serialize.
     let expected = Expected {
@@ -60,7 +68,7 @@ fn project(name: &'static str, set: &ObservationSet, permutations: Vec<Observati
         vector_mean: vector_mean(set),
         rotor_consensus: rotor_consensus(set),
     };
-    for perm in &permutations {
+    for perm in permutations {
         assert_eq!(
             scalar_mean(perm),
             expected.scalar_mean,
@@ -140,7 +148,7 @@ fn cases() -> Vec<ParityCase> {
     cases.push(project(
         "annihilation_oracle",
         &set,
-        vec![reversed(&obs), via_merge(&set)],
+        &[reversed(&obs), via_merge(&set)],
     ));
 
     // Scalars from three participants, non-trivial sum order.
@@ -155,7 +163,7 @@ fn cases() -> Vec<ParityCase> {
     cases.push(project(
         "scalar_mixed_magnitudes",
         &set,
-        vec![reversed(&obs), via_merge(&set)],
+        &[reversed(&obs), via_merge(&set)],
     ));
 
     // Vectors: componentwise mean.
@@ -168,13 +176,13 @@ fn cases() -> Vec<ParityCase> {
     cases.push(project(
         "vector_componentwise",
         &set,
-        vec![reversed(&obs), via_merge(&set)],
+        &[reversed(&obs), via_merge(&set)],
     ));
 
     // Single rotor is its own consensus.
     let obs = vec![rotor(a, 0, 0.6, 0.8, 0.0, 0.0)];
     let set = set_of(&obs);
-    cases.push(project("rotor_single", &set, vec![reversed(&obs)]));
+    cases.push(project("rotor_single", &set, &[reversed(&obs)]));
 
     // Double cover: q and −q is q observed twice.
     let obs = vec![
@@ -185,7 +193,7 @@ fn cases() -> Vec<ParityCase> {
     cases.push(project(
         "rotor_double_cover",
         &set,
-        vec![reversed(&obs), via_merge(&set)],
+        &[reversed(&obs), via_merge(&set)],
     ));
 
     // Opposed ±90°z rotors average to identity (w ≈ 1).
@@ -197,7 +205,7 @@ fn cases() -> Vec<ParityCase> {
     cases.push(project(
         "rotor_opposed_to_identity",
         &set,
-        vec![reversed(&obs), via_merge(&set)],
+        &[reversed(&obs), via_merge(&set)],
     ));
 
     // The full determinism set from the Rust oracle: four rotors, three
@@ -212,7 +220,7 @@ fn cases() -> Vec<ParityCase> {
     cases.push(project(
         "rotor_multi_participant",
         &set,
-        vec![reversed(&obs), via_merge(&set)],
+        &[reversed(&obs), via_merge(&set)],
     ));
 
     // Degenerate rotor (below the 1e-12 norm floor) is skipped, never
@@ -222,11 +230,7 @@ fn cases() -> Vec<ParityCase> {
         rotor(b, 0, 0.6, 0.8, 0.0, 0.0),
     ];
     let set = set_of(&obs);
-    cases.push(project(
-        "rotor_degenerate_skipped",
-        &set,
-        vec![reversed(&obs)],
-    ));
+    cases.push(project("rotor_degenerate_skipped", &set, &[reversed(&obs)]));
 
     // Mixed payloads: each projection aggregates only its kind.
     let obs = vec![
@@ -240,12 +244,12 @@ fn cases() -> Vec<ParityCase> {
     cases.push(project(
         "mixed_payloads",
         &set,
-        vec![reversed(&obs), via_merge(&set)],
+        &[reversed(&obs), via_merge(&set)],
     ));
 
     // Empty set: everything is None — never fabricate.
     let set = ObservationSet::new();
-    cases.push(project("empty", &set, vec![]));
+    cases.push(project("empty", &set, &[]));
 
     cases
 }

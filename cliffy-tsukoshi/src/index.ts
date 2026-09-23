@@ -155,12 +155,15 @@ export function scalarState(value: number): GeometricState {
 export {
   // Vector Clock
   VectorClock,
-  // CRDT
-  GeometricCRDT,
-  OperationType,
-  geometricMean,
+  // The sound CRDT floor + deterministic projections
+  ObservationSet,
+  scalarObservation,
+  vectorObservation,
+  rotorObservation,
+  scalarMean,
+  vectorMean,
+  rotorConsensus,
   // Lattice
-  GA3Lattice,
   ComponentLattice,
   latticeJoin,
   latticeMeet,
@@ -176,12 +179,13 @@ export {
   // Sync
   SyncState,
   PeerConnectionState,
-  // Consensus
-  GeometricConsensus,
 } from './protocols/index.js';
 
 export type {
-  GeometricOperation,
+  Observation,
+  ObservationPayload,
+  RotorObservation,
+  VectorObservation,
   GeometricLattice,
   StateDelta,
   Snapshot,
@@ -196,7 +200,4 @@ export type {
   PeerCapabilities,
   PeerState,
   SyncConfig,
-  ConsensusMessage,
-  MessageType,
-  ConsensusMessageHandler,
 } from './protocols/index.js';

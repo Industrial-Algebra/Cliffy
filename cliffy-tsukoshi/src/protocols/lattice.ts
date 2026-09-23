@@ -1,39 +1,27 @@
 /**
- * Lattice-based conflict resolution using geometric algebra.
+ * Lattice-based conflict resolution.
  *
- * Join-semilattice operations enable coordination-free conflict resolution
- * in distributed systems with guaranteed convergence.
+ * EPITAPH (2026-09-20, Phase 2 WS0): the magnitude-dominance `GA3Lattice`
+ * was deleted with `crdt.ts` — its join was not a semilattice join
+ * (`join(+1,−1)` produced cosh(1), outside the hull of its arguments; the
+ * geometric-mean tie-break is provably non-associative over multivectors).
+ * What survives is the sound floor the salvage blessed:
  *
- * Key Properties:
- * - Idempotent: a ⊔ a = a
- * - Commutative: a ⊔ b = b ⊔ a
- * - Associative: (a ⊔ b) ⊔ c = a ⊔ (b ⊔ c)
+ * - `latticeJoin` / `latticeMeet`: componentwise max/min over GA3
+ *   coefficients — honest semilattice laws.
+ * - `ComponentLattice`: the same laws as a class wrapper.
  *
- * @example
- * ```typescript
- * import { GA3Lattice } from 'cliffy-tsukoshi/protocols';
- *
- * const stateA = GA3Lattice.fromScalar(1);
- * const stateB = GA3Lattice.fromScalar(2);
- *
- * // Join always produces consistent result
- * const joined = stateA.join(stateB);
- * console.log(joined.dominates(stateA)); // true
- * console.log(joined.dominates(stateB)); // true
- * ```
+ * For distributed state, use `ObservationSet` (merge = union) plus the
+ * deterministic projections in `projection.ts` — the merge is boring; the
+ * render is geometric.
  */
 
 import type { GA3 } from '../ga3.js';
 import {
-  zero,
   scalar,
-  vector,
   fromCoefficients,
-  magnitude,
-  sub,
   clone,
 } from '../ga3.js';
-import { geometricMean } from './crdt.js';
 
 const EPSILON = 1e-10;
 
@@ -55,119 +43,6 @@ export interface GeometricLattice<T> {
 
   /** Compute the lattice meet (greatest lower bound) if it exists */
   meet(other: T): T | null;
-}
-
-/**
- * A wrapper around GA3 that implements GeometricLattice.
- *
- * Provides lattice operations where:
- * - Join uses geometric mean for equal-magnitude states
- * - Dominance is based on magnitude ordering
- * - Divergence is the geometric distance
- */
-export class GA3Lattice implements GeometricLattice<GA3Lattice> {
-  private inner: GA3;
-
-  constructor(mv: GA3) {
-    this.inner = mv;
-  }
-
-  /** Create a lattice element from a scalar. */
-  static fromScalar(value: number): GA3Lattice {
-    return new GA3Lattice(scalar(value));
-  }
-
-  /** Create a lattice element from vector components. */
-  static fromVector(x: number, y: number, z: number): GA3Lattice {
-    return new GA3Lattice(vector(x, y, z));
-  }
-
-  /** Create the zero element (bottom of the lattice). */
-  static zero(): GA3Lattice {
-    return new GA3Lattice(zero());
-  }
-
-  /** Get the underlying multivector. */
-  asMultivector(): GA3 {
-    return this.inner;
-  }
-
-  /** Get the magnitude of this lattice element. */
-  magnitude(): number {
-    return magnitude(this.inner);
-  }
-
-  /** Get a coefficient at the given index. */
-  get(index: number): number {
-    return (this.inner as number[])[index];
-  }
-
-  /** Create a copy of this lattice element. */
-  clone(): GA3Lattice {
-    return new GA3Lattice(clone(this.inner));
-  }
-
-  /** Lattice join (least upper bound). */
-  join(other: GA3Lattice): GA3Lattice {
-    // Check for structural equality first (idempotence optimization)
-    if (this.divergence(other) < EPSILON) {
-      return this.clone();
-    }
-
-    const selfMag = magnitude(this.inner);
-    const otherMag = magnitude(other.inner);
-
-    // Dominance by magnitude
-    if (selfMag > otherMag + EPSILON) {
-      return this.clone();
-    } else if (otherMag > selfMag + EPSILON) {
-      return other.clone();
-    } else {
-      // Equal magnitudes but different states - use geometric mean
-      return new GA3Lattice(geometricMean([this.inner, other.inner]));
-    }
-  }
-
-  /** Check if this state dominates another. */
-  dominates(other: GA3Lattice): boolean {
-    return magnitude(this.inner) >= magnitude(other.inner) - EPSILON;
-  }
-
-  /** Compute the divergence (geometric distance) from another state. */
-  divergence(other: GA3Lattice): number {
-    return magnitude(sub(this.inner, other.inner));
-  }
-
-  /** Check if two states are equal in the lattice ordering. */
-  latticeEq(other: GA3Lattice): boolean {
-    return this.dominates(other) && other.dominates(this);
-  }
-
-  /** Compute the lattice meet (greatest lower bound). */
-  meet(other: GA3Lattice): GA3Lattice | null {
-    const selfMag = magnitude(this.inner);
-    const otherMag = magnitude(other.inner);
-
-    // Meet is the element with smaller magnitude
-    if (selfMag < otherMag + EPSILON) {
-      return this.clone();
-    } else if (otherMag < selfMag + EPSILON) {
-      return other.clone();
-    } else {
-      // Equal magnitudes - meet exists and equals both
-      return this.clone();
-    }
-  }
-
-  /** Serialize to JSON. */
-  toJSON(): number[] {
-    return this.inner as number[];
-  }
-
-  /** Deserialize from JSON. */
-  static fromJSON(data: number[]): GA3Lattice {
-    return new GA3Lattice(fromCoefficients(data));
-  }
 }
 
 /**

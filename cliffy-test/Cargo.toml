@@ -10,7 +10,7 @@ keywords = ["testing", "geometric-algebra", "property-testing", "invariants", "p
 categories = ["development-tools::testing", "mathematics"]
 
 [dependencies]
-parking_lot = "0.12"
+parking_lot = "0.13"
 # Geometric algebra
 amari-core = { workspace = true }
 

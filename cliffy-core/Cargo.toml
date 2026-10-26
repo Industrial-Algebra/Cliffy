@@ -10,7 +10,7 @@ keywords = ["reactive", "frp", "geometric-algebra", "ui", "wasm"]
 categories = ["gui", "wasm", "mathematics"]
 
 [dependencies]
-parking_lot = "0.12"
+parking_lot = "0.13"
 # Amari provides geometric algebra
 amari-core = { workspace = true }
 

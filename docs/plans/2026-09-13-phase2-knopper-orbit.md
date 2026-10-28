@@ -258,9 +258,39 @@ defect is live in our published substrate until we deliberately adopt
    affected paths are single-node transform helpers, not the distributed
    soundness core — but users doing rotor interpolation deserve the
    warning.
-4. **Sequencing**: WS0 (merging) → WS2 → **WS-A (when 0.25.0 ships)** →
-   WS1 → WS3. If Amari 0.25.0 slips past WS1's completion, WS1 proceeds
-   (it is protocols-layer; its U2 contract is encoding, not numerics).
+4. **Sequencing**: WS0 (merging) → WS-L → WS2 → **WS-A (when 0.25.0
+   ships)** → WS1 → WS3. If Amari 0.25.0 slips past WS1's completion, WS1
+   proceeds (it is protocols-layer; its U2 contract is encoding, not
+   numerics).
+
+### WS-A empirical scope (probed 2026-10-16 against Amari develop @ 5f6ecce)
+
+The full core remediation has landed on Amari develop (W00–W04 merged
+through #304; W04 rotor/duality survived 5 review rounds, F1–F21) but is
+**unreleased** — develop's amari-core is still 0.24.1, with 0.25.0 pending
+amari-rewrite completion. A scratch worktree probe (path dependency, full
+workspace check) gives the exact adoption scope:
+
+**Compile breakage: 18 errors, confined to cliffy-core (9) and
+cliffy-test (9); cliffy-protocols/wire path has ZERO direct errors**
+(§8's "amari-light" claim, empirically confirmed).
+
+| New API (remediated) | Old call | Cliffy sites |
+|---|---|---|
+| `Multivector::coefficient_norm()` (L2 of coefficients, explicitly not metric) | `.magnitude()` | 8: test/error.rs, test/generators.rs ×3, test/manifold.rs ×3, core/geometric.rs, core/projection.rs, core/state.rs, core/transforms.rs |
+| `normalize() -> Option<Self>` (Some only for positive metric square; null → None, no tolerance) | `.normalize() -> Self` | 4: core/transforms.rs ×2, core/state.rs ×2 — each needs a policy decision (propagate vs. fallback) |
+| `Rotor::from_bivector() -> Result<Self, RotorError>` | bare value | 1: core/transforms.rs `to_amari_rotor` |
+| `Rotor::{inverse, slerp, logarithm, power} -> Result<_, RotorError>` | bare values | **0 direct sites** — cliffy-core's own Rotor wrapper owns inverse/slerp internally |
+
+**The silent class (compiles clean, semantics changed) — the real WS-A
+work:** W01 removes the 1e-14 coefficient pruning (bit-exact outputs in
+cliffy-core paths may shift; the wire path is unaffected — own Jacobi);
+W03 corrects general inverse/exp domains (Cliffy's sites are
+GA3-Euclidean versors, likely behavior-equal, must be verified by the
+matrix, not assumed); W02's equality/metric policy may move
+`approx_eq`-based test expectations. WS-A's acceptance gate: full matrix
++ parity vectors + phase-1 probes green on the remediated substrate, with
+any bit-shift explicitly attributed and dispositioned.
 
 ## 9. Workstream L — loadtest salvation (queued 2026-10-16)
 

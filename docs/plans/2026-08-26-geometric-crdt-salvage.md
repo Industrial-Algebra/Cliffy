@@ -142,3 +142,12 @@ DoD: the February question is answered by a test suite, not a report.
 > The original design tried to make the merge geometric. The salvage makes
 > the *render* geometric and the merge boring — which is what the algebra
 > was saying all along.
+
+> **Postscript (2026-10-16):** the 2026-10-16 rabbit hole found a third
+> resurrection axis this plan's deletion audit could not see: `cliffy-loadtest`
+> *reimplemented* the mean-merge doctrine inline ("CRDT merge via geometric
+> mean") without importing any deleted API — invisible to reference-based
+> audits. Ritual adopted: after any soundness kill, grep the CONCEPT
+> VOCABULARY (`geometric mean`, `mean merge`, `exp/log merge`) across the
+> whole workspace, not just the imports. Remediation queued as Phase 2
+> workstream WS-L (see 2026-09-13-phase2-knopper-orbit.md §9).
